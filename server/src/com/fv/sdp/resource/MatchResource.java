@@ -19,7 +19,11 @@ public class MatchResource
     @Path("/{id}")
     public Match getMatchDetails(@PathParam("id") String id)
     {
-        
+        MatchModel model = MatchModel.getInstance();
+        Match opResult = model.getMatch(id);
+        if (opResult != null)
+            return opResult;
+        return null;
     }
 
     @POST
@@ -81,8 +85,14 @@ class MatchModel //insert singleton
         return new ArrayList<>(matchesList);
     }
     //get match details
-    public Match getMatch(Match match)
+    public Match getMatch(String matchId)
     {
+        ArrayList<Match> list = new ArrayList<>(matchesList);
+        for (Match m : list)
+        {
+            if (m.getId().equals(matchId))
+                return m;
+        }
         return null;
     }
 }
