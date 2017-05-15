@@ -5,6 +5,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import  com.fv.sdp.model.Match;
+import com.fv.sdp.util.ConcurrentList;
 
 import java.util.ArrayList;
 
@@ -26,6 +27,14 @@ public class MatchResource
         return null;
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public ArrayList<Match> getMatches()
+    {
+        MatchModel model = MatchModel.getInstance();
+        return model.getMatchesList();
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     //@Produces(MediaType.APPLICATION_XML)
@@ -39,7 +48,7 @@ public class MatchResource
     }
 }
 
-class MatchModel //insert singleton
+class MatchModel
 {
     //singleton
     private static MatchModel instance = null;
@@ -54,17 +63,18 @@ class MatchModel //insert singleton
     private MatchModel()
     {
         instance = this;
-        matchesList = new ArrayList<>();
+        matchesList = new ConcurrentList<>();
     }
 
     //data model
     //change to ConcurrentList
-    private static ArrayList<Match> matchesList = null;
+    private static ConcurrentList<Match> matchesList = null;
+
     //add new match
     public boolean addMatch(Match match)
     {
         //local copy
-        ArrayList<Match> list = new ArrayList<>(matchesList);
+        ArrayList<Match> list = matchesList.getList();
         for(Match m : list)
         {
             if (m.getId().equals(match.getId()))
@@ -74,20 +84,23 @@ class MatchModel //insert singleton
         matchesList.add(match);
         return true;
     }
+
     //remove a match
     public boolean deleteMatch(Match match)
     {
         return false;
     }
+
     //get matches list copy
     public ArrayList<Match> getMatchesList()
     {
-        return new ArrayList<>(matchesList);
+        return matchesList.getList();
     }
+
     //get match details
     public Match getMatch(String matchId)
     {
-        ArrayList<Match> list = new ArrayList<>(matchesList);
+        ArrayList<Match> list = matchesList.getList();
         for (Match m : list)
         {
             if (m.getId().equals(matchId))
