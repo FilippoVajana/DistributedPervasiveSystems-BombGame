@@ -1,7 +1,0 @@
-METHOD-1:
-
-It's a bug in Glassfish 4.1.1 https://java.net/jira/browse/JERSEY-2888
-I was able to fix it in a dirty way: 
-In glassfish/modules/org.eclipse.persistence.moxy.jar fix META-INF/MANIFEST.MF Just append the following to Import-Package:
-
-REFERENCE URL: http://stackoverflow.com/questions/33722764/glassfish-error-when-producing-json
