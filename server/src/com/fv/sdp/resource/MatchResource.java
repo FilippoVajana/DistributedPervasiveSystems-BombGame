@@ -86,7 +86,7 @@ class MatchModel
     }
 
     //remove a match
-    public boolean deleteMatch(Match match)
+    public boolean deleteMatch(String matchId)
     {
         return false;
     }
@@ -106,6 +106,12 @@ class MatchModel
             if (m.getId().equals(matchId))
                 return m;
         }
+        return null;
+    }
+
+    //add player to a match
+    public ArrayList<Match> addPlayerToMatch(String matchId)
+    {
         return null;
     }
 }

@@ -1,6 +1,7 @@
 package com.fv.sdp;
 
 import com.fv.sdp.model.TestModel;
+import com.fv.sdp.MatchResource;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
