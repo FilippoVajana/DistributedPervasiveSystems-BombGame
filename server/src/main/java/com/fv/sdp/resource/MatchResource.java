@@ -28,7 +28,7 @@ public class MatchResource
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_JSON)
     public ArrayList<Match> getMatches()
     {
         MatchModel model = MatchModel.getInstance();
@@ -36,7 +36,7 @@ public class MatchResource
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes(MediaType.APPLICATION_JSON)
     //@Produces(MediaType.APPLICATION_XML)
     public Response addMatch(Match match)
     {
