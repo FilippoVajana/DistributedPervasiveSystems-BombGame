@@ -15,8 +15,14 @@ import java.util.ArrayList;
 @Path("/match")
 public class MatchResource
 {
+    public void resetResourceModel()
+    {
+        MatchModel.resetModel();
+    }
+
+
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     public Match getMatchDetails(@PathParam("id") String id)
     {
@@ -29,7 +35,7 @@ public class MatchResource
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ArrayList<Match> getMatches()
+    public ArrayList<Match> getAllMatches()
     {
         MatchModel model = MatchModel.getInstance();
         return model.getMatchesList();
@@ -37,9 +43,11 @@ public class MatchResource
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    //@Produces(MediaType.APPLICATION_XML)
     public Response addMatch(Match match)
     {
+        //check invalid data
+        if (match.getId().equals("") || match.getEdgeLength() == 0 || match.getVictoryPoints() == 0)
+            return Response.status(Response.Status.NOT_ACCEPTABLE).build();
         MatchModel model = MatchModel.getInstance();
         boolean opResult = model.addMatch(match);
         if (opResult)
@@ -67,8 +75,12 @@ class MatchModel
     }
 
     //data model
-    //change to ConcurrentList
     private static ConcurrentList<Match> matchesList = null;
+    //reset list
+    public static void resetModel()
+    {
+        new MatchModel();
+    }
 
     //add new match
     public boolean addMatch(Match match)
