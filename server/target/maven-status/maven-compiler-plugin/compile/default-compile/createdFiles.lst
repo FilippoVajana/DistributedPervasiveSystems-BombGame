@@ -1,0 +1,8 @@
+com\fv\sdp\model\Player.class
+com\fv\sdp\model\TestModel.class
+com\fv\sdp\model\Match.class
+com\fv\sdp\resource\MatchModel.class
+com\fv\sdp\util\ConcurrentList.class
+com\fv\sdp\MyApplication.class
+com\fv\sdp\resource\MatchResource.class
+com\fv\sdp\HelloWorld.class
