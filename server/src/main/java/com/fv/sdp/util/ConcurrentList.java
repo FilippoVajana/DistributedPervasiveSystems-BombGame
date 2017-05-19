@@ -26,7 +26,9 @@ public class ConcurrentList<E>
     {
         synchronized (_list)
         {
-            _list.remove(item);
+            for (E i : _list)
+                if (i.equals(item))
+                    _list.remove(i);
             //log action
         }
     }
