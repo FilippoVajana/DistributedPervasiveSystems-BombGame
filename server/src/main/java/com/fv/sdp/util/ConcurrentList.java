@@ -1,6 +1,8 @@
 package com.fv.sdp.util;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class ConcurrentList<E>
 {
@@ -8,7 +10,10 @@ public class ConcurrentList<E>
     {
         _list = new ArrayList<>();
     }
-
+    public ConcurrentList(Collection collection)
+    {
+        _list = new ArrayList<E>(collection);
+    }
     private ArrayList<E> _list = null;
 
     //add element
@@ -28,12 +33,15 @@ public class ConcurrentList<E>
         {
             for (E i : _list)
                 if (i.equals(item))
+                {
                     _list.remove(i);
+                    return;
+                }
             //log action
         }
     }
 
-    //get list
+    //get copy
     public ArrayList<E> getList()
     {
         synchronized (_list)
@@ -41,6 +49,28 @@ public class ConcurrentList<E>
             ArrayList<E> listCopy = new ArrayList<>(_list);
             //log action
             return listCopy;
+        }
+    }
+
+    public boolean contain(E item)
+    {
+        synchronized (_list)
+        {
+            for(E e : _list)
+                if (e.equals(item))
+                    return true;
+            return false;
+        }
+    }
+
+    public E getElement(E item)
+    {
+        synchronized (_list)
+        {
+            for(E e : _list)
+                if (e.equals(item))
+                    return e;
+            return null;
         }
     }
 }
