@@ -1,5 +1,7 @@
 package com.fv.sdp.model;
 
+import java.nio.file.Path;
+
 /**
  * Created by filip on 14/05/2017.
  */
@@ -41,5 +43,18 @@ public class Player
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    @Override
+    //equality over id
+    public boolean equals(Object player)
+    {
+        if (player == null)
+            return false;
+
+        Player p = (Player) player;
+        if (this.getId().equals(p.getId()))
+            return true;
+        return false;
     }
 }

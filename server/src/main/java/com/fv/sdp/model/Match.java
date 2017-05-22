@@ -72,7 +72,7 @@ public class Match
         return false;
 
         Match m = (Match) match;
-        if (this.getId() == m.getId())
+        if (this.getId().equals(m.getId()))
             return true;
         return false;
     }
