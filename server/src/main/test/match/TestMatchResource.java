@@ -1,19 +1,19 @@
 package match;
 
 import com.fv.sdp.model.Match;
-import com.fv.sdp.model.TestModel;
+import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
+import com.fv.sdp.util.ConcurrentList;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.client.*;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +45,14 @@ public class TestMatchResource extends JerseyTest
         target("match").request().post(Entity.entity(m1, MediaType.APPLICATION_JSON));
         target("match").request().post(Entity.entity(m2, MediaType.APPLICATION_JSON));
         target("match").request().post(Entity.entity(m3, MediaType.APPLICATION_JSON));
+
+        //match with players
+        ConcurrentList<Player> pList4 = new ConcurrentList<>();
+        pList4.add(new Player("pl1", "localhost", 45624));
+        pList4.add(new Player("pl2", "127.0.0.1", 56387));
+        pList4.add(new Player("pl3", "192.168.1.1", 45624));
+        Match m4 = new Match("game4", 34,67, pList4);
+        target("match").request().post(Entity.entity(m4, MediaType.APPLICATION_JSON));
     }
 
     @Test
@@ -87,26 +95,49 @@ public class TestMatchResource extends JerseyTest
         Match m1 = new Match("game1", 32,90);
         target("match").request().post(Entity.entity(m1, MediaType.APPLICATION_JSON));
         //get match details
-        Match response = target("match/game1").request().get(Match.class);
-        assertEquals(m1.getId(), response.getId());
+        Response response = target("match/game1").request().get();
+        assertEquals(m1.getId(), (response.readEntity(Match.class)).getId());
     }
 
     @Test
     public void getMatchDetailsNull()
     {
-        Match response = target("match/game1").request().get(Match.class);
-        assertNull(response);
+        Response response = target("match/game1").request().get();
+        assertNull(response.readEntity(Match.class));
     }
 
     @Test
     public void getAllMatches()
     {
         setModel();
-        List<Match> response = target("match/").request().get(new GenericType<List<Match>>() {});
+        Response response = target("match/").request().get();
         //debug
         //for (Match m : response)
         //   System.out.println(m.getId());
-        assertEquals(3, response.size());
+        assertEquals(4, response.readEntity(new GenericType<List<Match>>(){}).size());
+    }
+
+    @Test
+    public void removePlayerFromMatch()
+    {
+        setModel();
+        Response response = target("match/game1/pl1").request().delete(Response.class);
+        assertEquals(200, response.getStatus());
+
+        Response r = target("match/game1").request().get();
+        assertEquals(404, r.getStatus());
+    }
+
+    @Test
+    public void removeAllPlayers()
+    {
+        setModel();
+        target("match/game1/pl1").request().delete(Response.class);
+        target("match/game1/pl2").request().delete(Response.class);
+        target("match/game1/pl3").request().delete(Response.class);
+
+        Response r = target("match/game1").request().get(Response.class);
+        assertEquals(404, r.getStatus());
     }
 
 }

@@ -1,10 +1,12 @@
 package com.fv.sdp.resource;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import  com.fv.sdp.model.Match;
+import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
 
 import java.util.ArrayList;
@@ -24,21 +26,24 @@ public class MatchResource
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    public Match getMatchDetails(@PathParam("id") String id)
+    public Response getMatchDetails(@PathParam("id") String id)
     {
         MatchModel model = MatchModel.getInstance();
         Match opResult = model.getMatch(id);
         if (opResult != null)
-            return opResult;
-        return null;
+            return Response.ok(opResult).build();
+        return Response.status(Response.Status.NOT_FOUND).build();
+
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ArrayList<Match> getAllMatches()
+    public Response getAllMatches()
     {
         MatchModel model = MatchModel.getInstance();
-        return model.getMatchesList();
+        //ArrayList<Match> matches = model.getMatchesList();
+        GenericEntity<ArrayList<Match>> matches = new GenericEntity<ArrayList<Match>>(model.getMatchesList()){};
+        return Response.ok(matches).build();
     }
 
     @POST
@@ -54,8 +59,25 @@ public class MatchResource
             return Response.status(Response.Status.CREATED).build();
         return Response.status(Response.Status.NOT_MODIFIED).build();
     }
+
+    @DELETE
+    @Path("/{matchId}/{playerId}")
+    public Response deletePlayer(@PathParam("matchId") String matchId, @PathParam("playerId") String playerId)
+    {
+        MatchModel model = MatchModel.getInstance();
+        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
+        //check for match cancellation
+        Match match = model.getMatch(matchId);
+        if (match.getPlayers().getList().size() == 0)
+            model.deleteMatch(matchId);
+        if (playerRemoveResult)
+            return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
+    }
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////
 class MatchModel
 {
     //singleton
@@ -100,7 +122,9 @@ class MatchModel
     //remove a match
     public boolean deleteMatch(String matchId)
     {
-        return false;
+        Match m = new Match(matchId,0,0 );
+        matchesList.remove(m);
+        return true;
     }
 
     //get matches list copy
@@ -122,8 +146,30 @@ class MatchModel
     }
 
     //add player to a match
-    public ArrayList<Match> addPlayerToMatch(String matchId)
+    public boolean addPlayerToMatch(String matchId, Player player)
     {
-        return null;
+        //check match
+        if (!matchesList.contain(new Match(matchId,0,0)))
+            return false;
+        Match m = matchesList.getElement(new Match(matchId,0,0));
+        //check player
+        if (m.getPlayers().contain(player))
+            return false;
+        m.getPlayers().add(player);
+        return true;
+
     }
+
+    //remove player from a match
+    public boolean removePlayerFromMatch(String matchId, String playerId)
+    {
+        Match match = getMatch(matchId);
+        if (match != null)
+        {
+            match.getPlayers().remove(new Player(playerId, "localhost", 0));
+            return true;
+        }
+        return false;
+    }
+
 }
