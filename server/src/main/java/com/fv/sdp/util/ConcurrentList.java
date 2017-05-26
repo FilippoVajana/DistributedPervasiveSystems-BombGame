@@ -1,45 +1,46 @@
 package com.fv.sdp.util;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fv.sdp.model.Player;
+
+import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlSeeAlso(Player.class)
 public class ConcurrentList<E>
 {
     public ConcurrentList()
     {
-        _list = new ArrayList<>();
+        list = new ArrayList<>();
     }
     public ConcurrentList(Collection collection)
     {
-        _list = new ArrayList<E>(collection);
+        list = new ArrayList<E>(collection);
     }
-    private ArrayList<E> _list = null;
+
+    private ArrayList<E> list;
 //////////////////////////////////////////////////////////////////////////////////////
-    public ArrayList<E> get_list()
+    @XmlAnyElement(lax = true)
+    public ArrayList<E> getList()
     {
-        synchronized (_list)
+        synchronized (list)
         {
-            ArrayList<E> listCopy = new ArrayList<>(_list);
+            ArrayList<E> listCopy = new ArrayList<>(list);
             //log action
             return listCopy;
         }
     }
 
-    public void set_list(ArrayList<E> _list)
+    public void setList(ArrayList<E> list)
     {
-        this._list = _list;
+        this.list = list;
     }
 
     public void add(E item)
     {
-        synchronized (_list)
+        synchronized (list)
         {
-            _list.add(item);
+            list.add(item);
             //log action
         }
     }
@@ -47,12 +48,12 @@ public class ConcurrentList<E>
     //remove element
     public void remove(E item)
     {
-        synchronized (_list)
+        synchronized (list)
         {
-            for (E i : _list)
+            for (E i : list)
                 if (i.equals(item))
                 {
-                    _list.remove(i);
+                    list.remove(i);
                     return;
                 }
             //log action
@@ -63,9 +64,9 @@ public class ConcurrentList<E>
     /*
     public ArrayList<E> getList()
     {
-        synchronized (_list)
+        synchronized (list)
         {
-            ArrayList<E> listCopy = new ArrayList<>(_list);
+            ArrayList<E> listCopy = new ArrayList<>(list);
             //log action
             return listCopy;
         }
@@ -73,9 +74,9 @@ public class ConcurrentList<E>
     */
     public boolean contain(E item)
     {
-        synchronized (_list)
+        synchronized (list)
         {
-            for(E e : _list)
+            for(E e : list)
                 if (e.equals(item))
                     return true;
             return false;
@@ -84,9 +85,9 @@ public class ConcurrentList<E>
 
     public E getElement(E item)
     {
-        synchronized (_list)
+        synchronized (list)
         {
-            for(E e : _list)
+            for(E e : list)
                 if (e.equals(item))
                     return e;
             return null;

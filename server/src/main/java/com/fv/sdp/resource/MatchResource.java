@@ -1,17 +1,18 @@
 package com.fv.sdp.resource;
 
-import javax.print.attribute.standard.Media;
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import  com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by filip on 12/05/2017.
@@ -24,6 +25,12 @@ public class MatchResource
         MatchModel.resetModel();
     }
 
+    @GET
+    @Path("/setTest")
+    public void setResourceModel()
+    {
+        MatchModel.setTestModel();
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -66,7 +73,7 @@ public class MatchResource
     @Path("/{matchId}/enter")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response enterMatch(@PathParam("matchId") String matchId, Player player)
+    public Response joinMatch(@PathParam("matchId") String matchId, Player player)
     {
         MatchModel model = MatchModel.getInstance();
         boolean opResult = model.addPlayerToMatch(matchId, player);
@@ -82,13 +89,13 @@ public class MatchResource
 
     @DELETE
     @Path("/{matchId}/{playerId}")
-    public Response deletePlayer(@PathParam("matchId") String matchId, @PathParam("playerId") String playerId)
+    public Response leaveMatch(@PathParam("matchId") String matchId, @PathParam("playerId") String playerId)
     {
         MatchModel model = MatchModel.getInstance();
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
         //check for match cancellation
         Match match = model.getMatch(matchId);
-        if (match.getPlayers().get_list().size() == 0)
+        if (match.getPlayers().getList().size() == 0)
             model.deleteMatch(matchId);
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
@@ -98,6 +105,8 @@ public class MatchResource
 
 
 //////////////////////////////////////////////////////////////////////////////////
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 class MatchModel
 {
     //singleton
@@ -124,11 +133,24 @@ class MatchModel
         new MatchModel();
     }
 
+    public static void setTestModel()
+    {
+        Match m1 = new Match("game1", 10,10);
+        ArrayList<Player>pL2 = new ArrayList<>(); pL2.add(new Player("pl1", "local", 4563)); pL2.add(new Player("pl2", "local", 4563));
+        Match m2 = new Match("game2", 32,45,new ConcurrentList<>(pL2));
+
+        ArrayList<Match>mL = new ArrayList<>(); mL.add(m1); mL.add(m2);
+        matchesList = new ConcurrentList<>(mL);
+    }
+
+
+
+
     //add new match
     public boolean addMatch(Match match)
     {
         //local copy
-        ArrayList<Match> list = matchesList.get_list();
+        ArrayList<Match> list = matchesList.getList();
         for(Match m : list)
         {
             if (m.getId().equals(match.getId()))
@@ -150,13 +172,13 @@ class MatchModel
     //get matches list copy
     public ArrayList<Match> getMatchesList()
     {
-        return matchesList.get_list();
+        return matchesList.getList();
     }
 
     //get match details
     public Match getMatch(String matchId)
     {
-        ArrayList<Match> list = matchesList.get_list();
+        ArrayList<Match> list = matchesList.getList();
         for (Match m : list)
         {
             if (m.getId().equals(matchId))

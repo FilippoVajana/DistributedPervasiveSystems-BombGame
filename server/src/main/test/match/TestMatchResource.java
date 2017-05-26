@@ -9,13 +9,8 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.swing.plaf.metal.MetalBorders;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
+import javax.ws.rs.core.*;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -154,7 +149,7 @@ public class TestMatchResource extends JerseyTest
         Player pl1 = new Player("player1", "localhost", 6583);
         Response r = target("match/game1/enter").request().post(Entity.entity(pl1, MediaType.APPLICATION_JSON));
         assertEquals(200, r.getStatus());
-        assertEquals(1, r.readEntity(Match.class).getPlayers().get_list().size());
+        assertEquals(1, r.readEntity(Match.class).getPlayers().getList().size());
 
     }
 

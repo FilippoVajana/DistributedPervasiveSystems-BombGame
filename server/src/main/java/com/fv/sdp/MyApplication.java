@@ -1,13 +1,8 @@
 package com.fv.sdp;
 
-import com.fv.sdp.model.TestModel;
-import com.fv.sdp.resource.MatchResource;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-import java.util.HashSet;
-import java.util.Set;
 
 
 @ApplicationPath("/")
