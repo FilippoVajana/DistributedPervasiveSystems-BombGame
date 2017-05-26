@@ -1,5 +1,6 @@
 package com.fv.sdp.resource;
 
+import javax.print.attribute.standard.Media;
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -10,6 +11,7 @@ import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by filip on 12/05/2017.
@@ -25,11 +27,11 @@ public class MatchResource
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}")
-    public Response getMatchDetails(@PathParam("id") String id)
+    @Path("/{matchId}")
+    public Response getMatchDetails(@PathParam("matchId") String matchId)
     {
         MatchModel model = MatchModel.getInstance();
-        Match opResult = model.getMatch(id);
+        Match opResult = model.getMatch(matchId);
         if (opResult != null)
             return Response.ok(opResult).build();
         return Response.status(Response.Status.NOT_FOUND).build();
@@ -60,6 +62,24 @@ public class MatchResource
         return Response.status(Response.Status.NOT_MODIFIED).build();
     }
 
+    @POST
+    @Path("/{matchId}/enter")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response enterMatch(@PathParam("matchId") String matchId, Player player)
+    {
+        MatchModel model = MatchModel.getInstance();
+        boolean opResult = model.addPlayerToMatch(matchId, player);
+        if (opResult)
+        {
+            //DEBUG PROBE
+            ConcurrentList<Player> pList = model.getMatch(matchId).getPlayers();
+            Match m = model.getMatch(matchId);
+            return Response.ok(model.getMatch(matchId)).build();
+        }
+        return Response.status(Response.Status.BAD_REQUEST).build();
+    }
+
     @DELETE
     @Path("/{matchId}/{playerId}")
     public Response deletePlayer(@PathParam("matchId") String matchId, @PathParam("playerId") String playerId)
@@ -68,7 +88,7 @@ public class MatchResource
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
         //check for match cancellation
         Match match = model.getMatch(matchId);
-        if (match.getPlayers().getList().size() == 0)
+        if (match.getPlayers().get_list().size() == 0)
             model.deleteMatch(matchId);
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
@@ -108,7 +128,7 @@ class MatchModel
     public boolean addMatch(Match match)
     {
         //local copy
-        ArrayList<Match> list = matchesList.getList();
+        ArrayList<Match> list = matchesList.get_list();
         for(Match m : list)
         {
             if (m.getId().equals(match.getId()))
@@ -130,13 +150,13 @@ class MatchModel
     //get matches list copy
     public ArrayList<Match> getMatchesList()
     {
-        return matchesList.getList();
+        return matchesList.get_list();
     }
 
     //get match details
     public Match getMatch(String matchId)
     {
-        ArrayList<Match> list = matchesList.getList();
+        ArrayList<Match> list = matchesList.get_list();
         for (Match m : list)
         {
             if (m.getId().equals(matchId))

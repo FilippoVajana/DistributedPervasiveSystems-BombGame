@@ -1,10 +1,11 @@
 package com.fv.sdp.model;
 
-import java.nio.file.Path;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Created by filip on 14/05/2017.
  */
+@XmlRootElement
 public class Player
 {
     private String id;

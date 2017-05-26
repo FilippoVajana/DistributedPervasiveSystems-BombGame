@@ -2,17 +2,22 @@ package com.fv.sdp.model;
 
 import com.fv.sdp.util.ConcurrentList;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Created by filip on 12/05/2017.
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Match
 {
     private String id;
     private int edgeLength;
     private int victoryPoints;
+    @XmlElement
     private ConcurrentList<Player> players;
 
     public Match() {

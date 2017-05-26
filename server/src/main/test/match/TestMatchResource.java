@@ -9,6 +9,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.swing.plaf.metal.MetalBorders;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
@@ -47,6 +48,7 @@ public class TestMatchResource extends JerseyTest
         target("match").request().post(Entity.entity(m3, MediaType.APPLICATION_JSON));
 
         //match with players
+        // NON INVIA LA LISTA GIOCATORI !!
         ConcurrentList<Player> pList4 = new ConcurrentList<>();
         pList4.add(new Player("pl1", "localhost", 45624));
         pList4.add(new Player("pl2", "127.0.0.1", 56387));
@@ -132,12 +134,28 @@ public class TestMatchResource extends JerseyTest
     public void removeAllPlayers()
     {
         setModel();
-        target("match/game1/pl1").request().delete(Response.class);
-        target("match/game1/pl2").request().delete(Response.class);
-        target("match/game1/pl3").request().delete(Response.class);
+        target("match/game4/pl1").request().delete(Response.class);
+        target("match/game4/pl2").request().delete(Response.class);
+        target("match/game4/pl3").request().delete(Response.class);
 
-        Response r = target("match/game1").request().get(Response.class);
+        Response r = target("match/game4").request().get(Response.class);
         assertEquals(404, r.getStatus());
+    }
+
+    @Test
+    public void addPlayer()
+    {
+        //add new match
+        Match m1 = new Match("game1", 32,90);
+        Response response1 = target("match").request().post(Entity.entity(m1, MediaType.APPLICATION_JSON));
+        assertEquals("Should return status 201", 201, response1.getStatus());
+
+        //add player
+        Player pl1 = new Player("player1", "localhost", 6583);
+        Response r = target("match/game1/enter").request().post(Entity.entity(pl1, MediaType.APPLICATION_JSON));
+        assertEquals(200, r.getStatus());
+        assertEquals(1, r.readEntity(Match.class).getPlayers().get_list().size());
+
     }
 
 }

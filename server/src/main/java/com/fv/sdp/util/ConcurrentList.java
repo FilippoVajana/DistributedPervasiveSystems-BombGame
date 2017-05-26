@@ -1,9 +1,13 @@
 package com.fv.sdp.util;
 
-import java.lang.reflect.Array;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ConcurrentList<E>
 {
     public ConcurrentList()
@@ -15,8 +19,22 @@ public class ConcurrentList<E>
         _list = new ArrayList<E>(collection);
     }
     private ArrayList<E> _list = null;
+//////////////////////////////////////////////////////////////////////////////////////
+    public ArrayList<E> get_list()
+    {
+        synchronized (_list)
+        {
+            ArrayList<E> listCopy = new ArrayList<>(_list);
+            //log action
+            return listCopy;
+        }
+    }
 
-    //add element
+    public void set_list(ArrayList<E> _list)
+    {
+        this._list = _list;
+    }
+
     public void add(E item)
     {
         synchronized (_list)
@@ -42,6 +60,7 @@ public class ConcurrentList<E>
     }
 
     //get copy
+    /*
     public ArrayList<E> getList()
     {
         synchronized (_list)
@@ -51,7 +70,7 @@ public class ConcurrentList<E>
             return listCopy;
         }
     }
-
+    */
     public boolean contain(E item)
     {
         synchronized (_list)
