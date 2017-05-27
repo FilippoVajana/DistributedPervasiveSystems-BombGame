@@ -31,21 +31,6 @@ public class MatchResource
         MatchModel.setTestModel();
     }
 
-    /*
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{matchId}")
-    public Response getMatchDetails(@PathParam("matchId") String matchId)
-    {
-        MatchModel model = MatchModel.getInstance();
-        Match opResult = model.getMatch(matchId);
-        if (opResult != null)
-            return Response.ok(opResult).build();
-        return Response.status(Response.Status.NOT_FOUND).build();
-
-    }
-    */
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllMatches()
@@ -87,12 +72,13 @@ public class MatchResource
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
 
-    @DELETE
+    @POST
     @Path("/{matchId}/leave")
-    public Response leaveMatch(@PathParam("matchId") String matchId, Player player)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response leaveMatch(@PathParam("matchId") String matchId, String playerId)
     {
         MatchModel model = MatchModel.getInstance();
-        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
+        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
         //check for match cancellation
         Match match = model.getMatch(matchId);
         if (match.getPlayers().getList().size() == 0)
