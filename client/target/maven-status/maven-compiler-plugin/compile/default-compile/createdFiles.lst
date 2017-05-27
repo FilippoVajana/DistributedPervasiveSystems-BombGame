@@ -1,0 +1,5 @@
+main\java\NodeManager.class
+main\java\rest\RESTConnector.class
+main\java\ServerCore.class
+main\java\InServerService.class
+main\java\ClientCore.class
