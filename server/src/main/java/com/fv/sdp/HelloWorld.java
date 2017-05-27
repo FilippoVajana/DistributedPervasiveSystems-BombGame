@@ -13,23 +13,8 @@ import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 
 @Path("/hello")
-public class HelloWorld {
-
-    @Path("/test")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getTestModel()
-    {
-        ArrayList<Integer> list = new ArrayList<>();
-        list.add(2);
-        list.add(45);
-        list.add(567);
-        TestModel tm = new TestModel("asd", list);
-
-        return Response.ok(tm).build();
-    }
-
-
+public class HelloWorld
+{
 
     @Path("/player")
     @GET

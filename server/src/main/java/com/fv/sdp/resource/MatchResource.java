@@ -24,7 +24,6 @@ public class MatchResource
     {
         MatchModel.resetModel();
     }
-
     @GET
     @Path("/setTest")
     public void setResourceModel()
@@ -32,6 +31,7 @@ public class MatchResource
         MatchModel.setTestModel();
     }
 
+    /*
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{matchId}")
@@ -44,20 +44,20 @@ public class MatchResource
         return Response.status(Response.Status.NOT_FOUND).build();
 
     }
+    */
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllMatches()
     {
         MatchModel model = MatchModel.getInstance();
-        //ArrayList<Match> matches = model.getMatchesList();
         GenericEntity<ArrayList<Match>> matches = new GenericEntity<ArrayList<Match>>(model.getMatchesList()){};
         return Response.ok(matches).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response addMatch(Match match)
+    public Response createMatch(Match match)
     {
         //check invalid data
         if (match.getId().equals("") || match.getEdgeLength() == 0 || match.getVictoryPoints() == 0)
@@ -70,7 +70,7 @@ public class MatchResource
     }
 
     @POST
-    @Path("/{matchId}/enter")
+    @Path("/{matchId}/join")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response joinMatch(@PathParam("matchId") String matchId, Player player)
@@ -88,11 +88,11 @@ public class MatchResource
     }
 
     @DELETE
-    @Path("/{matchId}/{playerId}")
-    public Response leaveMatch(@PathParam("matchId") String matchId, @PathParam("playerId") String playerId)
+    @Path("/{matchId}/leave")
+    public Response leaveMatch(@PathParam("matchId") String matchId, Player player)
     {
         MatchModel model = MatchModel.getInstance();
-        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
+        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
         //check for match cancellation
         Match match = model.getMatch(matchId);
         if (match.getPlayers().getList().size() == 0)
@@ -140,7 +140,8 @@ class MatchModel
         Match m2 = new Match("game2", 32,45,new ConcurrentList<>(pL2));
 
         ArrayList<Match>mL = new ArrayList<>(); mL.add(m1); mL.add(m2);
-        matchesList = new ConcurrentList<>(mL);
+       MatchModel mm = MatchModel.getInstance();
+       matchesList.setList(mL);
     }
 
 

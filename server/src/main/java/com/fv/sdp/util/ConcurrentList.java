@@ -19,7 +19,9 @@ public class ConcurrentList<E>
     }
 
     private ArrayList<E> list;
-//////////////////////////////////////////////////////////////////////////////////////
+
+
+
     @XmlAnyElement(lax = true)
     public ArrayList<E> getList()
     {
@@ -36,6 +38,7 @@ public class ConcurrentList<E>
         this.list = list;
     }
 
+    //add element
     public void add(E item)
     {
         synchronized (list)
@@ -60,18 +63,7 @@ public class ConcurrentList<E>
         }
     }
 
-    //get copy
-    /*
-    public ArrayList<E> getList()
-    {
-        synchronized (list)
-        {
-            ArrayList<E> listCopy = new ArrayList<>(list);
-            //log action
-            return listCopy;
-        }
-    }
-    */
+    //check existence
     public boolean contain(E item)
     {
         synchronized (list)
@@ -83,6 +75,7 @@ public class ConcurrentList<E>
         }
     }
 
+    //return element reference
     public E getElement(E item)
     {
         synchronized (list)
