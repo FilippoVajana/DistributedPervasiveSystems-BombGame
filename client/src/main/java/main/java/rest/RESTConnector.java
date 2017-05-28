@@ -6,6 +6,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,8 +33,8 @@ public class RESTConnector
 
     public boolean requestSetTestModel()
     {
+        //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
-        //test model web target
         WebTarget testModelTarget = matchTarget.path("setTest");
 
         //invocation
@@ -46,7 +47,18 @@ public class RESTConnector
 
     public ArrayList<Match> requestMatchesList()
     {
-        return null;
+        //set web target
+        WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+
+        //invocation
+        Invocation.Builder invocation = matchTarget.request();
+
+        //make request
+        Response response = invocation.get();
+
+        //read response payload
+        ArrayList<Match> matches = response.readEntity(ArrayList.class);
+        return matches;
     }
 
     public static void main(String[] args)
@@ -61,5 +73,8 @@ public class RESTConnector
 
         //set test model
         rest.requestSetTestModel();
+
+        //get matches
+        rest.requestMatchesList();
     }
 }
