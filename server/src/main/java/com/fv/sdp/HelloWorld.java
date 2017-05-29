@@ -44,7 +44,7 @@ public class HelloWorld
 class MatchModel<T>
 {
     private String name;
-    private ConcurrentList<T> players; //MODIFICARE CON EREDITARIETA'
+    private ConcurrentList<T> players;
 
     public MatchModel() {
     }

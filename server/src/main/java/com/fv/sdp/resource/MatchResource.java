@@ -37,7 +37,7 @@ public class MatchResource
     {
         MatchModel model = MatchModel.getInstance();
         GenericEntity<ArrayList<Match>> matches = new GenericEntity<ArrayList<Match>>(model.getMatchesList()){};
-        return Response.ok(matches).build();
+        return Response.ok().entity(matches).build();
     }
 
     @POST
