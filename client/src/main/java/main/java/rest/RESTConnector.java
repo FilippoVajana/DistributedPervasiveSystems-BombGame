@@ -21,14 +21,14 @@ public class RESTConnector
     private WebTarget restBaseUrl = null;
     private Map<String, String> restEndpointsIndex = null;
 
-    public RESTConnector(String serviceBaseUrl, HashMap<String, String> serviceEndpoints)
+    public RESTConnector(RESTConfig configuration)
     {
         //client
         restClient = ClientBuilder.newClient();
         //base url
-        restBaseUrl = restClient.target(serviceBaseUrl);
+        restBaseUrl = restClient.target(configuration.BASE_URL);
         //endpoints
-        restEndpointsIndex = serviceEndpoints;
+        restEndpointsIndex = configuration.SERVICE_ENDPOINTS;
     }
 
     public boolean requestSetTestModel()
@@ -54,27 +54,11 @@ public class RESTConnector
         Invocation.Builder invocation = matchTarget.request();
 
         //make request
-        Response response = invocation.get();
+        ArrayList<Match> response = invocation.get(new GenericType<ArrayList<Match>>(){});
 
         //read response payload
-        ArrayList<Match> matches = response.readEntity(ArrayList.class);
-        return matches;
-    }
-
-    public static void main(String[] args)
-    {
-        //base url
-        String serverBaseUrl = "http://localhost:8080/server_war_exploded";
-        //service endpoints
-        HashMap<String, String> serverEndpoints = new HashMap<>();
-        serverEndpoints.put("Match", "match");
-
-        RESTConnector rest = new RESTConnector(serverBaseUrl, serverEndpoints );
-
-        //set test model
-        rest.requestSetTestModel();
-
-        //get matches
-        rest.requestMatchesList();
+        //ArrayList<Match> matches = response.readEntity(ArrayList.class);
+        return response;
     }
 }
+
