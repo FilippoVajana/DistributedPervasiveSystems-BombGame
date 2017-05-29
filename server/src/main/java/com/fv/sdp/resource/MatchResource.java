@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import  com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -36,8 +37,9 @@ public class MatchResource
     public Response getAllMatches()
     {
         MatchModel model = MatchModel.getInstance();
-        GenericEntity<ArrayList<Match>> matches = new GenericEntity<ArrayList<Match>>(model.getMatchesList()){};
-        return Response.ok().entity(matches).build();
+        ArrayList<Match> matches = model.getMatchesList();
+        Gson jsonizer = new Gson();
+        return Response.ok().entity(jsonizer.toJson(matches)).build();
     }
 
     @POST
