@@ -4,6 +4,7 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
 import com.fv.sdp.util.ConcurrentList;
+import com.google.gson.Gson;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Before;
@@ -38,12 +39,13 @@ public class TestMatchResource extends JerseyTest
         Match m1 = new Match("game1", 546464,789421);
         Match m2 = new Match("game2", 678654,90);
         Match m3 = new Match("game3@°çé@[?^", 64867,45);
-        target("match").request().post(Entity.entity(m1, MediaType.APPLICATION_JSON));
-        target("match").request().post(Entity.entity(m2, MediaType.APPLICATION_JSON));
-        target("match").request().post(Entity.entity(m3, MediaType.APPLICATION_JSON));
+
+        Gson jsonizer = new Gson();
+        target("match").request().post(Entity.entity(jsonizer.toJson(m1), MediaType.APPLICATION_JSON));
+        target("match").request().post(Entity.entity(jsonizer.toJson(m2), MediaType.APPLICATION_JSON));
+        target("match").request().post(Entity.entity(jsonizer.toJson(m3), MediaType.APPLICATION_JSON));
 
         //match with players
-        // NON INVIA LA LISTA GIOCATORI !!
         ConcurrentList<Player> pList4 = new ConcurrentList<>();
         pList4.add(new Player("pl1", "localhost", 45624));
         pList4.add(new Player("pl2", "127.0.0.1", 56387));
@@ -86,24 +88,6 @@ public class TestMatchResource extends JerseyTest
     }
 
     @Test
-    public void getMatchDetails()
-    {
-        //add new match
-        Match m1 = new Match("game1", 32,90);
-        target("match").request().post(Entity.entity(m1, MediaType.APPLICATION_JSON));
-        //get match details
-        Response response = target("match/game1").request().get();
-        assertEquals(m1.getId(), (response.readEntity(Match.class)).getId());
-    }
-
-    @Test
-    public void getMatchDetailsNull()
-    {
-        Response response = target("match/game1").request().get();
-        assertNull(response.readEntity(Match.class));
-    }
-
-    @Test
     public void getAllMatches()
     {
         setModel();
@@ -118,10 +102,10 @@ public class TestMatchResource extends JerseyTest
     public void removePlayerFromMatch()
     {
         setModel();
-        Response response = target("match/game1/pl1").request().delete(Response.class);
+        Response response = target("match/game1/leave").request().post(Entity.entity("pl1", MediaType.APPLICATION_JSON));
         assertEquals(200, response.getStatus());
 
-        Response r = target("match/game1").request().get();
+        Response r = target("match/game1/leave").request().post(Entity.entity("", MediaType.APPLICATION_JSON));
         assertEquals(404, r.getStatus());
     }
 
@@ -129,9 +113,9 @@ public class TestMatchResource extends JerseyTest
     public void removeAllPlayers()
     {
         setModel();
-        target("match/game4/pl1").request().delete(Response.class);
-        target("match/game4/pl2").request().delete(Response.class);
-        target("match/game4/pl3").request().delete(Response.class);
+        target("match/game4/leave").request().post(Entity.entity("pl1", MediaType.APPLICATION_JSON));
+        target("match/game4/leave").request().post(Entity.entity("pl2", MediaType.APPLICATION_JSON));
+        target("match/game4/leave").request().post(Entity.entity("pl3", MediaType.APPLICATION_JSON));
 
         Response r = target("match/game4").request().get(Response.class);
         assertEquals(404, r.getStatus());
@@ -147,8 +131,9 @@ public class TestMatchResource extends JerseyTest
 
         //add player
         Player pl1 = new Player("player1", "localhost", 6583);
-        Response r = target("match/game1/enter").request().post(Entity.entity(pl1, MediaType.APPLICATION_JSON));
+        Response r = target("match/game1/join").request().post(Entity.entity(pl1, MediaType.APPLICATION_JSON));
         assertEquals(200, r.getStatus());
+        //Match m = r.readEntity(Match.class);
         assertEquals(1, r.readEntity(Match.class).getPlayers().getList().size());
 
     }

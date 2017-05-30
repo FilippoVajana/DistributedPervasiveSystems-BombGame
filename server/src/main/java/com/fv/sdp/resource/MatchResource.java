@@ -32,6 +32,7 @@ public class MatchResource
         MatchModel.setTestModel();
     }
 
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllMatches()
@@ -83,11 +84,11 @@ public class MatchResource
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
         //check for match cancellation
         Match match = model.getMatch(matchId);
-        if (match.getPlayers().getList().size() == 0)
+        if (match == null || match.getPlayers().getList().size() == 0)
             model.deleteMatch(matchId);
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
-        return Response.status(Response.Status.NO_CONTENT).build();
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 }
 
