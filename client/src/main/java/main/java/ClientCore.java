@@ -2,6 +2,8 @@ package main.java;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.util.ConcurrentList;
+import com.google.gson.Gson;
 import main.java.rest.RESTConfig;
 import main.java.rest.RESTConnector;
 
@@ -23,8 +25,24 @@ public class ClientCore
 
     public static void main(String[] args)
     {
-        //RESTConnector restConnector = new RESTConnector(new RESTConfig());
+        //test Gson
+        new ClientCore().testGson();
+
         PlayerProfile playerProfile = new PlayerProfile();
+    }
+
+
+    private void testGson()
+    {
+        Gson jsonizer = new Gson();
+        ConcurrentList<Player> pl1 = new ConcurrentList<>();
+            pl1.add(new Player("pla1", "local", 456));
+            pl1.add(new Player("pla2", "remote", 466));
+        Match m1 = new Match("game1", 45, 67, pl1);
+
+        String m1Json = jsonizer.toJson(m1);
+
+        Match m2 = jsonizer.fromJson(m1Json, Match.class);
     }
 }
 
@@ -75,7 +93,7 @@ class PlayerProfile
         System.out.println("Available matches");
         for(Match m : matchesList)
         {
-            System.out.println(String.format("#- %s [size: %d, points: %d, players: %d]", m.getId(), m.getEdgeLength(), m.getVictoryPoints(), m.getPlayers()));
+            System.out.println(String.format("#- %s [size: %d, points: %d, players: %d]", m.getId(), m.getEdgeLength(), m.getVictoryPoints(), m.getPlayers().getList().size()));
         }
         //choose match
         System.out.println("Choose a match by name");

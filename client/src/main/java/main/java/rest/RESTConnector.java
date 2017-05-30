@@ -1,6 +1,8 @@
 package main.java.rest;
 
 import com.fv.sdp.model.Match;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -8,8 +10,10 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,11 +58,18 @@ public class RESTConnector
         Invocation.Builder invocation = matchTarget.request();
 
         //make request
-        ArrayList<Match> response = invocation.get(new GenericType<ArrayList<Match>>(){});
+        Response response = invocation.get();
 
         //read response payload
-        //ArrayList<Match> matches = response.readEntity(ArrayList.class);
-        return response;
+        String entity = response.readEntity(String.class);
+        System.out.println(entity);
+
+        //unpack json data
+        Type listType = new TypeToken<ArrayList<Match>>(){}.getType(); //sembra aver risolto il problema del riconoscimento tipi generics
+        Gson jsonizer = new Gson();
+        ArrayList<Match> matches = jsonizer.fromJson(entity, listType);
+
+        return matches;
     }
 }
 
