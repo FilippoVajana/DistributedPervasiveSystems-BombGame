@@ -21,14 +21,14 @@ import java.util.Scanner;
  */
 public class ClientCore
 {
-    //private PlayerProfile playerProfile;
+    private PlayerProfile playerProfile;
 
     public static void main(String[] args)
     {
         //test Gson
-        new ClientCore().testGson();
+        //new ClientCore().testGson();
 
-        PlayerProfile playerProfile = new PlayerProfile();
+        PlayerProfile playerProfile = new PlayerProfile("Filippo", "localhost", 9000);
     }
 
 
@@ -61,13 +61,15 @@ class PlayerProfile
         //match
         setMatch();
     }
-    public PlayerProfile(String nickname)
+    public PlayerProfile(String nickname, String address, int port)
     {
         playerInfo = new Player();
         matchInfo = new Match();
 
-        //nickname
+        //set parameters
         playerInfo.setId(nickname);
+        playerInfo.setAddress(address);
+        playerInfo.setPort(port);
         //match
         setMatch();
     }
@@ -101,8 +103,10 @@ class PlayerProfile
         String choosenMatchId = consoleReader.nextLine();
 
         //set match
-        matchInfo.setId(choosenMatchId);
-        System.out.println("Saved");
+        //matchInfo.setId(choosenMatchId);
+        if (new RESTConnector(new RESTConfig()).requestAddPlayer(new Match(choosenMatchId, 0,0), playerInfo))
+            System.out.println("Joined");
+        System.out.println("Duplicated nickname");
     }
 }
 

@@ -1,14 +1,13 @@
 package main.java.rest;
 
 import com.fv.sdp.model.Match;
+import com.fv.sdp.model.Player;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -70,6 +69,25 @@ public class RESTConnector
         ArrayList<Match> matches = jsonizer.fromJson(entity, listType);
 
         return matches;
+    }
+
+    public boolean requestAddPlayer(Match match, Player player)
+    {
+        //set web target
+        WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+        WebTarget joinTarget = matchTarget.path(String.format("%s/join", match.getId()));
+
+        //invocation
+        Invocation.Builder invocation = joinTarget.request();
+
+        //make request
+        Response response = invocation.post(Entity.entity(player, MediaType.APPLICATION_JSON));
+
+        //read response
+        if (response.getStatus() == 200)
+            return true;
+        else
+            return false;
     }
 }
 
