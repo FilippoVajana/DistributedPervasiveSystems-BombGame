@@ -5,5 +5,5 @@ package main.java.socket;
  */
 public interface ISocketObserver
 {
-    void deliverMessage(String message);
+    void pushMessage(RingMessage message);
 }

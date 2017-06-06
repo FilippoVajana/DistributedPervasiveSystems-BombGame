@@ -27,10 +27,10 @@ public class SocketConnector
         }
     }
 
-    public boolean startServer() //BLOCCANTE - generare thread dedicato
+    public boolean startListener() //BLOCCANTE - generare thread dedicato
     {
         //wait on client
-        System.out.println(String.format("Listening on %s:%d", getServerAddress(), getServerPort()));
+        System.out.println(String.format("Listening on %s:%d", getListenerAddress(), getListenerPort()));
         while (true)
         {
             try {
@@ -50,11 +50,12 @@ public class SocketConnector
         }
     }
 
-    public int getServerPort()
+
+    public int getListenerPort()
     {
         return listeningServer.getLocalPort();
     }
-    public InetAddress getServerAddress()
+    public InetAddress getListenerAddress()
     {
         return listeningServer.getInetAddress();
     }
