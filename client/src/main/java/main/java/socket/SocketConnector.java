@@ -1,5 +1,7 @@
 package main.java.socket;
 
+import com.google.gson.Gson;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -27,7 +29,8 @@ public class SocketConnector
         }
     }
 
-    public boolean startListener() //BLOCCANTE - generare thread dedicato
+    //Input Side
+    public boolean startListener() //syncronous op.
     {
         //wait on client
         System.out.println(String.format("Listening on %s:%d", getListenerAddress(), getListenerPort()));
@@ -50,6 +53,11 @@ public class SocketConnector
         }
     }
 
+    //Output Side
+    public boolean sendMessage(RingMessage message, List<InetAddress> destinations)
+    {
+        return false;
+    }
 
     public int getListenerPort()
     {
@@ -94,9 +102,12 @@ class SocketListenerRunner implements Runnable
             //read input message
             String input = reader.readLine();
 
+            //json parsing
+            RingMessage message = new Gson().fromJson(input, RingMessage.class);
+
             //dispatch message to observers
             for (ISocketObserver obs : observersList)
-                obs.deliverMessage(input);
+                obs.pushMessage(message);
         }
 
         //dispose reader
