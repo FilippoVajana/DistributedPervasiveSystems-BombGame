@@ -4,6 +4,7 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import main.java.SessionConfig;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericType;
@@ -24,14 +25,16 @@ public class RESTConnector
     private WebTarget restBaseUrl = null;
     private Map<String, String> restEndpointsIndex = null;
 
-    public RESTConnector(RESTConfig configuration)
+    public RESTConnector()
     {
+        //config
+        SessionConfig configuration = SessionConfig.getInstance();
         //client
         restClient = ClientBuilder.newClient();
         //base url
-        restBaseUrl = restClient.target(configuration.BASE_URL);
+        restBaseUrl = restClient.target(configuration.REST_BASE_URL);
         //endpoints
-        restEndpointsIndex = configuration.SERVICE_ENDPOINTS;
+        restEndpointsIndex = configuration.REST_ENDPOINTS;
     }
 
     public boolean requestSetTestModel()
@@ -48,7 +51,7 @@ public class RESTConnector
         return true;
     }
 
-    public ArrayList<Match> requestMatchesList()
+    public ArrayList<Match> getServerMatchList()
     {
         //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
@@ -71,7 +74,7 @@ public class RESTConnector
         return matches;
     }
 
-    public boolean requestAddPlayer(Match match, Player player)
+    public boolean joinServerMatch(Match match, Player player)
     {
         //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
@@ -87,7 +90,10 @@ public class RESTConnector
         if (response.getStatus() == 200)
             return true;
         else
+        {
+            System.out.println(response.getStatusInfo().getReasonPhrase());
             return false;
+        }
     }
 }
 

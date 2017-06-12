@@ -1,6 +1,7 @@
 package main.java.socket;
 
 import com.google.gson.Gson;
+import main.java.SessionConfig;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,10 +20,17 @@ public class SocketConnector
 
     public SocketConnector(List<ISocketObserver> observers)
     {
+        System.out.println("Initializing " + this.getClass().getCanonicalName());
+
         observersList = observers;
         try
         {
+            //create listener
             listeningServer = new ServerSocket(0);
+            //update session config
+            SessionConfig.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
+            SessionConfig.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
+
         }catch (Exception ex)
         {
             ex.printStackTrace();
@@ -54,7 +62,7 @@ public class SocketConnector
     }
 
     //Output Side
-    public boolean sendMessage(RingMessage message, List<InetAddress> destinations)
+    public boolean sendMessage(RingMessage message, List<InetAddress> destinations) //TODO implementare invio messaggi socket
     {
         return false;
     }
