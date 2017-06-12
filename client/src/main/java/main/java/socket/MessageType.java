@@ -7,4 +7,5 @@ public enum MessageType
 {
     ACK,
     GAME,
+    TOKEN
 }
