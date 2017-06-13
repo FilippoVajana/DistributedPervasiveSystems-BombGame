@@ -1,6 +1,7 @@
 package main.java;
 
 import com.fv.sdp.model.Match;
+import com.fv.sdp.model.Player;
 import main.java.rest.RESTConnector;
 
 import java.util.ArrayList;
@@ -44,22 +45,39 @@ public class GUIManager
     }
 
     //todo get match list
-    public void getMatchList
+    public boolean enterMatch()
     {
         System.out.println("Retrieving available matches . . .");
         //get list
         ArrayList<Match> matchList = new RESTConnector().getServerMatchList();
 
         System.out.println("Available matches: ");
-        for (Match m : matchList)
+        for (int i=0; i<matchList.size(); i++)
         {
-            System.out.println(String.format("[#] %s [players: %d]", m.getId(), m.getPlayers().getList().size()));
+            System.out.println(String.format("[#] %s [players: %d]", matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
         }
+
+        //choose match
+        System.out.println("Select match index: ");
+        int index = inputReader.nextInt();
+
+        //enter match
+        Player player = SessionConfig.getInstance().getPlayerInfo();
+        boolean joinResult = new RESTConnector().joinServerMatch(matchList.get(index), player );
+
+        //set match
+        if (joinResult)
+        {
+            System.out.println(String.format("Successfully joined match %s", matchList.get(index).getId()));
+            return true;
+        }
+        else
+            System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
+        return false;
     }
 
     //todo create match
 
-    //todo enter match
 
     //todo play
 
