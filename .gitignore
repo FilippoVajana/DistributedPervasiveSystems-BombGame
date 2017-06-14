@@ -51,3 +51,6 @@ fabric.properties
 # Project auxiliary
 test_payloads/
 server/src/com/fv/sdp/.vscode/
+
+#Java
+*.class
