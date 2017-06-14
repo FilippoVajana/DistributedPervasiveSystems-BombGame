@@ -40,13 +40,17 @@ public class MatchResource
         MatchModel model = MatchModel.getInstance();
         ArrayList<Match> matches = model.getMatchesList();
         Gson jsonizer = new Gson();
+
         return Response.ok().entity(jsonizer.toJson(matches)).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createMatch(Match match)
+    public Response createMatch(Match match) //todo change with String + Gson
     {
+        //deserialize json string
+
+
         //check invalid data
         if (match.getId().equals("") || match.getEdgeLength() == 0 || match.getVictoryPoints() == 0)
             return Response.status(Response.Status.NOT_ACCEPTABLE).build();
