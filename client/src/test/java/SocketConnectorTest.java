@@ -29,8 +29,6 @@ public class SocketConnectorTest
 
         return  mockObserverList;
     }
-
-
     @Test
     public void startServerTest()
     {
@@ -41,7 +39,6 @@ public class SocketConnectorTest
         System.out.println(connector.getListenerPort());
 
         Assert.assertNotNull(connector);
-
     }
 
     @Test
