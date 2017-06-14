@@ -1,6 +1,7 @@
 package main.java;
 
 import com.fv.sdp.model.Match;
+import com.fv.sdp.model.Player;
 
 import java.util.HashMap;
 
@@ -30,6 +31,8 @@ public class SessionConfig
 
     private void RESTConfig()
     {
+        //base server url
+        REST_BASE_URL = "http://localhost:8080/server_war_exploded/";
         //endpoints
         REST_ENDPOINTS.put("Match", "match");
     }
@@ -42,4 +45,9 @@ public class SessionConfig
     //todo player params
     public String PLAYER_NICKNAME;
     public Match PLAYER_MATCH;
+
+    public Player getPlayerInfo()
+    {
+        return new Player(PLAYER_NICKNAME, LISTENER_ADDR, LISTENER_PORT);
+    }
 }

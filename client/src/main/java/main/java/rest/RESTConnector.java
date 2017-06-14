@@ -95,5 +95,28 @@ public class RESTConnector
             return false;
         }
     }
+
+    public boolean createServerMatch(Match match)
+    {
+        //set web target
+        WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+
+        //invocation
+        Invocation.Builder invocation = matchTarget.request();
+
+        //make request
+        //String matchJson = new Gson().toJson(match, new TypeToken<Match>(){}.getType());
+        Response response = invocation.post(Entity.entity(match, MediaType.APPLICATION_JSON)); //todo change to String + Gson
+
+        //read response
+        if (response.getStatus() == 201)
+            return true;
+        else
+        {
+            System.out.println(response.getStatusInfo().getReasonPhrase());
+            return false;
+        }
+
+    }
 }
 
