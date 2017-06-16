@@ -5,22 +5,19 @@ import com.fv.sdp.model.Player;
 import main.java.rest.RESTConnector;
 
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by filip on 6/12/2017.
  */
+
 public class GUIManager
 {
-    Scanner inputReader;
-
     public GUIManager()
     {
-        inputReader = new Scanner(System.in);
-
         //testing
-        System.out.println("Requesting server test data model . . .\n\n");
-        new RESTConnector().requestSetTestModel();
+        //System.out.println("Requesting server test data model . . .\n\n");
+        //new RESTConnector().requestSetTestModel();
         //welcome
         welcome();
     }
@@ -31,30 +28,60 @@ public class GUIManager
         System.out.println("### Welcome to TokenBombRing Land ###");
     }
 
-    //todo menu
+    //main menu
+    public void showMenu()
+    {
+        Scanner inputReader = new Scanner(System.in);
 
-    //todo set nickname
+        System.out.println("### Choose an action ###\n");
+        System.out.println("[1] - Set nickname");
+        System.out.println("[2] - Create new match");
+        System.out.println("[3] - Enter existing match");
+        System.out.println("[4] - Exit application");
+
+        System.out.print("Enter option num: ");
+        int option = inputReader.nextInt();
+        switch (option) {
+            case 1:
+                setNickname();
+                break;
+            case 2:
+                createMatch();
+                break;
+            case 3:
+                joinMatch();
+                break;
+            case 4:
+                return;
+        }
+    }
+
+    //set nickname
     public void setNickname()
     {
+        Scanner inputReader = new Scanner(System.in);
+
         System.out.print("Enter your nickname: ");
-        String nickname = inputReader.nextLine();
+        String nickname = inputReader.next();
         System.out.println();
 
         SessionConfig.getInstance().PLAYER_NICKNAME = nickname;
         System.out.println("Nickname set to " + SessionConfig.getInstance().PLAYER_NICKNAME);
     }
 
-    //todo get match list
-    public boolean enterMatch()
+    //enter match
+    public boolean joinMatch()
     {
+        Scanner inputReader = new Scanner(System.in);
+
         System.out.println("Retrieving available matches . . .");
         //get list
         ArrayList<Match> matchList = new RESTConnector().getServerMatchList();
 
         System.out.println("Available matches: ");
-        for (int i=0; i<matchList.size(); i++)
+        for (int i = 0; i < matchList.size(); i++)
         {
-            System.out.println(String.format("[#] %s [players: %d]", matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+            System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
         }
 
         //choose match
@@ -77,7 +104,26 @@ public class GUIManager
     }
 
     //todo create match
+    public boolean createMatch()
+    {
+        Match match = new Match();
+        Scanner inputReader = new Scanner(System.in);
 
+        System.out.println("### Match creation menù ###\n");
+        //match id
+        System.out.print("Enter match id: ");
+        match.setId( inputReader.nextLine());
+        //edge
+        System.out.print("Enter match edge length: ");
+        match.setEdgeLength(inputReader.nextInt());
+        //victory
+        System.out.print("Enter match victory points: ");
+        match.setVictoryPoints(inputReader.nextInt());
+
+        boolean creationResult = new RESTConnector().createServerMatch(match);
+
+        return creationResult;
+    }
 
     //todo play
 
