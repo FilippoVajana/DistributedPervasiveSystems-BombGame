@@ -1,4 +1,4 @@
-package main.java;
+package com.fv.sdp;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;

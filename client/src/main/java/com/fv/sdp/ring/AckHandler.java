@@ -1,7 +1,6 @@
-package main.java.ring;
+package com.fv.sdp.ring;
 
-import main.java.socket.RingMessage;
-import main.java.util.ConcurrentObservableQueue;
+import com.fv.sdp.socket.RingMessage;
 
 import java.util.HashMap;
 import java.util.Map;

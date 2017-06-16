@@ -1,19 +1,16 @@
-package main.java.rest;
+package com.fv.sdp.rest;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import main.java.SessionConfig;
+import com.fv.sdp.SessionConfig;
 
 import javax.ws.rs.client.*;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

@@ -1,8 +1,8 @@
 import com.google.gson.Gson;
-import main.java.socket.ISocketObserver;
-import main.java.socket.MessageType;
-import main.java.socket.RingMessage;
-import main.java.socket.SocketConnector;
+import com.fv.sdp.socket.ISocketObserver;
+import com.fv.sdp.socket.MessageType;
+import com.fv.sdp.socket.RingMessage;
+import com.fv.sdp.socket.SocketConnector;
 import org.junit.Assert;
 import org.junit.Test;
 

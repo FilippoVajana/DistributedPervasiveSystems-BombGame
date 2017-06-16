@@ -1,7 +1,7 @@
-package main.java.socket;
+package com.fv.sdp.socket;
 
 import com.google.gson.Gson;
-import main.java.SessionConfig;
+import com.fv.sdp.SessionConfig;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

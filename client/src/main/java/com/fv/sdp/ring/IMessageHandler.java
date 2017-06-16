@@ -1,6 +1,6 @@
-package main.java.ring;
+package com.fv.sdp.ring;
 
-import main.java.socket.RingMessage;
+import com.fv.sdp.socket.RingMessage;
 
 public interface IMessageHandler
 {
