@@ -3,7 +3,7 @@ import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
 import com.fv.sdp.util.ConcurrentList;
 import com.google.gson.Gson;
-import main.java.GUIManager;
+import main.java.gui.GUIManager;
 import main.java.SessionConfig;
 import main.java.rest.RESTConnector;
 import org.glassfish.jersey.server.ResourceConfig;

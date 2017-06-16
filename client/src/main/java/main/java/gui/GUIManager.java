@@ -1,7 +1,8 @@
-package main.java;
+package main.java.gui;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import main.java.SessionConfig;
 import main.java.rest.RESTConnector;
 
 import java.util.ArrayList;
