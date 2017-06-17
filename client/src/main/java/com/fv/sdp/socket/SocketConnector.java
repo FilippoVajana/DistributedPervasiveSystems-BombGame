@@ -1,5 +1,6 @@
 package com.fv.sdp.socket;
 
+import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 import com.fv.sdp.SessionConfig;
 
@@ -20,7 +21,7 @@ public class SocketConnector
 
     public SocketConnector(List<ISocketObserver> observers)
     {
-        System.out.println("Initializing " + this.getClass().getCanonicalName());
+        PrettyPrinter.printTimestampLog("Initializing " + this.getClass().getSimpleName());
 
         observersList = observers;
         try
@@ -41,7 +42,8 @@ public class SocketConnector
     public boolean startListener() //syncronous op.
     {
         //wait on client
-        System.out.println(String.format("Listening on %s:%d", getListenerAddress(), getListenerPort()));
+        PrettyPrinter.printTimestampLog(String.format("Listening on %s:%d", getListenerAddress(), getListenerPort()));
+
         while (true)
         {
             try {
@@ -63,6 +65,7 @@ public class SocketConnector
 
     //Output Side
     public boolean sendMessage(RingMessage message, List<InetAddress> destinations) //TODO implementare invio messaggi socket
+                                                                                                                                                                    //todo implements ring topology/ change to destinations Enum(NEXT, ALL, SERVER)
     {
         return false;
     }
@@ -112,6 +115,9 @@ class SocketListenerRunner implements Runnable
 
             //json parsing
             RingMessage message = new Gson().fromJson(input, RingMessage.class);
+
+            //print log
+            PrettyPrinter.printReceivedRingMessage(message, client.getInetAddress().toString());
 
             //dispatch message to observers
             for (ISocketObserver obs : observersList)

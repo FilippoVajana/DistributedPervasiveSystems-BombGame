@@ -35,9 +35,15 @@ public class PrettyPrinter
                 "Points_E: %d\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
     }
 
-    public static void printRingMessage(RingMessage message, String sender)
+    public static void printReceivedRingMessage(RingMessage message, String sender)
     {
-        String messageString = String.format("MESSAGE [%s - %s] FROM %s ### %s ###", message.getType(), message.getId(), sender, message.getContent());
+        String messageString = String.format("MESSAGE-IN [%s - %s] FROM %s ### %s ###", message.getType(), message.getId(), sender, message.getContent());
+        printTimestampLog(messageString);
+    }
+
+    public static void printSentRingMessage(RingMessage message, String sender)
+    {
+        String messageString = String.format("MESSAGE-OUT [%s - %s] TO %s ### %s ###", message.getType(), message.getId(), sender, message.getContent());
         printTimestampLog(messageString);
     }
 }
