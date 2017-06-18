@@ -12,7 +12,7 @@ public class ConcurrentObservableQueue<E>
         queueToken = new Object();
     }
 
-    public Object getQueueToken()
+    public Object getQueueLock()
     {
         return queueToken;
     }
