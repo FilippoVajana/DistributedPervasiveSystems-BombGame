@@ -12,6 +12,11 @@ public class RingMessage
 
     public RingMessage()
     {    }
+    public RingMessage(MessageType type, String id)
+    {
+        this.type = type;
+        this.id = id;
+    }
     public RingMessage(MessageType type, String id, String content)
     {
         this.type = type;

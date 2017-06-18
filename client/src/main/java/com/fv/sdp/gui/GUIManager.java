@@ -104,7 +104,7 @@ public class GUIManager
         return false;
     }
 
-    //todo create match
+    //create match
     public boolean createMatch()
     {
         Match match = new Match();

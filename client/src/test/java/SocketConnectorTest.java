@@ -1,3 +1,4 @@
+import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
@@ -54,7 +55,7 @@ public class SocketConnectorTest
         Thread.sleep(1000);
 
         SocketClient client = new SocketClient(connector.getListenerAddress(), connector.getListenerPort());
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 10; i++)
         {
             RingMessage message = new RingMessage(MessageType.GAME, "asd23", String.format("[%s]", LocalDateTime.now()));
             client.sendMessage(message);
@@ -80,7 +81,7 @@ public class SocketConnectorTest
         for (int i = 0; i < 1; i++)
         {
             for (SocketClient c : clientList)
-                c.sendMessage(new RingMessage(MessageType.GAME, "asd23", String.format("[%s]", LocalDateTime.now())));
+                c.sendMessage(new RingMessage(MessageType.GAME,"asd23", String.format("[%s]", LocalDateTime.now())));
 
             Thread.sleep(100);
         }
@@ -99,7 +100,8 @@ class MockObserver implements ISocketObserver
     @Override
     public void pushMessage(RingMessage message)
     {
-        System.out.println(String.format("[Observer#%d] Received: %s", observerId, message.getContent()));
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[Observer#%d] Received: %s", observerId, message.getContent()));
     }
 }
 
@@ -126,7 +128,9 @@ class SocketClient
             writer.println(new Gson().toJson(message, RingMessage.class));
             writer.flush();
 
-            System.out.println("Sent: " + message.getContent() + " to: " + client.getRemoteSocketAddress());
+            //log
+            PrettyPrinter.printSentRingMessage(message, client.getInetAddress().getHostAddress(), client.getPort());
+
         } catch (IOException e)
         {
             e.printStackTrace();

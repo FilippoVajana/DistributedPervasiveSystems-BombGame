@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.Socket;
 
 /**
  * Created by filip on 6/17/2017.
@@ -65,14 +66,32 @@ public class PrettyPrinterTest
     }
 
     @Test
-    public void printRingMessage()
+    public void printReceivedRingMessage()
     {
         //test message
-        RingMessage message = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), "TokenRing");
-        String address = "127.0.0.1";
+        RingMessage message = new RingMessage(MessageType.TOKEN, "127.0.0.1",RandomIdGenerator.getRndId(), "TokenRing");
 
-        PrettyPrinter.printRingMessage(message, address);
-        Assert.assertTrue(outContent.toString().contains(address));
+        PrettyPrinter.printReceivedRingMessage(message, new Socket());
+
+        //Assert.assertEquals("", outContent.toString());
+        Assert.assertTrue(outContent.toString().contains("127.0.0.1"));
+        Assert.assertTrue(outContent.toString().contains("TokenRing"));
+    }
+
+    @Test
+    public void printSentRingMessage()
+    {
+        //test message
+        String destination = "8.8.8.8";
+        RingMessage message = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), "TokenRing");
+
+
+        PrettyPrinter.printSentRingMessage(message, destination, 80);
+        System.out.println("asdad" + outContent.toString());
+        Assert.assertNotNull(outContent.toString());
+
+        //Assert.assertEquals("", outContent.toString());
+        Assert.assertTrue(outContent.toString().contains(destination));
         Assert.assertTrue(outContent.toString().contains("TokenRing"));
     }
 }
