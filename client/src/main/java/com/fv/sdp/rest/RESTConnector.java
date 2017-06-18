@@ -19,8 +19,8 @@ import java.util.Map;
 public class RESTConnector
 {
     private Client restClient = null;
-    private WebTarget restBaseUrl = null;
-    private Map<String, String> restEndpointsIndex = null;
+    private WebTarget restBaseUrl = null; //TODO: remove, use SessionConfig
+    private Map<String, String> restEndpointsIndex = null; //TODO: remove
 
     public RESTConnector()
     {
@@ -71,6 +71,7 @@ public class RESTConnector
         return matches;
     }
 
+    //TODO: test
     public boolean joinServerMatch(Match match, Player player)
     {
         //set web target
@@ -85,7 +86,15 @@ public class RESTConnector
 
         //read response
         if (response.getStatus() == 200)
+        {
+            Match joinedMatch = response.readEntity(Match.class);
+            //set match
+            SessionConfig.getInstance().PLAYER_MATCH = joinedMatch;
+            //set ring node
+            SessionConfig.getInstance().RING_NODE = joinedMatch.getPlayers();
+
             return true;
+        }
         else
         {
             System.out.println(response.getStatusInfo().getReasonPhrase());

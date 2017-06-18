@@ -2,6 +2,7 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
 import com.fv.sdp.util.ConcurrentList;
+import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 import com.fv.sdp.SessionConfig;
 import com.fv.sdp.rest.RESTConnector;
@@ -71,7 +72,7 @@ public class RESTConnectorTest extends JerseyTest
                     "Address: %s:%d\n", p.getId(), p.getAddress(), p.getPort());
         }
         System.out.println(String.format("Id: %s\n" +
-                "Players: \n%s\n" +
+                "Players: \n%s" +
                 "Points_V: %d\n" +
                 "Points_E: %d\n\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
     }
@@ -109,18 +110,31 @@ public class RESTConnectorTest extends JerseyTest
     public void joinMatchTest()
     {
         //create match
-        connector.createServerMatch(new Match("Glory", 56, 67));
+        Match match = new Match("Glory", 56, 67);
+        connector.createServerMatch(match);
+
         //create player
+        SessionConfig.getInstance().setPlayerInfo("PL1", "127.0.0.1", 6453);
         Player player = SessionConfig.getInstance().getPlayerInfo();
+
         //join
         boolean joinResult = connector.joinServerMatch(new Match("Glory",0,0), player);
+
         //check result
         Assert.assertTrue(joinResult);
         //check server match status
         ArrayList<Match> matchList = connector.getServerMatchList(); //todo add contain method to ConcurrentArrayList
         Assert.assertEquals(1, matchList.size());
-        for (Match m : matchList)
-            printMatchDetails(m);
+
+        Assert.assertEquals(match, SessionConfig.getInstance().PLAYER_MATCH);
+        System.out.println("Current match: ");
+        PrettyPrinter.printMatchDetails(SessionConfig.getInstance().PLAYER_MATCH);
+
+        //chech session config node
+        Assert.assertEquals(1, SessionConfig.getInstance().RING_NODE.getList().size());
+        System.out.println("Ring topology: ");
+        for (Player p : SessionConfig.getInstance().RING_NODE.getList())
+            PrettyPrinter.printPlayerDetails(p);
     }
 
 }
