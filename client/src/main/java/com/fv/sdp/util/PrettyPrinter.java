@@ -4,8 +4,8 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.RingMessage;
 
+import java.net.Socket;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -35,15 +35,15 @@ public class PrettyPrinter
                 "Points_E: %d\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
     }
 
-    public static void printReceivedRingMessage(RingMessage message, String sender)
+    public static void printReceivedRingMessage(RingMessage message, Socket source)
     {
-        String messageString = String.format("MESSAGE-IN [%s - %s] FROM %s ### %s ###", message.getType(), message.getId(), sender, message.getContent());
+        String messageString = String.format("MESSAGE-IN [%s - %s] FROM %s:%d ### %s ###", message.getType(), message.getId(), message.getSourceAddress(), source.getPort(), message.getContent());
         printTimestampLog(messageString);
     }
 
-    public static void printSentRingMessage(RingMessage message, String sender)
+    public static void printSentRingMessage(RingMessage message, String destination, int port)
     {
-        String messageString = String.format("MESSAGE-OUT [%s - %s] TO %s ### %s ###", message.getType(), message.getId(), sender, message.getContent());
+        String messageString = String.format("MESSAGE-OUT [%s - %s] TO %s:%d ### %s ###", message.getType(), message.getId(), destination, port, message.getContent());
         printTimestampLog(messageString);
     }
 }

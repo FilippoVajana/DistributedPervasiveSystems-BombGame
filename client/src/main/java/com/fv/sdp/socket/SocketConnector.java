@@ -42,7 +42,7 @@ public class SocketConnector
     public boolean startListener() //syncronous op.
     {
         //wait on client
-        PrettyPrinter.printTimestampLog(String.format("Listening on %s:%d", getListenerAddress(), getListenerPort()));
+        PrettyPrinter.printTimestampLog(String.format("Listening on %s:%d", getListenerAddress().getHostAddress(), getListenerPort()));
 
         while (true)
         {
@@ -115,9 +115,10 @@ class SocketListenerRunner implements Runnable
 
             //json parsing
             RingMessage message = new Gson().fromJson(input, RingMessage.class);
+            message.setSourceAddress(client.getInetAddress().getHostAddress());
 
             //print log
-            PrettyPrinter.printReceivedRingMessage(message, client.getInetAddress().toString());
+            PrettyPrinter.printReceivedRingMessage(message, client);
 
             //dispatch message to observers
             for (ISocketObserver obs : observersList)
