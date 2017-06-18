@@ -20,23 +20,23 @@ public class AckHandler implements IMessageHandler
     }
 
     private Map<String, Integer> queueMap; //retain a map of pending ack to be received (id:count)
-    private Map<String, Object> observerSynlockMap; //retain a map between observer - ack queue
+    private Map<String, Object> observerMap; //retain a map between <ack queue> - <observer lock>
 
     private AckHandler()
     {
         //init map
         queueMap = new HashMap<>();
         //init synlock map
-        observerSynlockMap = new HashMap<>();
+        observerMap = new HashMap<>();
     }
 
-    public synchronized void addPendingAck(String id, int num, Object observerSynlock)
+    public synchronized void addPendingAck(String idAck, int requiredAck, Object observerLock)
     {
         //init queue
-        queueMap.put(id, num);
+        queueMap.put(idAck, requiredAck);
 
         //set token
-        observerSynlockMap.put(id, observerSynlock);
+        observerMap.put(idAck, observerLock);
     }
 
     //TODO test
@@ -54,7 +54,7 @@ public class AckHandler implements IMessageHandler
         if (ackCount == 0)
         {
             //notify action module (GameHandler/TokenHandler)
-            observerSynlockMap.get(receivedMessage.getId()).notify();
+            observerMap.get(receivedMessage.getId()).notify();
 
             //delete empty queue
             queueMap.remove(receivedMessage.getId());
