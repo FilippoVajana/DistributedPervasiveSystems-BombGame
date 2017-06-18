@@ -45,4 +45,12 @@ public class ConcurrentObservableQueue<E>
             return queue.size();
         }
     }
+
+    public void remove(E item)
+    {
+        synchronized (queueToken)
+        {
+            queue.remove(item);
+        }
+    }
 }
