@@ -74,7 +74,9 @@ public class MatchResource
             //DEBUG PROBE
             ConcurrentList<Player> pList = model.getMatch(matchId).getPlayers();
             Match m = model.getMatch(matchId);
-            return Response.ok(model.getMatch(matchId)).build();
+
+            //serialize json string
+            return Response.ok(model.getMatch(matchId)).build(); //todo use Gson
         }
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
@@ -82,7 +84,7 @@ public class MatchResource
     @POST
     @Path("/{matchId}/leave")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response leaveMatch(@PathParam("matchId") String matchId, String playerId)
+    public Response leaveMatch(@PathParam("matchId") String matchId, String playerId) //todo change to Player-json
     {
         MatchModel model = MatchModel.getInstance();
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);

@@ -92,6 +92,7 @@ public class GUIManager
         //enter match
         Player player = SessionConfig.getInstance().getPlayerInfo();
         boolean joinResult = new RESTConnector().joinServerMatch(matchList.get(index), player );
+        //TODO: token management + signal new node
 
         //set match
         if (joinResult)
