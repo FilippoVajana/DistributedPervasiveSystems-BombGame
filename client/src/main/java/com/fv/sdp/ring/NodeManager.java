@@ -5,6 +5,7 @@ import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentObservableQueue;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
+import com.fv.sdp.util.PrettyPrinter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class NodeManager implements ISocketObserver
 {
     private MessageQueueManager queueManager;
-    //TODO aggiungere gestione token
+
     public NodeManager()
     {    }
 
@@ -27,26 +28,35 @@ public class NodeManager implements ISocketObserver
     {
         try
         {
+            //TODO: make last action
             //init socket message observer
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
             SocketConnector connector = new SocketConnector(observersList);
-
             //start socket listener
             connector.startListener();
 
-            //init token manager //TODO add Token Manager
-            //init ack message handler
-            //init game message handler
+            //init token manager //TODO: add Token Manager
+            TokenManager tokenManager = TokenManager.getInstance();
 
             //init queue manager
             queueManager = new MessageQueueManager();
 
+            //init ack handler
+            AckHandler ackHandler = AckHandler.getInstance();
+            queueManager.observeQueue(MessageType.ACK, ackHandler);
+
+            //game handler
+            //game observer
+
+            //token handler
+            TokenHandler tokenHandler = TokenHandler.getInstance();
+            //token observer
+            queueManager.observeQueue(MessageType.TOKEN, tokenHandler);
+
+
             //startup GUI manager
-                //init player profile
-                //create match
-                //enter match
 
             return true;
         }catch (Exception ex)
@@ -78,24 +88,29 @@ class MessageQueueManager
         queuePool = new HashMap<>();
         queuePool.put(MessageType.ACK, new ConcurrentObservableQueue<>());
         queuePool.put(MessageType.GAME, new ConcurrentObservableQueue<>());
+        queuePool.put(MessageType.TOKEN, new ConcurrentObservableQueue<>());
 
-        //TODO run multiple observeQueue task
+        //TODO: run multiple observeQueue task
     }
 
     public void routeMessage(RingMessage message)
     {
-        //TODO run method on dedicated thread
         ConcurrentObservableQueue queue = queuePool.get(message.getType());
-        //push message into respective queue
+        //push message into specific queue
         queue.push(message);
     }
 
-    //call foreach queue to be observed (game, ack)
-    private void observeQueue(MessageType queueType, ConcurrentObservableQueue<RingMessage> observedQueue, IMessageHandler messageHandler)
+    //call foreach queue to be observed (game, ack, token)
+    public void observeQueue(MessageType queueType, IMessageHandler messageHandler)
     {
-        //TODO run method on dedicated thread
-        System.out.println("Monitoring queue: " + queueType.name());
-        Object token = observedQueue.getQueueToken(); //get sync token
+        //TODO: run method on dedicated thread
+        //log
+        PrettyPrinter.printTimestampLog("Monitoring queue: " + queueType.name());
+
+        //set queue
+        ConcurrentObservableQueue<RingMessage> observedQueue = queuePool.get(queueType);
+        //set queue lock
+        Object queueLock = observedQueue.getQueueLock(); //get sync lock
 
         while (true)
         {
@@ -104,7 +119,7 @@ class MessageQueueManager
             {
                 try
                 {
-                    token.wait(); //wait new message
+                    queueLock.wait(); //wait new message
                 }catch (Exception ex)
                 {
                     ex.printStackTrace();
@@ -113,7 +128,7 @@ class MessageQueueManager
             }
             else //at least one message available
             {
-                //dispatch message to proper observer
+                //dispatch message to proper handler
                 messageHandler.handle(message);
             }
         }

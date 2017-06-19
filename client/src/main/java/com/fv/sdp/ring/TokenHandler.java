@@ -10,7 +10,20 @@ import com.fv.sdp.util.PrettyPrinter;
  */
 public class TokenHandler implements IMessageHandler
 {
-    //TODO test
+    private static TokenHandler instance;
+    public static TokenHandler getInstance()
+    {
+        if (instance == null)
+            instance = new TokenHandler();
+        return instance;
+    }
+    private TokenHandler()
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("Initialize %s", this.getClass().getSimpleName()));
+    }
+
+    //TODO: test
     @Override
     public void handle(RingMessage receivedMessage)
     {
