@@ -24,6 +24,10 @@ public class TokenHandler implements IMessageHandler
     }
 
     //TODO: test
+    /**
+     * Handle received TokenMessage setting hasToken property and sending back an ACK message
+     * @param receivedMessage: message to be handled
+     */
     @Override
     public void handle(RingMessage receivedMessage)
     {
@@ -35,7 +39,6 @@ public class TokenHandler implements IMessageHandler
 
         //send back ack
         RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
-        //new SocketConnector().send() //todo implements send method
-
+        new SocketConnector().sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
     }
 }
