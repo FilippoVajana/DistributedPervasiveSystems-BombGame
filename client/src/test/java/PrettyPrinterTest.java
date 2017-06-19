@@ -71,7 +71,7 @@ public class PrettyPrinterTest
         //test message
         RingMessage message = new RingMessage(MessageType.TOKEN, "127.0.0.1",RandomIdGenerator.getRndId(), "TokenRing");
 
-        PrettyPrinter.printReceivedRingMessage(message, new Socket());
+        PrettyPrinter.printReceivedRingMessage(message);
 
         //Assert.assertEquals("", outContent.toString());
         Assert.assertTrue(outContent.toString().contains("127.0.0.1"));

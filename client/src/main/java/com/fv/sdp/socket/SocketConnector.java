@@ -1,14 +1,18 @@
 package com.fv.sdp.socket;
 
+import com.fv.sdp.model.Player;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 import com.fv.sdp.SessionConfig;
 
+import javax.ws.rs.core.GenericType;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,7 +25,8 @@ public class SocketConnector
 
     public SocketConnector(List<ISocketObserver> observers)
     {
-        PrettyPrinter.printTimestampLog("Initializing " + this.getClass().getSimpleName());
+        //log
+        PrettyPrinter.printTimestampLog("Initialize " + this.getClass().getSimpleName());
 
         observersList = observers;
         try
@@ -44,7 +49,7 @@ public class SocketConnector
         //wait on client
         PrettyPrinter.printTimestampLog(String.format("Listening on %s:%d", getListenerAddress().getHostAddress(), getListenerPort()));
 
-        while (true)
+        while (true) //fire up stream reader foreach accepted connection
         {
             try {
                 Socket client = listeningServer.accept();
@@ -88,6 +93,9 @@ class SocketListenerRunner implements Runnable
 
     public SocketListenerRunner(Socket client, List<ISocketObserver> observers) //set up listening thread
     {
+        //log
+        PrettyPrinter.printTimestampLog("Initialize " + this.getClass().getSimpleName());
+
         this.client = client;
         observersList = observers;
     }
@@ -106,6 +114,8 @@ class SocketListenerRunner implements Runnable
 
     private void runListener() throws Exception
     {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("Running listener on %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
         while (!client.isClosed())
@@ -115,14 +125,19 @@ class SocketListenerRunner implements Runnable
 
             //json parsing
             RingMessage message = new Gson().fromJson(input, RingMessage.class);
-            message.setSourceAddress(client.getInetAddress().getHostAddress());
+
+            //set message source address
+            String ip = client.getInetAddress().getHostAddress();
+            int port = client.getPort();
+            String messageSource = String.format("%s:%d", ip, port);
+            message.setSourceAddress(messageSource);
 
             //print log
-            PrettyPrinter.printReceivedRingMessage(message, client);
+            PrettyPrinter.printReceivedRingMessage(message);
 
             //dispatch message to observers
             for (ISocketObserver obs : observersList)
-                obs.pushMessage(message);
+                obs.pushMessage(message); //dispatch to NodeManager
         }
 
         //dispose reader

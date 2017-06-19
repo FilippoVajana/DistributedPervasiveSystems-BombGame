@@ -40,9 +40,9 @@ public class PrettyPrinter
         System.out.println(String.format("Id: %s, Addr: %s:%d", player.getId(), player.getAddress(), player.getPort()));
     }
 
-    public static void printReceivedRingMessage(RingMessage message, Socket source)
+    public static void printReceivedRingMessage(RingMessage message)
     {
-        String messageString = String.format("MESSAGE-IN [%s - %s] FROM %s:%d ### %s ###", message.getType(), message.getId(), message.getSourceAddress(), source.getPort(), message.getContent());
+        String messageString = String.format("MESSAGE-IN [%s - %s] FROM %s ### %s ###", message.getType(), message.getId(), message.getSourceAddress(), message.getContent());
         printTimestampLog(messageString);
     }
 
