@@ -54,7 +54,7 @@ public class SocketConnectorTest
         for (int i = 0; i < 10; i++)
         {
             RingMessage message = new RingMessage(MessageType.GAME, "asd23", String.format("[%s]", LocalDateTime.now()));
-            client.sendMessage(message);
+            client.sendMessage(message, false);
             Thread.sleep(100);
         }
     }
@@ -77,7 +77,7 @@ public class SocketConnectorTest
         for (int i = 0; i < 1; i++)
         {
             for (MockSocketClient c : clientList)
-                c.sendMessage(new RingMessage(MessageType.GAME,"asd23", String.format("[%s]", LocalDateTime.now())));
+                c.sendMessage(new RingMessage(MessageType.GAME,"asd23", String.format("[%s]", LocalDateTime.now())), false);
 
             Thread.sleep(100);
         }

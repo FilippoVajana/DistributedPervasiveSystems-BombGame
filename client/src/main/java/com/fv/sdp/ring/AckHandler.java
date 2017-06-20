@@ -56,8 +56,13 @@ public class AckHandler implements IMessageHandler
 
         if (ackCount == 0)
         {
-            //notify action module (GameHandler/TokenHandler)
-            observerMap.get(receivedMessage.getId()).notify();
+            //get action module lock
+            Object moduleLock =  observerMap.get(receivedMessage.getId());
+            synchronized (moduleLock)
+            {
+                //notify action module (GameHandler/TokenHandler)
+                moduleLock.notify();
+            }
 
             //delete empty queue
             queueMap.remove(receivedMessage.getId());

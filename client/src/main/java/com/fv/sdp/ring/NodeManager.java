@@ -22,14 +22,17 @@ public class NodeManager implements ISocketObserver
     private MessageQueueManager queueManager;
 
     public NodeManager()
-    {    }
+    {
+        //init queue manager
+        queueManager = new MessageQueueManager();
+    }
 
     public boolean startupNode()
     {
         try
         {
             //TODO: make last action
-            //init socket message observer
+            //set this instance as observer for socket messages
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
@@ -39,9 +42,6 @@ public class NodeManager implements ISocketObserver
 
             //init token manager //TODO: add Token Manager
             TokenManager tokenManager = TokenManager.getInstance();
-
-            //init queue manager
-            queueManager = new MessageQueueManager();
 
             //init ack handler
             AckHandler ackHandler = AckHandler.getInstance();
@@ -66,6 +66,11 @@ public class NodeManager implements ISocketObserver
         }
     }
 
+
+    /**
+     * Push received message to a MessageQueueManager
+     * @param message: massage to be pushed
+     */
     @Override
     public void pushMessage(RingMessage message)
     {
@@ -117,13 +122,16 @@ class MessageQueueManager
             RingMessage message = observedQueue.pop();
             if (message == null)
             {
-                try
+                synchronized (queueLock)
                 {
-                    queueLock.wait(); //wait new message
-                }catch (Exception ex)
-                {
-                    ex.printStackTrace();
-                    return;
+                    try
+                    {
+                        queueLock.wait(); //wait new message
+                    }catch (Exception ex)
+                    {
+                        ex.printStackTrace();
+                        return;
+                    }
                 }
             }
             else //at least one message available

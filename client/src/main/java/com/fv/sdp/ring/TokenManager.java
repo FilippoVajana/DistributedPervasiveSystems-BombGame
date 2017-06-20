@@ -2,6 +2,7 @@ package com.fv.sdp.ring;
 
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
+import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 
@@ -55,17 +56,22 @@ public class TokenManager
         AckHandler.getInstance().addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
 
         //send message via socket(next ring node) //todo ring topology
+        SocketConnector connector = new SocketConnector();
+        connector.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
-
-
-        //wait on all ack
-        try
+        //get observer lock
+        synchronized (tokenLock)
         {
-            tokenLock.wait();
-            //releas token
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
+            //wait on all ack
+            try
+            {
+                tokenLock.wait();
+                //release token
+                hasToken = false;
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
