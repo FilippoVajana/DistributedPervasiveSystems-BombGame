@@ -23,7 +23,7 @@ public class MockSocketListener
         {
             listenSocket = new ServerSocket(0);
             //log
-            PrettyPrinter.printTimestampLog(String.format("Initialized listener at %s:%d", listenSocket.getInetAddress().getHostAddress(), listenSocket.getLocalPort()));
+            PrettyPrinter.printTimestampLog(String.format("[MockSocketListener] Initialized listener at %s:%d", listenSocket.getInetAddress().getHostAddress(), listenSocket.getLocalPort()));
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -38,7 +38,7 @@ public class MockSocketListener
             {
                 Socket client = listenSocket.accept();
                 //log
-                PrettyPrinter.printTimestampLog(String.format("Accepted client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+                PrettyPrinter.printTimestampLog(String.format("[MockSocketListener] Accepted client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
 
                 Thread clientHandle_t = new Thread(new ClientHandler(client));
                 clientHandle_t.start();
@@ -65,7 +65,7 @@ class ClientHandler implements Runnable
         try
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("Running listener for %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+            PrettyPrinter.printTimestampLog(String.format("[MockSocketListener] Running listener for %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
             BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
             while (!client.isClosed())
@@ -73,23 +73,27 @@ class ClientHandler implements Runnable
                 //read input message
                 String input = reader.readLine();
 
-                //json parsing
-                RingMessage message = new Gson().fromJson(input, RingMessage.class);
+                if (input != null)
+                {
+                    //json parsing
+                    RingMessage message = new Gson().fromJson(input, RingMessage.class);
 
-                //set message source address
-                String ip = client.getInetAddress().getHostAddress();
-                int port = client.getPort();
-                String messageSource = String.format("%s:%d", ip, port);
-                message.setSourceAddress(messageSource);
+                    //set message source address
+                    String ip = client.getInetAddress().getHostAddress();
+                    int port = client.getPort();
+                    String messageSource = String.format("%s:%d", ip, port);
+                    message.setSourceAddress(messageSource);
 
-                //print log
-                PrettyPrinter.printReceivedRingMessage(message);
+                    //log
+                    PrettyPrinter.printReceivedRingMessage(message);
+                }
             }
 
             //dispose reader
             reader.close();
         }catch (Exception ex)
         {
+            PrettyPrinter.printTimestampLog("ERROR");
             ex.printStackTrace();
         }
     }

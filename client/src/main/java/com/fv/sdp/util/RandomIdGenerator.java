@@ -13,6 +13,6 @@ public class RandomIdGenerator
     {
         SecureRandom random = new SecureRandom();
 
-        return String.valueOf(random.nextDouble());
+        return String.valueOf(random.nextInt(Integer.MAX_VALUE));
     }
 }

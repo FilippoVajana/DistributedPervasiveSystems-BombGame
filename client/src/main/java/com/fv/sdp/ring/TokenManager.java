@@ -37,7 +37,7 @@ public class TokenManager
         synchronized (tokenLock)
         {
             //log
-            PrettyPrinter.printTimestampLog("Storing ring token");
+            PrettyPrinter.printTimestampLog("STORING RING TOKEN");
             hasToken = true;
             tokenLock.notify();
         }
@@ -46,7 +46,7 @@ public class TokenManager
     public synchronized void releaseToken()
     {
         //log
-        PrettyPrinter.printTimestampLog("Releasing ring token");
+        PrettyPrinter.printTimestampLog("RELEASING RING TOKEN");
 
         //create new token message
         RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId(), new String(""));
