@@ -32,13 +32,14 @@ public class TokenHandler implements IMessageHandler
     public void handle(RingMessage receivedMessage)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("Handling TOKEN-%s", receivedMessage.getId()));
+        PrettyPrinter.printTimestampLog(String.format("Handling TOKEN-%s From %s", receivedMessage.getId(), receivedMessage.getSourceAddress()));
 
         //set hasToken true
         TokenManager.getInstance().storeToken();
 
         //send back ack
         RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //TODO: resolve this MAGIC HACK (send.SOURCE use message source address)
         new SocketConnector().sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
     }
 }
