@@ -32,10 +32,15 @@ public class TokenManager
     }
     public Object getTokenLock() {return tokenLock;}
 
-    public synchronized void storeToken()
+    public void storeToken()
     {
-        hasToken = true;
-        tokenLock.notify();
+        synchronized (tokenLock)
+        {
+            //log
+            PrettyPrinter.printTimestampLog("Storing ring token");
+            hasToken = true;
+            tokenLock.notify();
+        }
     }
 
     public synchronized void releaseToken()
