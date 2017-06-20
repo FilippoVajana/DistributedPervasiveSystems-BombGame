@@ -1,3 +1,5 @@
+package util;
+
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.MessageType;
@@ -31,8 +33,8 @@ public class PrettyPrinterTest
     @After
     public void cleanUpStreams()
     {
-        System.setOut(null);
-        System.setErr(null);
+        System.setOut(System.out);
+        System.setErr(System.err);
     }
 
     @Test

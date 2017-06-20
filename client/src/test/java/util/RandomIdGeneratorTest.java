@@ -1,3 +1,5 @@
+package util;
+
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.Test;
 
