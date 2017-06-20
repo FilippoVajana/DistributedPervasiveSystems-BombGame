@@ -108,7 +108,6 @@ class MessageQueueManager
     //call foreach queue to be observed (game, ack, token)
     public void observeQueue(MessageType queueType, IMessageHandler messageHandler)
     {
-        //TODO: run method on dedicated thread
         //log
         PrettyPrinter.printTimestampLog("Monitoring queue: " + queueType.name());
 

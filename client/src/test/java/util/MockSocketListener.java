@@ -65,7 +65,7 @@ class ClientHandler implements Runnable
         try
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[MockSocketListener] Running listener for %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+            PrettyPrinter.printTimestampLog(String.format("[MockSocketListener] Connected to %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
             BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
             while (!client.isClosed())

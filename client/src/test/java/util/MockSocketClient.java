@@ -16,7 +16,7 @@ import java.net.Socket;
  */
 public class MockSocketClient
 {
-    Socket client;
+    private Socket client;
     public MockSocketClient(InetAddress serverAddr, int serverPort)
     {
         try

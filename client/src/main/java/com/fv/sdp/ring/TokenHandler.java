@@ -37,9 +37,11 @@ public class TokenHandler implements IMessageHandler
         //set hasToken true
         TokenManager.getInstance().storeToken();
 
-        //send back ack
-        RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
-        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //TODO: resolve this MAGIC HACK (send.SOURCE use message source address)
+        //build ack message
+        RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId(), receivedMessage.getContent());
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //TODO: MAGIC HACK (send.SOURCE use message source address)
+
+        //send ack
         new SocketConnector().sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
     }
 }

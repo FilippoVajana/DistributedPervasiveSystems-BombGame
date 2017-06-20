@@ -37,7 +37,7 @@ public class TokenHandlerTest //todo implements test
         SessionConfig.getInstance().RING_NODE = nodes;
 
         //build message
-        RingMessage inMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId());
+        RingMessage inMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), "TEST TOKEN MESSAGE");
         inMessage.setSourceAddress(String.format("%s:%d", mockPlayer.getAddress(), mockPlayer.getPort()));
 
         //send message to handler
@@ -52,6 +52,6 @@ public class TokenHandlerTest //todo implements test
     @Test
     public void handleTokenMessageSocket()
     {
-
+        //TODO: complete NodeManager
     }
 }
