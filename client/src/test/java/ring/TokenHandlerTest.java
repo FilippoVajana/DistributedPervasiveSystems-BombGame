@@ -18,7 +18,7 @@ import util.MockSocketListener;
 public class TokenHandlerTest //todo implements test
 {
     @Test
-    public void handleMessage() throws Exception
+    public void handleTokenMessageDirect() throws Exception
     {
         //start mock listener
         MockSocketListener mockListener = new MockSocketListener();
@@ -47,6 +47,11 @@ public class TokenHandlerTest //todo implements test
         Assert.assertTrue(TokenManager.getInstance().isHasToken());
 
         Thread.sleep(500);
+    }
+
+    @Test
+    public void handleTokenMessageSocket()
+    {
 
     }
 }
