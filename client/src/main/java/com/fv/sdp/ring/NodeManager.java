@@ -40,23 +40,19 @@ public class NodeManager implements ISocketObserver
             //init socket connector
             SocketConnector connector = new SocketConnector(observersList);
 
-            //init token manager
-            TokenManager tokenManager = TokenManager.getInstance();
-
             //init ack handler
             AckHandler ackHandler = AckHandler.getInstance();
-            queueManager.observeQueue(MessageType.ACK, ackHandler);
+            new Thread(() -> queueManager.observeQueue(MessageType.ACK, ackHandler)).start();
 
             //game handler
             //game observer
 
             //token handler
             TokenHandler tokenHandler = TokenHandler.getInstance();
-            //token observer
-            queueManager.observeQueue(MessageType.TOKEN, tokenHandler);
+            new Thread(() -> queueManager.observeQueue(MessageType.TOKEN, tokenHandler)).start();
 
             //start socket listener
-            connector.startListener();
+            new Thread(() -> connector.startListener()).start();
 
             //startup GUI manager
             //exit on return
@@ -98,8 +94,6 @@ class MessageQueueManager
         queuePool.put(MessageType.ACK, new ConcurrentObservableQueue<>());
         queuePool.put(MessageType.GAME, new ConcurrentObservableQueue<>());
         queuePool.put(MessageType.TOKEN, new ConcurrentObservableQueue<>());
-
-        //TODO: run multiple observeQueue task
     }
 
     public void routeMessage(RingMessage message)
