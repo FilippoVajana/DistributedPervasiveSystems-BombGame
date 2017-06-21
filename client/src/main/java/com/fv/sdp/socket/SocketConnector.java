@@ -39,7 +39,7 @@ public class SocketConnector
         try
         {
             //create listener
-            listeningServer = new ServerSocket(0);
+            listeningServer = new ServerSocket(9090);
             //update session config
             SessionConfig.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
             SessionConfig.getInstance().LISTENER_PORT = listeningServer.getLocalPort();

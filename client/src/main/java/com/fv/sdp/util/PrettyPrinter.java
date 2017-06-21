@@ -2,12 +2,14 @@ package com.fv.sdp.util;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 /**
  * Created by filip on 6/17/2017.
@@ -62,5 +64,20 @@ public class PrettyPrinter
     public static void printClassInit(Object obj)
     {
         printTimestampLog(String.format("INIT %s", obj.getClass().getSimpleName()));
+    }
+
+    public static void printQueuePool(Map<MessageType, ConcurrentObservableQueue<RingMessage>> getQueuePool)
+    {
+        for (MessageType mType : getQueuePool.keySet())
+        {
+            String queueString = String.format("QUEUE: %s\n", mType);
+            for (RingMessage m : getQueuePool.get(mType).getQueue())
+            {
+                queueString += String.format("\t\t %s - %s - %s\n", m.getId(), m.getSourceAddress(), m.getContent());
+            }
+
+            System.out.println(queueString);
+        }
+
     }
 }

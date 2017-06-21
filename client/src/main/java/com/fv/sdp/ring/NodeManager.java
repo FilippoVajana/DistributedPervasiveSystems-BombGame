@@ -73,9 +73,7 @@ public class NodeManager implements ISocketObserver
     @Override
     public void pushMessage(RingMessage message)
     {
-        Runnable routeTask = () -> queueManager.routeMessage(message);
-        Thread routeThread = new Thread(routeTask);
-        routeThread.start();
+        new Thread(() -> queueManager.routeMessage(message)).start();
     }
 }
 
@@ -94,6 +92,11 @@ class MessageQueueManager
         queuePool.put(MessageType.ACK, new ConcurrentObservableQueue<>());
         queuePool.put(MessageType.GAME, new ConcurrentObservableQueue<>());
         queuePool.put(MessageType.TOKEN, new ConcurrentObservableQueue<>());
+    }
+
+    public Map<MessageType, ConcurrentObservableQueue<RingMessage>> getQueuePool()
+    {
+        return queuePool;
     }
 
     public void routeMessage(RingMessage message)
