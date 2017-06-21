@@ -17,6 +17,18 @@ import java.net.Socket;
 public class MockSocketClient
 {
     private Socket client;
+    private String lastMessageSent;
+    private String lastMessageReceived;
+
+    public String getLastMessageSent()
+    {
+        return lastMessageSent;
+    }
+    public String getLastMessageReceived()
+    {
+        return lastMessageReceived;
+    }
+
     public MockSocketClient(InetAddress serverAddr, int serverPort)
     {
         try
@@ -36,11 +48,13 @@ public class MockSocketClient
             BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
             //send message
-            writer.println(new Gson().toJson(message, RingMessage.class));
+            String outMessage = new Gson().toJson(message, RingMessage.class);
+            writer.println(outMessage);
             writer.flush();
+            lastMessageSent = outMessage;
+
             //log
             PrettyPrinter.printSentRingMessage(message, client.getInetAddress().getHostAddress(), client.getPort());
-
 
             //read response
             if (waitResponse)
@@ -50,6 +64,8 @@ public class MockSocketClient
                 if (responseJson != null)
                 {
                     RingMessage responseMessage = new Gson().fromJson(responseJson, RingMessage.class);
+                    lastMessageReceived = responseMessage.toString();
+
                     //log
                     PrettyPrinter.printReceivedRingMessage(responseMessage);
                 }

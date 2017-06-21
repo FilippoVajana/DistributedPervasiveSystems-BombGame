@@ -62,4 +62,11 @@ public class RingMessage
     public void setContent(String content) {
         this.content = content;
     }
+
+    @Override
+    public String toString()
+    {
+        String messageString = String.format("Type: %s\t Id: %s\t Source: %s\t Content: %s", this.getType(), this.getId(), this.getSourceAddress(), this.getContent());
+        return messageString;
+    }
 }

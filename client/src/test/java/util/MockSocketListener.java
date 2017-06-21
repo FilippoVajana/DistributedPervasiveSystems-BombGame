@@ -16,6 +16,7 @@ import java.net.Socket;
 public class MockSocketListener
 {
     public ServerSocket listenSocket;
+    public static String lastMessageReceived;
 
     public  MockSocketListener()
     {
@@ -83,6 +84,7 @@ class ClientHandler implements Runnable
                     int port = client.getPort();
                     String messageSource = String.format("%s:%d", ip, port);
                     message.setSourceAddress(messageSource);
+                    MockSocketListener.lastMessageReceived = message.toString();
 
                     //log
                     PrettyPrinter.printReceivedRingMessage(message);
