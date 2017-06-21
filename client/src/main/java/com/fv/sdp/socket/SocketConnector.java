@@ -103,16 +103,16 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
             //check token
-            if (!TokenManager.getInstance().isHasToken())
+            if ((!TokenManager.getInstance().isHasToken() && message.getType() != MessageType.ACK))
             {
                 Object tokenLock = TokenManager.getInstance().getTokenLock();
                 synchronized (tokenLock)
                 {
+                    //log
                     PrettyPrinter.printTimestampLog("WAITING RING TOKEN");
                     tokenLock.wait();
                 }
             }
-
 
             //log
             PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort());

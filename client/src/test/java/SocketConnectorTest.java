@@ -102,8 +102,6 @@ public class SocketConnectorTest
 
         //setting session config
         SessionConfig.getInstance().RING_NODE = new ConcurrentList<>();
-        //set ring token
-        TokenManager.getInstance().storeToken();
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -140,9 +138,6 @@ public class SocketConnectorTest
         ring.add(p1);
         SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
 
-        //set ring token
-        TokenManager.getInstance().storeToken();
-
         //init sender
         SocketConnector sender = new SocketConnector();
 
@@ -175,7 +170,7 @@ public class SocketConnectorTest
             listenerThread.start();
 
             //add ring node
-            Player p = new Player("NextPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
+            Player p = new Player("NextPlayer" + i, mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
             ring.add(p);
         }
 
@@ -183,9 +178,6 @@ public class SocketConnectorTest
 
         //setting session config
         SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
-
-        //set ring token
-        TokenManager.getInstance().storeToken();
 
         //init sender
         SocketConnector sender = new SocketConnector();
