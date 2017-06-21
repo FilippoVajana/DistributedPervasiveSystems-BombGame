@@ -162,6 +162,45 @@ public class SocketConnectorTest
         Assert.assertTrue(MockSocketListener.lastMessageReceived.contains(messageId));
         Assert.assertTrue(MockSocketListener.lastMessageReceived.contains(messageContent));
     }
+
+    @Test
+    public  void sendAllTest() throws Exception {
+        //start mock listener
+        ArrayList<Player> ring = new ArrayList<>();
+        for (int i = 0; i < 4; i++)
+        {
+            MockSocketListener mockListener = new MockSocketListener();
+            Runnable listenerTask = () -> mockListener.startListener();
+            Thread listenerThread = new Thread(listenerTask);
+            listenerThread.start();
+
+            //add ring node
+            Player p = new Player("NextPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
+            ring.add(p);
+        }
+
+        Thread.sleep(1000);
+
+        //setting session config
+        SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
+
+        //set ring token
+        TokenManager.getInstance().storeToken();
+
+        //init sender
+        SocketConnector sender = new SocketConnector();
+
+        //build message
+        String sourceAddress = "127.0.0.1:8000";
+        String messageId = RandomIdGenerator.getRndId();
+        String messageContent = "TEST MESSAGE";
+        RingMessage outMessage = new RingMessage(MessageType.ACK, sourceAddress, messageId, messageContent);
+
+        //send message
+        sender.sendMessage(outMessage, SocketConnector.DestinationGroup.ALL);
+
+        Thread.sleep(1000);
+    }
 }
 
 
