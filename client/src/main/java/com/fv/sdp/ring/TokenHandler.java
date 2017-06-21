@@ -20,7 +20,7 @@ public class TokenHandler implements IMessageHandler
     private TokenHandler()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("Initialize %s", this.getClass().getSimpleName()));
+        PrettyPrinter.printClassInit(this);
     }
 
     //TODO: test

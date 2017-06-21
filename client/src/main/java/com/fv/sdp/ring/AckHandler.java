@@ -25,7 +25,7 @@ public class AckHandler implements IMessageHandler
     private AckHandler()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("Initialize %s", this.getClass().getSimpleName()));
+        PrettyPrinter.printClassInit(this);
 
         //init map
         queueMap = new HashMap<>();
