@@ -2,15 +2,20 @@ package ring;
 
 import com.fv.sdp.SessionConfig;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.ring.TokenHandler;
 import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
+import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.Assert;
 import org.junit.Test;
+import util.MockSocketClient;
 import util.MockSocketListener;
+
+import java.net.InetAddress;
 
 /**
  * Created by filip on 6/18/2017.
@@ -18,7 +23,7 @@ import util.MockSocketListener;
 public class TokenTest //todo implements test
 {
     @Test
-    public void handleTokenMessageDirect() throws Exception
+    public void handleStoreTokenDirect() throws Exception
     {
         //start mock listener
         MockSocketListener mockListener = new MockSocketListener();
@@ -49,4 +54,29 @@ public class TokenTest //todo implements test
         Thread.sleep(500);
     }
 
+    @Test
+    public void handleStoreTokenMessage() throws Exception
+    {
+        //init target node
+        NodeManager node = new NodeManager();
+        Assert.assertNotNull(node);
+
+        //startup node
+        node.startupNode();
+
+        Thread.sleep(1000);
+
+        //init fake ring
+        ConcurrentList<Player> ring = new ConcurrentList<>();
+        ring.add(SessionConfig.getInstance().getPlayerInfo());
+        SessionConfig.getInstance().RING_NODE = ring;
+
+        //send fake token message
+        RingMessage fakeToken = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId());
+        //fakeToken.setSourceAddress(String.format("%s:%d", SessionConfig.getInstance().LISTENER_ADDR, SessionConfig.getInstance().LISTENER_PORT));
+        new SocketConnector().sendMessage(fakeToken, SocketConnector.DestinationGroup.NEXT);
+
+        Thread.sleep(3000);
+
+    }
 }

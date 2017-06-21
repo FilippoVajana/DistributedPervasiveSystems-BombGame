@@ -51,6 +51,7 @@ public class TokenManager
     {
         //log
         PrettyPrinter.printTimestampLog("RELEASING RING TOKEN");
+        System.out.println("\n\nThere is only one Lord of the Ring,\nonly one who can bend it to his will.\nAnd he does not share power.\n\n");
 
         //create new token message
         RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId(), new String(""));
@@ -58,7 +59,7 @@ public class TokenManager
         //build ack queue
         AckHandler.getInstance().addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
 
-        //send message via socket(next ring node) //todo ring topology
+        //send message via socket
         SocketConnector connector = new SocketConnector();
         connector.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 

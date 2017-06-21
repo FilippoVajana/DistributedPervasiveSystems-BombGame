@@ -8,6 +8,7 @@ import com.fv.sdp.SessionConfig;
 
 import javax.ws.rs.core.GenericType;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -23,9 +24,8 @@ import java.util.stream.Stream;
 public class SocketConnector
 {
     private ServerSocket listeningServer;
-    private List<ISocketObserver> observersList; //TODO: make final after singleton implementation
+    private List<ISocketObserver> observersList;
 
-    //TODO: singleton
     public SocketConnector(List<ISocketObserver> observers)
     {
         //log
@@ -39,7 +39,7 @@ public class SocketConnector
         try
         {
             //create listener
-            listeningServer = new ServerSocket(9090);
+            listeningServer = new ServerSocket(0); //TODO: use method param
             //update session config
             SessionConfig.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
             SessionConfig.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
@@ -252,7 +252,7 @@ class SocketListenerRunner implements Runnable
     public SocketListenerRunner(Socket client, List<ISocketObserver> observers) //set up listening thread
     {
         //log
-        PrettyPrinter.printTimestampLog("Initialize " + this.getClass().getSimpleName());
+        PrettyPrinter.printClassInit(this);
 
         this.client = client;
         observersList = observers;
@@ -273,7 +273,7 @@ class SocketListenerRunner implements Runnable
     private void runListener() throws Exception
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("Running listener on %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+        PrettyPrinter.printTimestampLog(String.format("Listening client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
         while (!client.isClosed())
@@ -286,7 +286,7 @@ class SocketListenerRunner implements Runnable
                //json parsing
                RingMessage message = new Gson().fromJson(input, RingMessage.class);
 
-               //set message source address
+               //set message source address //TODO: rivedere pesantemente -> le risposte devono essere inviate al LISTENER del client!!!
                String ip = client.getInetAddress().getHostAddress();
                int port = client.getPort();
                String messageSource = String.format("%s:%d", ip, port);
@@ -303,5 +303,8 @@ class SocketListenerRunner implements Runnable
 
         //dispose reader
         reader.close();
+
+        //dispose socket
+        client.close();
     }
 }
