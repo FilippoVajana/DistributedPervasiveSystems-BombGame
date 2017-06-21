@@ -15,7 +15,7 @@ import util.MockSocketListener;
 /**
  * Created by filip on 6/18/2017.
  */
-public class TokenHandlerTest //todo implements test
+public class TokenTest //todo implements test
 {
     @Test
     public void handleTokenMessageDirect() throws Exception
@@ -49,9 +49,4 @@ public class TokenHandlerTest //todo implements test
         Thread.sleep(500);
     }
 
-    @Test
-    public void handleTokenMessageSocket()
-    {
-        //TODO: complete NodeManager
-    }
 }
