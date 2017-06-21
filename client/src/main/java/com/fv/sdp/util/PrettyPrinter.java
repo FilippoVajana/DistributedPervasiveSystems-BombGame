@@ -4,6 +4,7 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.RingMessage;
 
+import java.lang.reflect.Type;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -56,5 +57,10 @@ public class PrettyPrinter
             String messageString = String.format("MESSAGE-OUT [%s - %s] TO %s:%d ### %s ###", message.getType(), message.getId(), destination, port, message.getContent());
             printTimestampLog(messageString);
         }
+    }
+
+    public static void printClassInit(Object obj)
+    {
+        printTimestampLog(String.format("INIT %s", obj.getClass().getSimpleName()));
     }
 }

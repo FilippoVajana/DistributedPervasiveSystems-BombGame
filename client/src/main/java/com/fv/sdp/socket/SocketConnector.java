@@ -29,7 +29,8 @@ public class SocketConnector
     public SocketConnector(List<ISocketObserver> observers)
     {
         //log
-        PrettyPrinter.printTimestampLog("Initialize " + this.getClass().getSimpleName());
+        PrettyPrinter.printClassInit(this);
+
         //check observers list
         if (observers == null)
             observers = new ArrayList<>();
@@ -103,7 +104,7 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
             //check token
-            if ((!TokenManager.getInstance().isHasToken() && message.getType() != MessageType.ACK))
+            if ((TokenManager.getInstance().isHasToken() && message.getType() != MessageType.ACK))
             {
                 Object tokenLock = TokenManager.getInstance().getTokenLock();
                 synchronized (tokenLock)

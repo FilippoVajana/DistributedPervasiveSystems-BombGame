@@ -23,6 +23,9 @@ public class NodeManager implements ISocketObserver
 
     public NodeManager()
     {
+        //log
+        PrettyPrinter.printClassInit(this);
+
         //init queue manager
         queueManager = new MessageQueueManager();
     }
@@ -31,16 +34,13 @@ public class NodeManager implements ISocketObserver
     {
         try
         {
-            //TODO: make last action
             //set this instance as observer for socket messages
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
             SocketConnector connector = new SocketConnector(observersList);
-            //start socket listener
-            connector.startListener();
 
-            //init token manager //TODO: add Token Manager
+            //init token manager
             TokenManager tokenManager = TokenManager.getInstance();
 
             //init ack handler
@@ -55,8 +55,11 @@ public class NodeManager implements ISocketObserver
             //token observer
             queueManager.observeQueue(MessageType.TOKEN, tokenHandler);
 
+            //start socket listener
+            connector.startListener();
 
             //startup GUI manager
+            //exit on return
 
             return true;
         }catch (Exception ex)
@@ -87,7 +90,8 @@ class MessageQueueManager
 
     public MessageQueueManager()
     {
-        System.out.println("Initializing " + this.getClass().getCanonicalName());
+        //log
+        PrettyPrinter.printClassInit(this);
 
         //init hashmap
         queuePool = new HashMap<>();

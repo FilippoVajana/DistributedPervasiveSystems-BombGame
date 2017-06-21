@@ -14,6 +14,9 @@ public class TokenManager
     private static TokenManager instance = null;
     private TokenManager()
     {
+        //log
+        PrettyPrinter.printClassInit(this);
+
         //init token lock
         tokenLock = new Object();
     }
