@@ -26,7 +26,7 @@ public class SocketConnector
     private ServerSocket listeningServer;
     private List<ISocketObserver> observersList;
 
-    public SocketConnector(List<ISocketObserver> observers)
+    public SocketConnector(List<ISocketObserver> observers, int listenerPort)
     {
         //log
         PrettyPrinter.printClassInit(this);
@@ -39,7 +39,7 @@ public class SocketConnector
         try
         {
             //create listener
-            listeningServer = new ServerSocket(0); //TODO: use method param
+            listeningServer = new ServerSocket(listenerPort);
             //update session config
             SessionConfig.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
             SessionConfig.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
@@ -65,9 +65,9 @@ public class SocketConnector
     public boolean startListener() //syncronous op.
     {
         //wait on client
-        PrettyPrinter.printTimestampLog(String.format("Listening on %s:%d", getListenerAddress().getHostAddress(), getListenerPort()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] LISTENING AT %s:%d", this.getClass().getSimpleName(), getListenerAddress().getHostAddress(), getListenerPort()));
 
-        while (true) //fire up stream reader foreach accepted connection
+        while (true) //start stream reader foreach accepted connection
         {
             try {
                 Socket client = listeningServer.accept();
@@ -90,12 +90,17 @@ public class SocketConnector
     //TODO: return operation result
     private void send(RingMessage message, Player destination)
     {
+        //set message origin
+        String ip = SessionConfig.getInstance().LISTENER_ADDR;
+        int port = SessionConfig.getInstance().LISTENER_PORT;
+        String messageSource = String.format("%s:%d", ip, port);
+        message.setSourceAddress(messageSource);
         try
         {
             //connect socket
             Socket connection = new Socket(InetAddress.getByName(destination.getAddress()), destination.getPort());
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Created socket %s:%d", this.getClass().getSimpleName(), connection.getInetAddress().getHostAddress(), connection.getLocalPort()));
+            //PrettyPrinter.printTimestampLog(String.format("[%s] Created socket %s:%d", this.getClass().getSimpleName(), connection.getInetAddress().getHostAddress(), connection.getLocalPort()));
 
             //get writer
             PrintWriter writer = new PrintWriter(connection.getOutputStream());
@@ -110,7 +115,7 @@ public class SocketConnector
                 synchronized (tokenLock)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog("WAITING RING TOKEN");
+                    PrettyPrinter.printTimestampLog(String.format("[%s] WAITING TOKEN", this.getClass().getSimpleName()));
                     tokenLock.wait();
                 }
             }
@@ -201,7 +206,7 @@ public class SocketConnector
         return playerStream.findFirst().get();
     }
 
-    private Player findNextNode() //TODO: check
+    private Player findNextNode()
     {
         Player thisNode = SessionConfig.getInstance().getPlayerInfo();
         Player nextNode = null;
@@ -273,7 +278,7 @@ class SocketListenerRunner implements Runnable
     private void runListener() throws Exception
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("Listening client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Handling client %s:%d", this.getClass().getSimpleName(), client.getInetAddress().getHostAddress(), client.getPort()));
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
         while (!client.isClosed())
@@ -287,23 +292,27 @@ class SocketListenerRunner implements Runnable
                RingMessage message = new Gson().fromJson(input, RingMessage.class);
 
                //set message source address //TODO: rivedere pesantemente -> le risposte devono essere inviate al LISTENER del client!!!
+               /*
                String ip = client.getInetAddress().getHostAddress();
                int port = client.getPort();
                String messageSource = String.format("%s:%d", ip, port);
                message.setSourceAddress(messageSource);
+                */
 
                //print log
                PrettyPrinter.printReceivedRingMessage(message);
 
                //dispatch message to observers
-               for (ISocketObserver obs : observersList)
-                   obs.pushMessage(message); //dispatch to NodeManager
+               for (ISocketObserver observer : observersList)
+                   observer.pushMessage(message); //dispatch to NodeManager
            }
         }
 
+        //log
+        PrettyPrinter.printTimestampLog(String.format("Disconnected client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+
         //dispose reader
         reader.close();
-
         //dispose socket
         client.close();
     }

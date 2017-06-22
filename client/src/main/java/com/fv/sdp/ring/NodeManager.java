@@ -38,7 +38,7 @@ public class NodeManager implements ISocketObserver
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
-            SocketConnector connector = new SocketConnector(observersList);
+            SocketConnector connector = new SocketConnector(observersList, 0);
 
             //init ack handler
             AckHandler ackHandler = AckHandler.getInstance();

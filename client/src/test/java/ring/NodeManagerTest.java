@@ -5,6 +5,7 @@ import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.*;
+import org.junit.rules.Timeout;
 import util.MockSocketClient;
 
 import java.io.ByteArrayOutputStream;
@@ -33,6 +34,19 @@ public class NodeManagerTest
         System.setErr(System.err);
     }
     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(10); // 10 seconds max per method tested
+
+    @Before
+    public void warmup()
+    {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test
     public void initNodeTest() throws InterruptedException
     {
@@ -52,27 +66,6 @@ public class NodeManagerTest
 
         //startup node
         node.startupNode();
-
-        Thread.sleep(1000);
-    }
-
-    @Test
-    public void queueManagerTest() throws Exception
-    {
-        //init node
-        NodeManager node = new NodeManager();
-        Assert.assertNotNull(node);
-
-        //startup node
-        node.startupNode();
-
-        Thread.sleep(1000);
-
-
-        MockSocketClient mockClient = new MockSocketClient(InetAddress.getLocalHost(), 9090);
-        RingMessage outMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId());
-        //send fake message
-        mockClient.sendMessage(outMessage, false);
 
         Thread.sleep(1000);
     }

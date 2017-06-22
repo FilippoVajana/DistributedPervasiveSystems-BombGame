@@ -36,7 +36,7 @@ public class SocketConnectorTest
     {
         List<ISocketObserver> mockObserverList = getObserversList();
 
-        SocketConnector connector = new SocketConnector(mockObserverList);
+        SocketConnector connector = new SocketConnector(mockObserverList, 0);
         System.out.println(connector.getListenerAddress());
         System.out.println(connector.getListenerPort());
 
@@ -48,7 +48,7 @@ public class SocketConnectorTest
     {
         List<ISocketObserver> mockObserverList = getObserversList();
         //server creation
-        SocketConnector connector = new SocketConnector(mockObserverList);
+        SocketConnector connector = new SocketConnector(mockObserverList, 0);
         Runnable task = () -> connector.startListener();
         Thread thread = new Thread(task);
         thread.start();
@@ -68,7 +68,7 @@ public class SocketConnectorTest
     public void multiClientDeliveryTest() throws InterruptedException {
         List<ISocketObserver> mockObserverList = getObserversList();
         //server creation
-        SocketConnector connector = new SocketConnector(mockObserverList);
+        SocketConnector connector = new SocketConnector(mockObserverList, 0);
         Runnable task = () -> connector.startListener();
         Thread thread = new Thread(task);
         thread.start();

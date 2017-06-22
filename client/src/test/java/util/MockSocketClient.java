@@ -70,6 +70,9 @@ public class MockSocketClient
                     PrettyPrinter.printReceivedRingMessage(responseMessage);
                 }
             }
+
+            //reader.close();
+            //client.close();
         } catch (IOException e)
         {
             e.printStackTrace();
