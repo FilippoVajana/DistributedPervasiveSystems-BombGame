@@ -19,6 +19,7 @@ import java.util.Map;
  */
 public class NodeManager implements ISocketObserver
 {
+    private SocketConnector listeningSocket;
     private MessageQueueManager queueManager;
 
     public NodeManager()
@@ -30,6 +31,10 @@ public class NodeManager implements ISocketObserver
         queueManager = new MessageQueueManager();
     }
 
+    public SocketConnector getListeningSocket() {
+        return listeningSocket;
+    }
+
     public boolean startupNode()
     {
         try
@@ -38,7 +43,7 @@ public class NodeManager implements ISocketObserver
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
-            SocketConnector connector = new SocketConnector(observersList, 0);
+            listeningSocket = new SocketConnector(observersList, 0);
 
             //init ack handler
             AckHandler ackHandler = AckHandler.getInstance();
@@ -52,7 +57,7 @@ public class NodeManager implements ISocketObserver
             new Thread(() -> queueManager.observeQueue(MessageType.TOKEN, tokenHandler)).start();
 
             //start socket listener
-            new Thread(() -> connector.startListener()).start();
+            new Thread(() -> listeningSocket.startListener()).start();
 
             //startup GUI manager
             //exit on return
