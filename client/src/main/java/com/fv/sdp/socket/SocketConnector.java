@@ -209,7 +209,7 @@ public class SocketConnector
     private Player findNextNode()
     {
         Player thisNode = SessionConfig.getInstance().getPlayerInfo();
-        Player nextNode = null;
+        Player nextNode;
         ArrayList<Player> ringNodes = SessionConfig.getInstance().RING_NODE.getList();
 
         try

@@ -37,6 +37,8 @@ public class AckHandler implements IMessageHandler
     {
         //init queue
         queueMap.put(idAck, requiredAck);
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Setting queue ACK %s (size: %d)", this.getClass().getSimpleName(), idAck, requiredAck));
 
         //set token
         observerMap.put(idAck, observerLock);
@@ -47,7 +49,7 @@ public class AckHandler implements IMessageHandler
     public synchronized void handle(RingMessage receivedMessage)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("Handling ACK-%s", receivedMessage.getId()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Handling ACK %s", this.getClass().getSimpleName(), receivedMessage.getId()));
 
         //find message ack queue
         Integer ackCount = queueMap.get(receivedMessage.getId());
@@ -60,6 +62,9 @@ public class AckHandler implements IMessageHandler
             Object moduleLock =  observerMap.get(receivedMessage.getId());
             synchronized (moduleLock)
             {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK %s", this.getClass().getSimpleName(),  receivedMessage.getId()));
+
                 //notify action module (GameHandler/TokenHandler)
                 moduleLock.notify();
             }

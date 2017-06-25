@@ -47,7 +47,7 @@ public class PrettyPrinter
     {
         if (message != null)
         {
-            String messageString = String.format("MESSAGE-IN [%s - %s] FROM %s ### %s ###", message.getType(), message.getId(), message.getSourceAddress(), message.getContent());
+            String messageString = String.format("MESSAGE-IN [%s %s] FROM %s ### %s ###", message.getType(), message.getId(), message.getSourceAddress(), message.getContent());
             printTimestampLog(messageString);
         }
     }
@@ -56,7 +56,7 @@ public class PrettyPrinter
     {
         if (message != null)
         {
-            String messageString = String.format("MESSAGE-OUT [%s - %s] TO %s:%d ### %s ###", message.getType(), message.getId(), destination, port, message.getContent());
+            String messageString = String.format("MESSAGE-OUT [%s %s] TO %s:%d ### %s ###", message.getType(), message.getId(), destination, port, message.getContent());
             printTimestampLog(messageString);
         }
     }

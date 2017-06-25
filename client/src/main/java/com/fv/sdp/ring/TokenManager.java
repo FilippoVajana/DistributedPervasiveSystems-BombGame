@@ -41,7 +41,7 @@ public class TokenManager
         synchronized (tokenLock)
         {
             //log
-            PrettyPrinter.printTimestampLog("STORING RING TOKEN");
+            PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
             hasToken = true;
             tokenLock.notify();
         }
@@ -50,11 +50,11 @@ public class TokenManager
     public synchronized void releaseToken()
     {
         //log
-        PrettyPrinter.printTimestampLog("RELEASING RING TOKEN");
+        PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token", this.getClass().getSimpleName()));
         System.out.println("\n\nThere is only one Lord of the Ring,\nonly one who can bend it to his will.\nAnd he does not share power.\n\n");
 
         //create new token message
-        RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId(), new String(""));
+        RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId());
 
         //build ack queue
         AckHandler.getInstance().addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
@@ -63,15 +63,16 @@ public class TokenManager
         SocketConnector connector = new SocketConnector();
         connector.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
-        //get observer lock
+        //wait ack
         synchronized (tokenLock)
         {
-            //wait on all ack
             try
             {
                 tokenLock.wait();
                 //release token
                 hasToken = false;
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Token released", this.getClass().getSimpleName()));
             } catch (InterruptedException e)
             {
                 e.printStackTrace();

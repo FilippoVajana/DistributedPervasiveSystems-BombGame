@@ -32,7 +32,7 @@ public class TokenHandler implements IMessageHandler
     public void handle(RingMessage receivedMessage)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("HANDLING [TOKEN - %s] FROM %s", receivedMessage.getId(), receivedMessage.getSourceAddress()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Handling [TOKEN %s]", this.getClass().getSimpleName(), receivedMessage.getId()));
 
         //set hasToken true
         TokenManager.getInstance().storeToken();
