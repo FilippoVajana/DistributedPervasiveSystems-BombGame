@@ -34,17 +34,13 @@ public class TokenManager
     {
         return hasToken;
     }
-    public Object getTokenLock() {return tokenLock;}
+    public Object getTokenLock() { return tokenLock; }
 
     public void storeToken()
     {
-        synchronized (tokenLock)
-        {
-            //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
-            hasToken = true;
-            tokenLock.notify();
-        }
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
+        hasToken = true;
     }
 
     public synchronized void releaseToken()
@@ -68,6 +64,7 @@ public class TokenManager
         {
             try
             {
+                System.out.println("WAIT TOKEN ACK");
                 tokenLock.wait();
                 //release token
                 hasToken = false;

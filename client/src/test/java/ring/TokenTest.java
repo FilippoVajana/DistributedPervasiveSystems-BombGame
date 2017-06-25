@@ -11,17 +11,45 @@ import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import util.MockSocketClient;
 import util.MockSocketListener;
 
+import javax.xml.soap.Node;
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 /**
  * Created by filip on 6/18/2017.
  */
-public class TokenTest //todo implements test
+public class TokenTest
 {
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(10); // 10 seconds max per method tested
+
+    private void buildTestRing()
+    {
+        ArrayList<Player> ring = new ArrayList<>();
+        for (int i=0; i<3; i++)
+        {
+            NodeManager node = new NodeManager();
+            node.startupNode();
+            Player pl = new Player("PL1", node.getListeningSocket().getListenerAddress().getHostAddress(), node.getListeningSocket().getListenerPort());
+
+            ring.add(pl);
+        }
+        //set session ring
+        SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test
     public void handleStoreTokenDirect() throws Exception
     {
@@ -55,6 +83,38 @@ public class TokenTest //todo implements test
     }
 
     @Test
+    public void handleReleaseToken() throws Exception
+    {
+        //init node
+        NodeManager node = new NodeManager();
+        Assert.assertNotNull(node);
+
+        //startup node
+        node.startupNode();
+        Thread.sleep(1000);
+
+        //init fake ring
+        ConcurrentList<Player> ring = new ConcurrentList<>();
+        ring.add(SessionConfig.getInstance().getPlayerInfo());
+        SessionConfig.getInstance().RING_NODE = ring;
+
+        //release token
+        TokenManager.getInstance().releaseToken();
+
+        Thread.sleep(1000);
+    }
+
+    @Test
+    public void handleRingReleaseToken() throws Exception
+    {
+        //build ring
+        buildTestRing();
+
+        TokenManager.getInstance().releaseToken();
+        Thread.sleep(2000);
+    }
+
+    @Test
     public void handleStoreTokenMessage() throws Exception
     {
         //init target node
@@ -63,7 +123,6 @@ public class TokenTest //todo implements test
 
         //startup node
         node.startupNode();
-
         Thread.sleep(1000);
 
         //init fake ring
@@ -78,5 +137,11 @@ public class TokenTest //todo implements test
 
         Thread.sleep(3000);
 
+        /*
+        l'errore riscontrato (NullPointer) deriva dal fatto che la sorgente del messaggio Token, non avendo
+        utilizzato la procedura prevista, pur aspettandosi un ACK di risposta non ha predisposto una entry
+        all'interno della coda in AckHandler.
+        Soluzione: utilizzare, dopo validazione, la procedura corretta di rilascio del token
+         */
     }
 }
