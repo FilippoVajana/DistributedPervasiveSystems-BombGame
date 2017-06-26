@@ -131,9 +131,9 @@ public class RESTConnectorTest extends JerseyTest
         PrettyPrinter.printMatchDetails(SessionConfig.getInstance().PLAYER_MATCH);
 
         //chech session config node
-        Assert.assertEquals(1, SessionConfig.getInstance().RING_NODE.getList().size());
+        Assert.assertEquals(1, SessionConfig.getInstance().RING_NETWORK.getList().size());
         System.out.println("Ring topology: ");
-        for (Player p : SessionConfig.getInstance().RING_NODE.getList())
+        for (Player p : SessionConfig.getInstance().RING_NETWORK.getList())
             PrettyPrinter.printPlayerDetails(p);
     }
 

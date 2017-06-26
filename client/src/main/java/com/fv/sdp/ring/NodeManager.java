@@ -1,5 +1,7 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.SessionConfig;
+import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentObservableQueue;
@@ -11,28 +13,42 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Funzionalità
-    entry point per il main - funzioni di configuratore per i moduli lato client
-    1- avvio listener
-    2- avvio gestore code messaggi
-    3- avvio GUI manager
+/**TODO: rimuovere implementazioni del pattern singleton dai vari moduli
+ * salvare le istanze dei moduli funzionali all'interno di SessionConfig con relativi get/set
+ * rinominare SessionConfig in AppContext
+ * correggere i test, in particolare quelli con molteplici nodi
  */
+
+
 public class NodeManager implements ISocketObserver
 {
-    private SocketConnector listeningSocket;
+    //app context
+    SessionConfig appContext;
+
+    //network modules
+    private SocketConnector listenerSocket;
     private MessageQueueManager queueManager;
+
+    //functional modules
+    private AckHandler ackHandler;
+    private TokenHandler tokenHandler;
+    private GameHandler gameHandler;
+    private GUIManager guiManager;
 
     public NodeManager()
     {
         //log
         PrettyPrinter.printClassInit(this);
 
+        //init app context
+        appContext = SessionConfig.getInstance();
+
         //init queue manager
         queueManager = new MessageQueueManager();
     }
 
-    public SocketConnector getListeningSocket() {
-        return listeningSocket;
+    public SocketConnector getListenerSocket() {
+        return listenerSocket;
     }
 
     public boolean startupNode()
@@ -43,21 +59,22 @@ public class NodeManager implements ISocketObserver
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
-            listeningSocket = new SocketConnector(observersList, 0);
+            listenerSocket = new SocketConnector(observersList, 0);
 
             //init ack handler
-            AckHandler ackHandler = AckHandler.getInstance();
+            ackHandler = AckHandler.getInstance();
             new Thread(() -> queueManager.observeQueue(MessageType.ACK, ackHandler)).start();
 
             //game handler
-            //game observer
+            gameHandler = new GameHandler(appContext);
+            new Thread(() -> queueManager.observeQueue(MessageType.GAME, gameHandler)).start();
 
             //token handler
-            TokenHandler tokenHandler = TokenHandler.getInstance();
+            tokenHandler = TokenHandler.getInstance();
             new Thread(() -> queueManager.observeQueue(MessageType.TOKEN, tokenHandler)).start();
 
             //start socket listener
-            new Thread(() -> listeningSocket.startListener()).start();
+            new Thread(() -> listenerSocket.startListener()).start();
 
             //startup GUI manager
             //exit on return
