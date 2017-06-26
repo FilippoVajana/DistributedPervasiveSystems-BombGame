@@ -1,6 +1,6 @@
 package com.fv.sdp.gui;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.rest.RESTConnector;
@@ -66,8 +66,8 @@ public class GUIManager
         String nickname = inputReader.next();
         System.out.println();
 
-        SessionConfig.getInstance().PLAYER_NICKNAME = nickname;
-        System.out.println("Nickname set to " + SessionConfig.getInstance().PLAYER_NICKNAME);
+        ApplicationContext.getInstance().PLAYER_NICKNAME = nickname;
+        System.out.println("Nickname set to " + ApplicationContext.getInstance().PLAYER_NICKNAME);
     }
 
     //enter match
@@ -90,7 +90,7 @@ public class GUIManager
         int index = inputReader.nextInt();
 
         //enter match
-        Player player = SessionConfig.getInstance().getPlayerInfo();
+        Player player = ApplicationContext.getInstance().getPlayerInfo();
         boolean joinResult = new RESTConnector().joinServerMatch(matchList.get(index), player );
         //TODO: token management + signal new node
 

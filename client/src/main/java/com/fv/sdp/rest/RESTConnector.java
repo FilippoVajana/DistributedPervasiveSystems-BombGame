@@ -1,6 +1,6 @@
 package com.fv.sdp.rest;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.google.gson.Gson;
@@ -19,13 +19,13 @@ import java.util.Map;
 public class RESTConnector
 {
     private Client restClient = null;
-    private WebTarget restBaseUrl = null; //TODO: remove, use SessionConfig
+    private WebTarget restBaseUrl = null; //TODO: remove, use ApplicationContext
     private Map<String, String> restEndpointsIndex = null; //TODO: remove
 
     public RESTConnector()
     {
         //config
-        SessionConfig configuration = SessionConfig.getInstance();
+        ApplicationContext configuration = ApplicationContext.getInstance();
         //client
         restClient = ClientBuilder.newClient();
         //base url
@@ -89,9 +89,9 @@ public class RESTConnector
         {
             Match joinedMatch = response.readEntity(Match.class);
             //set match
-            SessionConfig.getInstance().PLAYER_MATCH = joinedMatch;
+            ApplicationContext.getInstance().PLAYER_MATCH = joinedMatch;
             //set ring node
-            SessionConfig.getInstance().RING_NETWORK = joinedMatch.getPlayers();
+            ApplicationContext.getInstance().RING_NETWORK = joinedMatch.getPlayers();
 
             return true;
         }

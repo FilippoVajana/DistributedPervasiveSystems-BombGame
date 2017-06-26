@@ -1,4 +1,4 @@
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
@@ -99,7 +99,7 @@ public class SocketConnectorTest
         Thread.sleep(500);
 
         //setting session config
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>();
+        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>();
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -134,7 +134,7 @@ public class SocketConnectorTest
         ArrayList<Player> ring = new ArrayList<>();
         Player p1 = new Player("NextPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
         ring.add(p1);
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -175,7 +175,7 @@ public class SocketConnectorTest
         Thread.sleep(1000);
 
         //setting session config
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
         SocketConnector sender = new SocketConnector();

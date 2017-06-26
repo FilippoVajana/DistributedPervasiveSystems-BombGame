@@ -1,4 +1,4 @@
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
@@ -37,7 +37,7 @@ public class RESTConnectorTest extends JerseyTest
         new MatchResource().resetResourceModel();
 
         //init session parameters
-        SessionConfig config = SessionConfig.getInstance();
+        ApplicationContext config = ApplicationContext.getInstance();
         //set JdkHttpServerTestContainer
         config.REST_BASE_URL = "http://localhost:9998/";
 
@@ -114,8 +114,8 @@ public class RESTConnectorTest extends JerseyTest
         connector.createServerMatch(match);
 
         //create player
-        SessionConfig.getInstance().setPlayerInfo("PL1", "127.0.0.1", 6453);
-        Player player = SessionConfig.getInstance().getPlayerInfo();
+        ApplicationContext.getInstance().setPlayerInfo("PL1", "127.0.0.1", 6453);
+        Player player = ApplicationContext.getInstance().getPlayerInfo();
 
         //join
         boolean joinResult = connector.joinServerMatch(new Match("Glory",0,0), player);
@@ -126,14 +126,14 @@ public class RESTConnectorTest extends JerseyTest
         ArrayList<Match> matchList = connector.getServerMatchList(); //todo add contain method to ConcurrentArrayList
         Assert.assertEquals(1, matchList.size());
 
-        Assert.assertEquals(match, SessionConfig.getInstance().PLAYER_MATCH);
+        Assert.assertEquals(match, ApplicationContext.getInstance().PLAYER_MATCH);
         System.out.println("Current match: ");
-        PrettyPrinter.printMatchDetails(SessionConfig.getInstance().PLAYER_MATCH);
+        PrettyPrinter.printMatchDetails(ApplicationContext.getInstance().PLAYER_MATCH);
 
         //chech session config node
-        Assert.assertEquals(1, SessionConfig.getInstance().RING_NETWORK.getList().size());
+        Assert.assertEquals(1, ApplicationContext.getInstance().RING_NETWORK.getList().size());
         System.out.println("Ring topology: ");
-        for (Player p : SessionConfig.getInstance().RING_NETWORK.getList())
+        for (Player p : ApplicationContext.getInstance().RING_NETWORK.getList())
             PrettyPrinter.printPlayerDetails(p);
     }
 

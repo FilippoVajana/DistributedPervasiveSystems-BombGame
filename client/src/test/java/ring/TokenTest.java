@@ -1,6 +1,6 @@
 package ring;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.ring.TokenHandler;
@@ -35,7 +35,7 @@ public class TokenTest
             ring.add(pl);
         }
         //set session ring
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         try {
             Thread.sleep(2000);
@@ -61,7 +61,7 @@ public class TokenTest
         nodes.add(mockPlayer);
 
         //set ring nodes
-        SessionConfig.getInstance().RING_NETWORK = nodes;
+        ApplicationContext.getInstance().RING_NETWORK = nodes;
 
         //build message
         RingMessage inMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), "TEST TOKEN MESSAGE");
@@ -89,8 +89,8 @@ public class TokenTest
 
         //init fake ring
         ConcurrentList<Player> ring = new ConcurrentList<>();
-        ring.add(SessionConfig.getInstance().getPlayerInfo());
-        SessionConfig.getInstance().RING_NETWORK = ring;
+        ring.add(ApplicationContext.getInstance().getPlayerInfo());
+        ApplicationContext.getInstance().RING_NETWORK = ring;
 
         //release token
         TokenManager.getInstance().releaseToken();
@@ -121,12 +121,12 @@ public class TokenTest
 
         //init fake ring
         ConcurrentList<Player> ring = new ConcurrentList<>();
-        ring.add(SessionConfig.getInstance().getPlayerInfo());
-        SessionConfig.getInstance().RING_NETWORK = ring;
+        ring.add(ApplicationContext.getInstance().getPlayerInfo());
+        ApplicationContext.getInstance().RING_NETWORK = ring;
 
         //send fake token message
         RingMessage fakeToken = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId());
-        //fakeToken.setSourceAddress(String.format("%s:%d", SessionConfig.getInstance().LISTENER_ADDR, SessionConfig.getInstance().LISTENER_PORT));
+        //fakeToken.setSourceAddress(String.format("%s:%d", ApplicationContext.getInstance().LISTENER_ADDR, ApplicationContext.getInstance().LISTENER_PORT));
         new SocketConnector().sendMessage(fakeToken, SocketConnector.DestinationGroup.NEXT);
 
         Thread.sleep(3000);

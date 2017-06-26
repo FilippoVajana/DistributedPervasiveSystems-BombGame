@@ -1,6 +1,6 @@
 package com.fv.sdp.ring;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**TODO: rimuovere implementazioni del pattern singleton dai vari moduli
- * salvare le istanze dei moduli funzionali all'interno di SessionConfig con relativi get/set
- * rinominare SessionConfig in AppContext
+ * salvare le istanze dei moduli funzionali all'interno di ApplicationContext con relativi get/set
+ * rinominare ApplicationContext in AppContext
  * correggere i test, in particolare quelli con molteplici nodi
  */
 
@@ -23,7 +23,7 @@ import java.util.Map;
 public class NodeManager implements ISocketObserver
 {
     //app context
-    SessionConfig appContext;
+    ApplicationContext appContext;
 
     //network modules
     private SocketConnector listenerSocket;
@@ -41,7 +41,7 @@ public class NodeManager implements ISocketObserver
         PrettyPrinter.printClassInit(this);
 
         //init app context
-        appContext = SessionConfig.getInstance();
+        appContext = ApplicationContext.getInstance();
 
         //init queue manager
         queueManager = new MessageQueueManager();

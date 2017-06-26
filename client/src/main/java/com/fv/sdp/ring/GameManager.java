@@ -1,6 +1,6 @@
 package com.fv.sdp.ring;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
@@ -14,10 +14,10 @@ import com.google.gson.Gson;
  */
 public class GameManager
 {
-    private SessionConfig appContext;
+    private ApplicationContext appContext;
     private Object moduleLock = new Object();
 
-    public GameManager(SessionConfig appContext)
+    public GameManager(ApplicationContext appContext)
     {
         this.appContext = appContext;
     }
@@ -33,7 +33,7 @@ public class GameManager
         Player newPlayer = new Gson().fromJson(playerJson, Player.class);
 
         //update ring topology
-        SessionConfig.getInstance().RING_NETWORK.add(newPlayer); //TODO: check duplicated player
+        ApplicationContext.getInstance().RING_NETWORK.add(newPlayer); //TODO: check duplicated player
         //TODO: context.getRingNetwork.add()
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", this.getClass().getSimpleName(), newPlayer.getId()));
@@ -56,7 +56,7 @@ public class GameManager
         RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
 
         //build ack queue
-        int ringNodesCount = SessionConfig.getInstance().RING_NETWORK.getList().size();
+        int ringNodesCount = ApplicationContext.getInstance().RING_NETWORK.getList().size();
         AckHandler.getInstance().addPendingAck(message.getId(), ringNodesCount, moduleLock);
 
         //send message

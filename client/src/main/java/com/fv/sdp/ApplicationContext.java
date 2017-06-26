@@ -5,9 +5,9 @@ import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
 import java.util.HashMap;
 
-public class SessionConfig
+public class ApplicationContext
 {
-    public SessionConfig()
+    public ApplicationContext()
     {
         //init REST
         RESTConfig();

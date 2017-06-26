@@ -1,6 +1,6 @@
 package com.fv.sdp.socket;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.util.PrettyPrinter;
@@ -39,8 +39,8 @@ public class SocketConnector
             //create listener
             listeningServer = new ServerSocket(listenerPort);
             //update session config
-            SessionConfig.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
-            SessionConfig.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
+            ApplicationContext.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
+            ApplicationContext.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
 
         }catch (Exception ex)
         {
@@ -89,8 +89,8 @@ public class SocketConnector
     private void send(RingMessage message, Player destination)
     {
         //set message origin
-        String ip = SessionConfig.getInstance().LISTENER_ADDR;
-        int port = SessionConfig.getInstance().LISTENER_PORT;
+        String ip = ApplicationContext.getInstance().LISTENER_ADDR;
+        int port = ApplicationContext.getInstance().LISTENER_PORT;
         String messageSource = String.format("%s:%d", ip, port);
         message.setSourceAddress(messageSource);
         try
@@ -163,7 +163,7 @@ public class SocketConnector
            {
                case ALL:
                    //call send
-                   sendMessage(message, SessionConfig.getInstance().RING_NETWORK.getList());
+                   sendMessage(message, ApplicationContext.getInstance().RING_NETWORK.getList());
                    break;
                case NEXT:
                    //find next node
@@ -206,9 +206,9 @@ public class SocketConnector
 
     private Player findNextNode()
     {
-        Player thisNode = SessionConfig.getInstance().getPlayerInfo();
+        Player thisNode = ApplicationContext.getInstance().getPlayerInfo();
         Player nextNode;
-        ArrayList<Player> ringNodes = SessionConfig.getInstance().RING_NETWORK.getList();
+        ArrayList<Player> ringNodes = ApplicationContext.getInstance().RING_NETWORK.getList();
 
         try
         {

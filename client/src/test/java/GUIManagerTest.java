@@ -1,4 +1,4 @@
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
@@ -37,7 +37,7 @@ public class GUIManagerTest extends JerseyTest
         new MatchResource().resetResourceModel();
 
         //init session parameters
-        SessionConfig config = SessionConfig.getInstance();
+        ApplicationContext config = ApplicationContext.getInstance();
         //set JdkHttpServerTestContainer
         config.REST_BASE_URL = "http://localhost:9998/";
 
@@ -75,8 +75,8 @@ public class GUIManagerTest extends JerseyTest
 
         gui.setNickname();
 
-        Assert.assertNotNull(SessionConfig.getInstance().PLAYER_NICKNAME);
-        Assert.assertEquals("Filippo", SessionConfig.getInstance().PLAYER_NICKNAME);
+        Assert.assertNotNull(ApplicationContext.getInstance().PLAYER_NICKNAME);
+        Assert.assertEquals("Filippo", ApplicationContext.getInstance().PLAYER_NICKNAME);
     }
 
     @Test
@@ -85,9 +85,9 @@ public class GUIManagerTest extends JerseyTest
         setServerTestModel();
 
         //set mock player
-        SessionConfig.getInstance().PLAYER_NICKNAME = "Rambo";
-        SessionConfig.getInstance().LISTENER_ADDR = "192.168.1.1";
-        SessionConfig.getInstance().LISTENER_PORT = 4567;
+        ApplicationContext.getInstance().PLAYER_NICKNAME = "Rambo";
+        ApplicationContext.getInstance().LISTENER_ADDR = "192.168.1.1";
+        ApplicationContext.getInstance().LISTENER_PORT = 4567;
         //enter match id
         Integer matchIndex = 0;
         System.setIn(new java.io.ByteArrayInputStream(matchIndex.toString().getBytes())); //mock input utente

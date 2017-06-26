@@ -1,6 +1,6 @@
 package ring;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.GameManager;
 import com.fv.sdp.ring.NodeManager;
@@ -33,7 +33,7 @@ public class GameTest
             ring.add(pl);
         }
         //set session ring
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         try {
             Thread.sleep(2000);
@@ -64,7 +64,7 @@ public class GameTest
         message.setSourceAddress(String.format("%s:%d", listener.listenSocket.getInetAddress().getHostAddress(), listener.listenSocket.getLocalPort()));
 
         //init app context
-        SessionConfig appContext = SessionConfig.getInstance();
+        ApplicationContext appContext = ApplicationContext.getInstance();
         appContext.RING_NETWORK = new ConcurrentList<>();
 
         //push message
@@ -88,11 +88,11 @@ public class GameTest
         Player player = new Player("TestPlayer", "localhost", 9000);
 
         //app context
-        SessionConfig context = SessionConfig.getInstance();
+        ApplicationContext context = ApplicationContext.getInstance();
         //notify
         new GameManager(context).notifyRingEntrance(player);
         Thread.sleep(1000);
 
-        Assert.assertEquals(6, SessionConfig.getInstance().RING_NETWORK.getList().size());
+        Assert.assertEquals(6, ApplicationContext.getInstance().RING_NETWORK.getList().size());
     }
 }

@@ -1,6 +1,6 @@
 package com.fv.sdp.ring;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.PrettyPrinter;
 
@@ -9,10 +9,10 @@ import com.fv.sdp.util.PrettyPrinter;
  */
 public class GameHandler implements IMessageHandler
 {
-    SessionConfig appContext;
+    ApplicationContext appContext;
     GameManager gameManager;
 
-    public GameHandler(SessionConfig appContext)
+    public GameHandler(ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
