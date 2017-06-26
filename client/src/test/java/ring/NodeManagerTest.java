@@ -1,16 +1,11 @@
 package ring;
 
 import com.fv.sdp.ring.NodeManager;
-import com.fv.sdp.socket.MessageType;
-import com.fv.sdp.socket.RingMessage;
-import com.fv.sdp.util.RandomIdGenerator;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.Timeout;
-import util.MockSocketClient;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.net.InetAddress;
 
 /**
  * Created by filip on 21/06/2017.

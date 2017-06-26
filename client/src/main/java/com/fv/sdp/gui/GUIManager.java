@@ -1,12 +1,12 @@
 package com.fv.sdp.gui;
 
+import com.fv.sdp.SessionConfig;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.rest.RESTConnector;
-import com.fv.sdp.SessionConfig;
 
 import java.util.ArrayList;
-import java.util.*;
+import java.util.Scanner;
 
 /**
  * Created by filip on 6/12/2017.

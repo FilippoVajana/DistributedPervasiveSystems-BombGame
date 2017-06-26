@@ -2,11 +2,11 @@ package com.fv.sdp.ring;
 
 import com.fv.sdp.SessionConfig;
 import com.fv.sdp.gui.GUIManager;
+import com.fv.sdp.socket.ISocketObserver;
+import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentObservableQueue;
-import com.fv.sdp.socket.ISocketObserver;
-import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.util.PrettyPrinter;
 
 import java.util.ArrayList;

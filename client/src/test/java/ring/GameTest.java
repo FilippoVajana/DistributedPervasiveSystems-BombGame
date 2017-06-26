@@ -11,9 +11,7 @@ import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import com.google.gson.Gson;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 import util.MockSocketListener;
 
 import java.util.ArrayList;

@@ -1,10 +1,10 @@
 package com.fv.sdp.socket;
 
+import com.fv.sdp.SessionConfig;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
-import com.fv.sdp.SessionConfig;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

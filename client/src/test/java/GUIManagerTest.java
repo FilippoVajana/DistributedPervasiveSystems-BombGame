@@ -1,11 +1,11 @@
+import com.fv.sdp.SessionConfig;
+import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
+import com.fv.sdp.rest.RESTConnector;
 import com.fv.sdp.util.ConcurrentList;
 import com.google.gson.Gson;
-import com.fv.sdp.gui.GUIManager;
-import com.fv.sdp.SessionConfig;
-import com.fv.sdp.rest.RESTConnector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Assert;
