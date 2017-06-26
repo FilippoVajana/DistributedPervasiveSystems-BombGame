@@ -3,29 +3,15 @@ package com.fv.sdp;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
-import com.fv.sdp.util.ConcurrentObservableQueue;
-
 import java.util.HashMap;
 
-/**
- * Created by filip on 6/12/2017.
- */
 public class SessionConfig
 {
-    private static SessionConfig instance = null;
-    public static SessionConfig getInstance()
-    {
-        if (instance == null)
-            instance = new SessionConfig();
-        return instance;
-    }
-
-    private SessionConfig()
+    public SessionConfig()
     {
         //init REST
         RESTConfig();
     }
-
 
     //REST
     public String REST_BASE_URL;
@@ -41,13 +27,11 @@ public class SessionConfig
     //SOCKET
     public String LISTENER_ADDR;
     public int LISTENER_PORT;
-    public ConcurrentList<Player> RING_NETWORK;
+    public ConcurrentList<Player> RING_NETWORK = new ConcurrentList<>();
 
     //PLAYER
     public String PLAYER_NICKNAME;
     public Match PLAYER_MATCH;
-
-
     public void setPlayerInfo(String nickname, String address, int port)
     {
         PLAYER_NICKNAME = nickname;
