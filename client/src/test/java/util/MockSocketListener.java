@@ -31,6 +31,11 @@ public class MockSocketListener
         }
     }
 
+    /**
+     * Starts listening for new connections.
+     * @implNote Blocking on listening.
+     *                   New connections are served on dedicated threads
+     */
     public  void startListener()
     {
         while (true)

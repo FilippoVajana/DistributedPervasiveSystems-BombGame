@@ -14,16 +14,10 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import util.MockSocketClient;
 import util.MockSocketListener;
 
-import javax.xml.soap.Node;
-import java.net.InetAddress;
 import java.util.ArrayList;
 
-/**
- * Created by filip on 6/18/2017.
- */
 public class TokenTest
 {
     @Rule
@@ -36,12 +30,12 @@ public class TokenTest
         {
             NodeManager node = new NodeManager();
             node.startupNode();
-            Player pl = new Player("PL1", node.getListeningSocket().getListenerAddress().getHostAddress(), node.getListeningSocket().getListenerPort());
+            Player pl = new Player(String.format("PL%d", i), node.getListenerSocket().getListenerAddress().getHostAddress(), node.getListenerSocket().getListenerPort());
 
             ring.add(pl);
         }
         //set session ring
-        SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
+        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         try {
             Thread.sleep(2000);
@@ -67,7 +61,7 @@ public class TokenTest
         nodes.add(mockPlayer);
 
         //set ring nodes
-        SessionConfig.getInstance().RING_NODE = nodes;
+        SessionConfig.getInstance().RING_NETWORK = nodes;
 
         //build message
         RingMessage inMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), "TEST TOKEN MESSAGE");
@@ -96,7 +90,7 @@ public class TokenTest
         //init fake ring
         ConcurrentList<Player> ring = new ConcurrentList<>();
         ring.add(SessionConfig.getInstance().getPlayerInfo());
-        SessionConfig.getInstance().RING_NODE = ring;
+        SessionConfig.getInstance().RING_NETWORK = ring;
 
         //release token
         TokenManager.getInstance().releaseToken();
@@ -128,7 +122,7 @@ public class TokenTest
         //init fake ring
         ConcurrentList<Player> ring = new ConcurrentList<>();
         ring.add(SessionConfig.getInstance().getPlayerInfo());
-        SessionConfig.getInstance().RING_NODE = ring;
+        SessionConfig.getInstance().RING_NETWORK = ring;
 
         //send fake token message
         RingMessage fakeToken = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId());

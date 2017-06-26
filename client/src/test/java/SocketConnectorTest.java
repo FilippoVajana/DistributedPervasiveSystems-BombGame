@@ -99,7 +99,7 @@ public class SocketConnectorTest
         Thread.sleep(500);
 
         //setting session config
-        SessionConfig.getInstance().RING_NODE = new ConcurrentList<>();
+        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>();
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -134,7 +134,7 @@ public class SocketConnectorTest
         ArrayList<Player> ring = new ArrayList<>();
         Player p1 = new Player("NextPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
         ring.add(p1);
-        SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
+        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -175,7 +175,7 @@ public class SocketConnectorTest
         Thread.sleep(1000);
 
         //setting session config
-        SessionConfig.getInstance().RING_NODE = new ConcurrentList<>(ring);
+        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
         SocketConnector sender = new SocketConnector();

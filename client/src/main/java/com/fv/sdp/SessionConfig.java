@@ -41,7 +41,7 @@ public class SessionConfig
     //SOCKET
     public String LISTENER_ADDR;
     public int LISTENER_PORT;
-    public ConcurrentList<Player> RING_NODE;
+    public ConcurrentList<Player> RING_NETWORK;
 
     //PLAYER
     public String PLAYER_NICKNAME;

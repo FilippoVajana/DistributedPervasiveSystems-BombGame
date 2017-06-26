@@ -6,9 +6,7 @@ import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 import com.fv.sdp.SessionConfig;
 
-import javax.ws.rs.core.GenericType;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -165,7 +163,7 @@ public class SocketConnector
            {
                case ALL:
                    //call send
-                   sendMessage(message, SessionConfig.getInstance().RING_NODE.getList());
+                   sendMessage(message, SessionConfig.getInstance().RING_NETWORK.getList());
                    break;
                case NEXT:
                    //find next node
@@ -210,7 +208,7 @@ public class SocketConnector
     {
         Player thisNode = SessionConfig.getInstance().getPlayerInfo();
         Player nextNode;
-        ArrayList<Player> ringNodes = SessionConfig.getInstance().RING_NODE.getList();
+        ArrayList<Player> ringNodes = SessionConfig.getInstance().RING_NETWORK.getList();
 
         try
         {

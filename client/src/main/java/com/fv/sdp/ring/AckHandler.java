@@ -44,7 +44,6 @@ public class AckHandler implements IMessageHandler
         observerMap.put(idAck, observerLock);
     }
 
-    //TODO test
     @Override
     public synchronized void handle(RingMessage receivedMessage)
     {
@@ -52,11 +51,12 @@ public class AckHandler implements IMessageHandler
         PrettyPrinter.printTimestampLog(String.format("[%s] Handling ACK %s", this.getClass().getSimpleName(), receivedMessage.getId()));
 
         //find message ack queue
-        Integer ackCount = queueMap.get(receivedMessage.getId());
+        //Integer ackCount = queueMap.get(receivedMessage.getId());
         //decrement ack count
-        ackCount--;
+        //ackCount--;
+        queueMap.put(receivedMessage.getId(), queueMap.get(receivedMessage.getId()) - 1);
 
-        if (ackCount == 0)
+        if (queueMap.get(receivedMessage.getId()) == 0)
         {
             //get action module lock
             Object moduleLock =  observerMap.get(receivedMessage.getId());

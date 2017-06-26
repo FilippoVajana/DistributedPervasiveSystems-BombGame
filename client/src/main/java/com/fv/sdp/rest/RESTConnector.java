@@ -91,7 +91,7 @@ public class RESTConnector
             //set match
             SessionConfig.getInstance().PLAYER_MATCH = joinedMatch;
             //set ring node
-            SessionConfig.getInstance().RING_NODE = joinedMatch.getPlayers();
+            SessionConfig.getInstance().RING_NETWORK = joinedMatch.getPlayers();
 
             return true;
         }
