@@ -50,11 +50,17 @@ public class AckHandler implements IMessageHandler
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Handling ACK %s", this.getClass().getSimpleName(), receivedMessage.getId()));
 
-        //find message ack queue
-        //Integer ackCount = queueMap.get(receivedMessage.getId());
         //decrement ack count
-        //ackCount--;
-        queueMap.put(receivedMessage.getId(), queueMap.get(receivedMessage.getId()) - 1);
+        try
+        {
+            queueMap.put(receivedMessage.getId(), queueMap.get(receivedMessage.getId()) - 1);
+        }catch (NullPointerException ex)
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR: Queue %s not found", this.getClass().getSimpleName(), receivedMessage.getId()));
+
+            return;
+        }
 
         if (queueMap.get(receivedMessage.getId()) == 0)
         {
