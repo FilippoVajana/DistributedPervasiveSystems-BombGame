@@ -1,23 +1,32 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by filip on 6/16/2017.
  */
 public class TokenManager
 {
-    public TokenManager()
+    //app context
+    private ApplicationContext appContext;
+
+    public TokenManager(@NotNull ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
 
         //init token lock
         tokenLock = new Object();
+
+        //save app context
+        this.appContext = appContext;
     }
 
     private boolean hasToken = false;
@@ -49,8 +58,7 @@ public class TokenManager
         AckHandler.getInstance().addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
 
         //send message via socket
-        SocketConnector connector = new SocketConnector();
-        connector.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
+        appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
         //wait ack
         synchronized (tokenLock)

@@ -55,17 +55,6 @@ public class SocketConnector
         }
     }
 
-    //TODO: remove method
-    /**
-     * Temporary method.
-     * Use only for sendMessage()
-     */
-    public SocketConnector()
-    {
-        //log
-        //PrettyPrinter.printTimestampLog("Initialize temporary" + this.getClass().getSimpleName());
-    }
-
     //Input Side
     public boolean startListener() //syncronous op.
     {
@@ -114,9 +103,9 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
             //check token
-            if ((TokenManager.getInstance().isHasToken() && message.getType() != MessageType.ACK))
+            if ((appContext.TOKEN_MANAGER.isHasToken() && message.getType() != MessageType.ACK))
             {
-                Object tokenLock = TokenManager.getInstance().getTokenLock();
+                Object tokenLock = appContext.TOKEN_MANAGER.getTokenLock();
                 synchronized (tokenLock)
                 {
                     //log

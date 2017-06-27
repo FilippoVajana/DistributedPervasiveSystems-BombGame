@@ -26,7 +26,6 @@ public class NodeManager implements ISocketObserver
     public ApplicationContext appContext;
 
     //network modules
-    private SocketConnector socketConnector;
     private MessageQueueManager queueManager;
 
     //functional modules
@@ -47,11 +46,6 @@ public class NodeManager implements ISocketObserver
         queueManager = new MessageQueueManager();
     }
 
-    //Getter-Setter
-    public SocketConnector getSocketConnector() {
-        return socketConnector;
-    }
-
     public boolean startupNode()
     {
         try
@@ -60,7 +54,7 @@ public class NodeManager implements ISocketObserver
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
-            socketConnector = new SocketConnector(appContext, observersList, 0);
+            appContext.SOCKET_CONNECTOR = new SocketConnector(appContext, observersList, 0);
 
             //init ack handler
             ackHandler = AckHandler.getInstance();
@@ -71,11 +65,11 @@ public class NodeManager implements ISocketObserver
             new Thread(() -> queueManager.observeQueue(MessageType.GAME, gameHandler)).start();
 
             //token handler
-            tokenHandler = TokenHandler.getInstance();
+            tokenHandler = new TokenHandler(appContext);
             new Thread(() -> queueManager.observeQueue(MessageType.TOKEN, tokenHandler)).start();
 
             //start socket listener
-            new Thread(() -> socketConnector.startListener()).start();
+            new Thread(() -> appContext.SOCKET_CONNECTOR.startListener()).start();
 
             //startup GUI manager
             //exit on return

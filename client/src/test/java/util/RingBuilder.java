@@ -31,7 +31,7 @@ public class RingBuilder
             }
 
             //build node player
-            Player pl = new Player(String.format("PL%d", i), node.getSocketConnector().getListenerAddress().getHostAddress(), node.getSocketConnector().getListenerPort());
+            Player pl = new Player(String.format("PL%d", i), node.appContext.SOCKET_CONNECTOR.getListenerAddress().getHostAddress(), node.appContext.SOCKET_CONNECTOR.getListenerPort());
 
             //update nodes list
             nodesList.add(node);

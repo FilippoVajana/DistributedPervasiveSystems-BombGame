@@ -41,7 +41,7 @@ public class GameManager
         //send back ACK
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
         response.setSourceAddress(message.getSourceAddress()); //MAGIC HACK
-        new SocketConnector().sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
+        appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
         //TODO: context.getSocketConnector().sendMessage()....
     }
 
@@ -60,7 +60,7 @@ public class GameManager
         AckHandler.getInstance().addPendingAck(message.getId(), ringNodesCount, moduleLock);
 
         //send message
-        new SocketConnector().sendMessage(message, SocketConnector.DestinationGroup.ALL);
+       appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
 
         //wait ack
         synchronized (moduleLock)

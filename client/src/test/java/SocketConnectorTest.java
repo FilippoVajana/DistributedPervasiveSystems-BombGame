@@ -103,7 +103,7 @@ public class SocketConnectorTest
         //ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>();
 
         //init sender
-        SocketConnector sender = new SocketConnector();
+        SocketConnector sender = new SocketConnector(new ApplicationContext(), new ArrayList<>(), 0);
 
         //build message
         String sourceAddress = String.format("%s:%d", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
@@ -138,7 +138,7 @@ public class SocketConnectorTest
         //ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
-        SocketConnector sender = new SocketConnector();
+        SocketConnector sender = new SocketConnector(new ApplicationContext(), new ArrayList<>(), 0);
 
         //build message
         String sourceAddress = String.format("%s:%d", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
@@ -179,7 +179,7 @@ public class SocketConnectorTest
         //ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
-        SocketConnector sender = new SocketConnector();
+        SocketConnector sender = new SocketConnector(new ApplicationContext(), new ArrayList<>(), 0);
 
         //build message
         String sourceAddress = "127.0.0.1:8000";

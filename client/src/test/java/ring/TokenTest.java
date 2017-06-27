@@ -37,7 +37,7 @@ public class TokenTest
         tokenMessage.setSourceAddress(String.format("%s:%d", node0.appContext.LISTENER_ADDR, node0.appContext.LISTENER_PORT));
 
         //send mock token message to node1
-        node0.getSocketConnector().sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
+        node0.appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
         Thread.sleep(2000);
 
