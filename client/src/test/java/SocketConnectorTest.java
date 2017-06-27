@@ -21,6 +21,7 @@ import java.util.List;
  */
 public class SocketConnectorTest
 {
+
     private List<ISocketObserver> getObserversList()
     {
         List<ISocketObserver> mockObserverList = new ArrayList<>();
@@ -36,7 +37,7 @@ public class SocketConnectorTest
     {
         List<ISocketObserver> mockObserverList = getObserversList();
 
-        SocketConnector connector = new SocketConnector(mockObserverList, 0);
+        SocketConnector connector = new SocketConnector(new ApplicationContext(), mockObserverList, 0);
         System.out.println(connector.getListenerAddress());
         System.out.println(connector.getListenerPort());
 
@@ -48,7 +49,7 @@ public class SocketConnectorTest
     {
         List<ISocketObserver> mockObserverList = getObserversList();
         //server creation
-        SocketConnector connector = new SocketConnector(mockObserverList, 0);
+        SocketConnector connector = new SocketConnector(new ApplicationContext(), mockObserverList, 0);
         Runnable task = () -> connector.startListener();
         Thread thread = new Thread(task);
         thread.start();
@@ -68,7 +69,7 @@ public class SocketConnectorTest
     public void multiClientDeliveryTest() throws InterruptedException {
         List<ISocketObserver> mockObserverList = getObserversList();
         //server creation
-        SocketConnector connector = new SocketConnector(mockObserverList, 0);
+        SocketConnector connector = new SocketConnector(new ApplicationContext(), mockObserverList, 0);
         Runnable task = () -> connector.startListener();
         Thread thread = new Thread(task);
         thread.start();
@@ -99,7 +100,7 @@ public class SocketConnectorTest
         Thread.sleep(500);
 
         //setting session config
-        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>();
+        //ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>();
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -134,7 +135,7 @@ public class SocketConnectorTest
         ArrayList<Player> ring = new ArrayList<>();
         Player p1 = new Player("NextPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
         ring.add(p1);
-        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        //ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
         SocketConnector sender = new SocketConnector();
@@ -175,7 +176,7 @@ public class SocketConnectorTest
         Thread.sleep(1000);
 
         //setting session config
-        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        //ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
 
         //init sender
         SocketConnector sender = new SocketConnector();

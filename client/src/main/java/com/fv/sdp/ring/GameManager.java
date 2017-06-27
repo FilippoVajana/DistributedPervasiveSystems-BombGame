@@ -29,12 +29,12 @@ public class GameManager
     public void handleNewPlayerRingEntrance(RingMessage message)
     {
         //get player info
-        String playerJson = message.getContent().split("#")[1]; //TODO: annotate message format
+        String playerJson = message.getContent().split("#")[1]; //TODO: set message format
         Player newPlayer = new Gson().fromJson(playerJson, Player.class);
 
         //update ring topology
-        ApplicationContext.getInstance().RING_NETWORK.add(newPlayer); //TODO: check duplicated player
-        //TODO: context.getRingNetwork.add()
+        appContext.RING_NETWORK.add(newPlayer); //TODO: check duplicated player
+
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", this.getClass().getSimpleName(), newPlayer.getId()));
 
@@ -56,7 +56,7 @@ public class GameManager
         RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
 
         //build ack queue
-        int ringNodesCount = ApplicationContext.getInstance().RING_NETWORK.getList().size();
+        int ringNodesCount = appContext.RING_NETWORK.getList().size();
         AckHandler.getInstance().addPendingAck(message.getId(), ringNodesCount, moduleLock);
 
         //send message

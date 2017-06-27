@@ -37,12 +37,12 @@ public class RESTConnectorTest extends JerseyTest
         new MatchResource().resetResourceModel();
 
         //init session parameters
-        ApplicationContext config = ApplicationContext.getInstance();
+        ApplicationContext appContext = new ApplicationContext();
         //set JdkHttpServerTestContainer
-        config.REST_BASE_URL = "http://localhost:9998/";
+        appContext.REST_BASE_URL = "http://localhost:9998/";
 
         //init rest connector
-        connector = new RESTConnector();
+        connector = new RESTConnector(appContext);
     }
     private void setServerTestModel()
     {
@@ -109,13 +109,16 @@ public class RESTConnectorTest extends JerseyTest
     @Test
     public void joinMatchTest()
     {
+        //app context
+        ApplicationContext appContext = new ApplicationContext();
+
         //create match
         Match match = new Match("Glory", 56, 67);
         connector.createServerMatch(match);
 
         //create player
-        ApplicationContext.getInstance().setPlayerInfo("PL1", "127.0.0.1", 6453);
-        Player player = ApplicationContext.getInstance().getPlayerInfo();
+        appContext.setPlayerInfo("PL1", "127.0.0.1", 6453);
+        Player player = appContext.getPlayerInfo();
 
         //join
         boolean joinResult = connector.joinServerMatch(new Match("Glory",0,0), player);
@@ -126,14 +129,14 @@ public class RESTConnectorTest extends JerseyTest
         ArrayList<Match> matchList = connector.getServerMatchList(); //todo add contain method to ConcurrentArrayList
         Assert.assertEquals(1, matchList.size());
 
-        Assert.assertEquals(match, ApplicationContext.getInstance().PLAYER_MATCH);
+        Assert.assertEquals(match, appContext.PLAYER_MATCH);
         System.out.println("Current match: ");
-        PrettyPrinter.printMatchDetails(ApplicationContext.getInstance().PLAYER_MATCH);
+        PrettyPrinter.printMatchDetails(appContext.PLAYER_MATCH);
 
         //chech session config node
-        Assert.assertEquals(1, ApplicationContext.getInstance().RING_NETWORK.getList().size());
+        Assert.assertEquals(1, appContext.RING_NETWORK.getList().size());
         System.out.println("Ring topology: ");
-        for (Player p : ApplicationContext.getInstance().RING_NETWORK.getList())
+        for (Player p : appContext.RING_NETWORK.getList())
             PrettyPrinter.printPlayerDetails(p);
     }
 

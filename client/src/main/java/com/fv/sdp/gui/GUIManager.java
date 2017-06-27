@@ -4,7 +4,9 @@ import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.rest.RESTConnector;
+import com.fv.sdp.util.PrettyPrinter;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -14,13 +16,27 @@ import java.util.Scanner;
 
 public class GUIManager
 {
-    public GUIManager()
+    //app context
+    ApplicationContext appContext;
+
+    public GUIManager(@NotNull ApplicationContext appContext)
     {
+        //log
+        PrettyPrinter.printClassInit(this);
+
+        //save context
+        this.appContext = appContext;
         //testing
         //System.out.println("Requesting server test data model . . .\n\n");
         //new RESTConnector().requestSetTestModel();
         //welcome
         welcome();
+        //TODO: show menu
+    }
+
+    public ApplicationContext getAppContext()
+    {
+        return appContext;
     }
 
     //welcome message
@@ -66,8 +82,8 @@ public class GUIManager
         String nickname = inputReader.next();
         System.out.println();
 
-        ApplicationContext.getInstance().PLAYER_NICKNAME = nickname;
-        System.out.println("Nickname set to " + ApplicationContext.getInstance().PLAYER_NICKNAME);
+        appContext.PLAYER_NICKNAME = nickname;
+        System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
     }
 
     //enter match
@@ -77,7 +93,7 @@ public class GUIManager
 
         System.out.println("Retrieving available matches . . .");
         //get list
-        ArrayList<Match> matchList = new RESTConnector().getServerMatchList();
+        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
 
         System.out.println("Available matches: ");
         for (int i = 0; i < matchList.size(); i++)
@@ -90,8 +106,8 @@ public class GUIManager
         int index = inputReader.nextInt();
 
         //enter match
-        Player player = ApplicationContext.getInstance().getPlayerInfo();
-        boolean joinResult = new RESTConnector().joinServerMatch(matchList.get(index), player );
+        Player player = appContext.getPlayerInfo();
+        boolean joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player );
         //TODO: token management + signal new node
 
         //set match
@@ -122,7 +138,7 @@ public class GUIManager
         System.out.print("Enter match victory points: ");
         match.setVictoryPoints(inputReader.nextInt());
 
-        boolean creationResult = new RESTConnector().createServerMatch(match);
+        boolean creationResult = new RESTConnector(appContext).createServerMatch(match);
 
         return creationResult;
     }

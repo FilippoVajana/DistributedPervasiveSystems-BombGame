@@ -4,6 +4,8 @@ import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.PrettyPrinter;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by filip on 26/06/2017.
  */
@@ -12,7 +14,7 @@ public class GameHandler implements IMessageHandler
     ApplicationContext appContext;
     GameManager gameManager;
 
-    public GameHandler(ApplicationContext appContext)
+    public GameHandler(@NotNull ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);

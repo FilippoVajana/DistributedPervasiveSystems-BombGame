@@ -1,141 +1,52 @@
 package ring;
 
-import com.fv.sdp.ApplicationContext;
-import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.NodeManager;
-import com.fv.sdp.ring.TokenHandler;
-import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
-import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.RandomIdGenerator;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import util.MockSocketListener;
+import util.RingBuilder;
 
 import java.util.ArrayList;
 
 public class TokenTest
 {
-    @Rule
+    /*@Rule
     public Timeout globalTimeout = Timeout.seconds(10); // 10 seconds max per method tested
-
-    private void buildTestRing()
+    */
+    private String getCurrentMethodName()
     {
-        ArrayList<Player> ring = new ArrayList<>();
-        for (int i=0; i<3; i++)
-        {
-            NodeManager node = new NodeManager();
-            node.startupNode();
-            Player pl = new Player(String.format("PL%d", i), node.getListenerSocket().getListenerAddress().getHostAddress(), node.getListenerSocket().getListenerPort());
-
-            ring.add(pl);
-        }
-        //set session ring
-        ApplicationContext.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        return Thread.currentThread().getStackTrace()[2].getMethodName();
     }
 
     @Test
-    public void handleStoreTokenDirect() throws Exception
+    /**
+     * Mock TOKEN from node0 to node1
+     */
+    public void tokenStoreTest() throws InterruptedException
     {
-        //start mock listener
-        MockSocketListener mockListener = new MockSocketListener();
-        Runnable listenerTask = () -> mockListener.startListener();
-        Thread listenerThread = new Thread(listenerTask);
-        listenerThread.start();
+        //build test ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
 
-        Thread.sleep(500);
+        //mock token message from node0
+        NodeManager node0 = ring.get(0);
+        RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), getCurrentMethodName());
+        tokenMessage.setSourceAddress(String.format("%s:%d", node0.appContext.LISTENER_ADDR, node0.appContext.LISTENER_PORT));
 
-        //add mock listener as ring node
-        ConcurrentList<Player> nodes = new ConcurrentList<>();
-        Player mockPlayer = new Player("MockPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
-        nodes.add(mockPlayer);
+        //send mock token message to node1
+        node0.getSocketConnector().sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
-        //set ring nodes
-        ApplicationContext.getInstance().RING_NETWORK = nodes;
-
-        //build message
-        RingMessage inMessage = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), "TEST TOKEN MESSAGE");
-        inMessage.setSourceAddress(String.format("%s:%d", mockPlayer.getAddress(), mockPlayer.getPort()));
-
-        //send message to handler
-        TokenHandler.getInstance().handle(inMessage);
-
-        //check
-        Assert.assertTrue(TokenManager.getInstance().isHasToken());
-
-        Thread.sleep(500);
-    }
-
-    @Test
-    public void handleReleaseToken() throws Exception
-    {
-        //init node
-        NodeManager node = new NodeManager();
-        Assert.assertNotNull(node);
-
-        //startup node
-        node.startupNode();
-        Thread.sleep(1000);
-
-        //init fake ring
-        ConcurrentList<Player> ring = new ConcurrentList<>();
-        ring.add(ApplicationContext.getInstance().getPlayerInfo());
-        ApplicationContext.getInstance().RING_NETWORK = ring;
-
-        //release token
-        TokenManager.getInstance().releaseToken();
-
-        Thread.sleep(1000);
-    }
-
-    @Test
-    public void handleRingReleaseToken() throws Exception
-    {
-        //build ring
-        buildTestRing();
-
-        TokenManager.getInstance().releaseToken();
         Thread.sleep(2000);
+
     }
 
     @Test
-    public void handleStoreTokenMessage() throws Exception
+    public void tokenReleaseTest()
     {
-        //init target node
-        NodeManager node = new NodeManager();
-        Assert.assertNotNull(node);
-
-        //startup node
-        node.startupNode();
-        Thread.sleep(1000);
-
-        //init fake ring
-        ConcurrentList<Player> ring = new ConcurrentList<>();
-        ring.add(ApplicationContext.getInstance().getPlayerInfo());
-        ApplicationContext.getInstance().RING_NETWORK = ring;
-
-        //send fake token message
-        RingMessage fakeToken = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId());
-        //fakeToken.setSourceAddress(String.format("%s:%d", ApplicationContext.getInstance().LISTENER_ADDR, ApplicationContext.getInstance().LISTENER_PORT));
-        new SocketConnector().sendMessage(fakeToken, SocketConnector.DestinationGroup.NEXT);
-
-        Thread.sleep(3000);
-
-        /*
-        l'errore riscontrato (NullPointer) deriva dal fatto che la sorgente del messaggio Token, non avendo
-        utilizzato la procedura prevista, pur aspettandosi un ACK di risposta non ha predisposto una entry
-        all'interno della coda in AckHandler.
-        Soluzione: utilizzare, dopo validazione, la procedura corretta di rilascio del token
-         */
+        //build test ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
     }
 }

@@ -6,6 +6,7 @@ import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 
+import javax.validation.constraints.NotNull;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -21,13 +22,19 @@ import java.util.stream.Stream;
  */
 public class SocketConnector
 {
+    //app context
+    private ApplicationContext appContext;
+
     private ServerSocket listeningServer;
     private List<ISocketObserver> observersList;
 
-    public SocketConnector(List<ISocketObserver> observers, int listenerPort)
+    public SocketConnector(@NotNull ApplicationContext appContext, List<ISocketObserver> observers, int listenerPort)
     {
         //log
         PrettyPrinter.printClassInit(this);
+
+        //save context
+        this.appContext = appContext;
 
         //check observers list
         if (observers == null)
@@ -39,8 +46,8 @@ public class SocketConnector
             //create listener
             listeningServer = new ServerSocket(listenerPort);
             //update session config
-            ApplicationContext.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
-            ApplicationContext.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
+            this.appContext.LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
+            this.appContext.LISTENER_PORT = listeningServer.getLocalPort();
 
         }catch (Exception ex)
         {
@@ -63,7 +70,7 @@ public class SocketConnector
     public boolean startListener() //syncronous op.
     {
         //wait on client
-        PrettyPrinter.printTimestampLog(String.format("[%s] LISTENING AT %s:%d", this.getClass().getSimpleName(), getListenerAddress().getHostAddress(), getListenerPort()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Listening at %s:%d", this.getClass().getSimpleName(), getListenerAddress().getHostAddress(), getListenerPort()));
 
         while (true) //start stream reader foreach accepted connection
         {
@@ -89,8 +96,8 @@ public class SocketConnector
     private void send(RingMessage message, Player destination)
     {
         //set message origin
-        String ip = ApplicationContext.getInstance().LISTENER_ADDR;
-        int port = ApplicationContext.getInstance().LISTENER_PORT;
+        String ip = appContext.LISTENER_ADDR;
+        int port = appContext.LISTENER_PORT;
         String messageSource = String.format("%s:%d", ip, port);
         message.setSourceAddress(messageSource);
         try
@@ -113,7 +120,7 @@ public class SocketConnector
                 synchronized (tokenLock)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] WAITING TOKEN", this.getClass().getSimpleName()));
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
                     tokenLock.wait();
                 }
             }
@@ -163,7 +170,7 @@ public class SocketConnector
            {
                case ALL:
                    //call send
-                   sendMessage(message, ApplicationContext.getInstance().RING_NETWORK.getList());
+                   sendMessage(message, appContext.RING_NETWORK.getList());
                    break;
                case NEXT:
                    //find next node
@@ -206,9 +213,9 @@ public class SocketConnector
 
     private Player findNextNode()
     {
-        Player thisNode = ApplicationContext.getInstance().getPlayerInfo();
+        Player thisNode = appContext.getPlayerInfo();
         Player nextNode;
-        ArrayList<Player> ringNodes = ApplicationContext.getInstance().RING_NETWORK.getList();
+        ArrayList<Player> ringNodes = appContext.RING_NETWORK.getList();
 
         try
         {
@@ -288,14 +295,6 @@ class SocketListenerRunner implements Runnable
            {
                //json parsing
                RingMessage message = new Gson().fromJson(input, RingMessage.class);
-
-               //set message source address //TODO: rivedere pesantemente -> le risposte devono essere inviate al LISTENER del client!!!
-               /*
-               String ip = client.getInetAddress().getHostAddress();
-               int port = client.getPort();
-               String messageSource = String.format("%s:%d", ip, port);
-               message.setSourceAddress(messageSource);
-                */
 
                //print log
                PrettyPrinter.printReceivedRingMessage(message);

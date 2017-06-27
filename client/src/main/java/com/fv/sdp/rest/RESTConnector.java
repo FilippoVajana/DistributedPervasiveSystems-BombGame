@@ -6,6 +6,7 @@ import com.fv.sdp.model.Player;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -18,20 +19,23 @@ import java.util.Map;
  */
 public class RESTConnector
 {
+    //app context
+    private ApplicationContext appContext;
+
     private Client restClient = null;
     private WebTarget restBaseUrl = null; //TODO: remove, use ApplicationContext
     private Map<String, String> restEndpointsIndex = null; //TODO: remove
 
-    public RESTConnector()
+    public RESTConnector(@NotNull ApplicationContext appContext)
     {
         //config
-        ApplicationContext configuration = ApplicationContext.getInstance();
+        this.appContext = appContext;
         //client
         restClient = ClientBuilder.newClient();
         //base url
-        restBaseUrl = restClient.target(configuration.REST_BASE_URL);
+        restBaseUrl = restClient.target(this.appContext.REST_BASE_URL);
         //endpoints
-        restEndpointsIndex = configuration.REST_ENDPOINTS;
+        restEndpointsIndex = this.appContext.REST_ENDPOINTS;
     }
 
     public boolean requestSetTestModel()
@@ -89,9 +93,9 @@ public class RESTConnector
         {
             Match joinedMatch = response.readEntity(Match.class);
             //set match
-            ApplicationContext.getInstance().PLAYER_MATCH = joinedMatch;
+            appContext.PLAYER_MATCH = joinedMatch;
             //set ring node
-            ApplicationContext.getInstance().RING_NETWORK = joinedMatch.getPlayers();
+            appContext.RING_NETWORK = joinedMatch.getPlayers();
 
             return true;
         }

@@ -23,10 +23,10 @@ import java.util.Map;
 public class NodeManager implements ISocketObserver
 {
     //app context
-    ApplicationContext appContext;
+    public ApplicationContext appContext;
 
     //network modules
-    private SocketConnector listenerSocket;
+    private SocketConnector socketConnector;
     private MessageQueueManager queueManager;
 
     //functional modules
@@ -41,14 +41,15 @@ public class NodeManager implements ISocketObserver
         PrettyPrinter.printClassInit(this);
 
         //init app context
-        appContext = ApplicationContext.getInstance();
+        appContext = new ApplicationContext();
 
         //init queue manager
         queueManager = new MessageQueueManager();
     }
 
-    public SocketConnector getListenerSocket() {
-        return listenerSocket;
+    //Getter-Setter
+    public SocketConnector getSocketConnector() {
+        return socketConnector;
     }
 
     public boolean startupNode()
@@ -59,7 +60,7 @@ public class NodeManager implements ISocketObserver
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
-            listenerSocket = new SocketConnector(observersList, 0);
+            socketConnector = new SocketConnector(appContext, observersList, 0);
 
             //init ack handler
             ackHandler = AckHandler.getInstance();
@@ -74,7 +75,7 @@ public class NodeManager implements ISocketObserver
             new Thread(() -> queueManager.observeQueue(MessageType.TOKEN, tokenHandler)).start();
 
             //start socket listener
-            new Thread(() -> listenerSocket.startListener()).start();
+            new Thread(() -> socketConnector.startListener()).start();
 
             //startup GUI manager
             //exit on return
