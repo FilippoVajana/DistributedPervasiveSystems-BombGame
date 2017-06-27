@@ -25,13 +25,14 @@ public class RingBuilder
             try
             {
                 Thread.sleep(250);
+                System.out.println(String.format("Node%d - %s:%d", i, node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT));
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
             }
 
             //build node player
-            Player pl = new Player(String.format("PL%d", i), node.appContext.SOCKET_CONNECTOR.getListenerAddress().getHostAddress(), node.appContext.SOCKET_CONNECTOR.getListenerPort());
+            Player pl = new Player(String.format("PL%d", i), node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
 
             //update nodes list
             nodesList.add(node);
@@ -44,6 +45,9 @@ public class RingBuilder
         {
             node.appContext.RING_NETWORK = new ConcurrentList<>(playersList);
         }
+
+        //print white lines
+        System.out.println("\n\n");
 
         return nodesList;
     }

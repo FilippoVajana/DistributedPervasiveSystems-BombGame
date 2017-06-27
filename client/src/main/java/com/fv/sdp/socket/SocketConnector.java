@@ -168,13 +168,17 @@ public class SocketConnector
                    send(message, nextPlayer);
                    break;
                case SOURCE:
-                   //destination
+                   //set destinations list
                    ArrayList<Player> destination = new ArrayList<>();
-                   //build dummy player for source node
+
+                   //get source address
                    String ip = message.getSourceAddress().split(":")[0];
                    int port = Integer.parseInt(message.getSourceAddress().split(":")[1]);
+
+                   //build dummy player
                    Player sourcePlayer = new Player("DummyPlayer", ip, port);
                    destination.add(sourcePlayer);
+
                    //call send
                    sendMessage(message, destination);
                    break;
