@@ -133,11 +133,14 @@ public class SocketConnector
         }
     }
 
-    //TODO: test
-    //TODO: check send result
+    //TODO: caller must check return value
     //Output Side
     public boolean sendMessage(RingMessage message, List<Player> destinations)
     {
+        //send threads list
+        ArrayList<Thread> sendThreadList = new ArrayList<>();
+
+        //launch send threads
         for (Player p : destinations)
         {
             //task
@@ -147,6 +150,20 @@ public class SocketConnector
             //start thread
             sendThread.start();
         }
+
+        //wait send threads
+        for (Thread t : sendThreadList)
+        {
+            try
+            {
+                t.join();
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -159,17 +176,19 @@ public class SocketConnector
            {
                case ALL:
                    //call send
-                   sendMessage(message, appContext.RING_NETWORK.getList());
-                   break;
+                   return sendMessage(message, appContext.RING_NETWORK.getList());
+
                case NEXT:
+                   //destination
+                   ArrayList<Player> destination = new ArrayList<>();
                    //find next node
-                   Player nextPlayer = findNextNode();
+                   destination.add(findNextNode());
                     //call send
-                   send(message, nextPlayer);
-                   break;
+                   return sendMessage(message, destination);
+
                case SOURCE:
                    //set destinations list
-                   ArrayList<Player> destination = new ArrayList<>();
+                   ArrayList<Player> dst = new ArrayList<>();
 
                    //get source address
                    String ip = message.getSourceAddress().split(":")[0];
@@ -177,11 +196,10 @@ public class SocketConnector
 
                    //build dummy player
                    Player sourcePlayer = new Player("DummyPlayer", ip, port);
-                   destination.add(sourcePlayer);
+                   dst.add(sourcePlayer);
 
                    //call send
-                   sendMessage(message, destination);
-                   break;
+                   return sendMessage(message, dst);
            }
        }catch (Exception ex)
        {

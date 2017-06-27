@@ -63,19 +63,6 @@ public class RESTConnectorTest extends JerseyTest
         Match m4 = new Match("game4", 34,67, pList4);
         target("match").request().post(Entity.entity(m4, MediaType.APPLICATION_JSON));
     }
-    private void printMatchDetails(Match match)
-    {
-        String playerDetails = "";
-        for (Player p : match.getPlayers().getList())
-        {
-            playerDetails += String.format("\tId: %s\t" +
-                    "Address: %s:%d\n", p.getId(), p.getAddress(), p.getPort());
-        }
-        System.out.println(String.format("Id: %s\n" +
-                "Players: \n%s" +
-                "Points_V: %d\n" +
-                "Points_E: %d\n\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
-    }
 
     @Test
     public void getMatchList()
@@ -87,7 +74,7 @@ public class RESTConnectorTest extends JerseyTest
         //check return
         Assert.assertEquals(4, matchList.size());
         for (Match m : matchList)
-            printMatchDetails(m);
+            PrettyPrinter.printMatchDetails(m);
     }
 
     @Test
@@ -103,7 +90,7 @@ public class RESTConnectorTest extends JerseyTest
         ArrayList<Match> matchList = connector.getServerMatchList();
         //check response
         for (Match e : matchList)
-            printMatchDetails(e);
+            PrettyPrinter.printMatchDetails(e);
     }
 
     @Test
@@ -111,6 +98,11 @@ public class RESTConnectorTest extends JerseyTest
     {
         //app context
         ApplicationContext appContext = new ApplicationContext();
+        //set JdkHttpServerTestContainer
+        appContext.REST_BASE_URL = "http://localhost:9998/";
+
+        //init REST connector
+        connector = new RESTConnector(appContext);
 
         //create match
         Match match = new Match("Glory", 56, 67);
