@@ -11,8 +11,10 @@ import javax.validation.constraints.NotNull;
  */
 public class GameHandler implements IMessageHandler
 {
-    ApplicationContext appContext;
-    GameManager gameManager;
+    //app context
+    private ApplicationContext appContext;
+    //game logic module
+    private GameManager gameManager;
 
     public GameHandler(@NotNull ApplicationContext appContext)
     {

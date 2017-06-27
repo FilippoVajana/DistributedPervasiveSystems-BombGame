@@ -1,26 +1,33 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.PrettyPrinter;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by filip on 6/18/2017.
  */
 public class TokenHandler implements IMessageHandler
 {
-    private static TokenHandler instance;
-    public static TokenHandler getInstance()
-    {
-        if (instance == null)
-            instance = new TokenHandler();
-        return instance;
-    }
-    private TokenHandler()
+    //app context
+    private ApplicationContext appContext;
+    //tokek logic module
+    private TokenManager tokenManager;
+
+    public TokenHandler(@NotNull ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
+
+        //save app context
+        this.appContext = appContext;
+
+        //init token logic
+        tokenManager = new TokenManager();
     }
 
     //TODO: test
@@ -35,7 +42,7 @@ public class TokenHandler implements IMessageHandler
         PrettyPrinter.printTimestampLog(String.format("[%s] Handling [TOKEN %s]", this.getClass().getSimpleName(), receivedMessage.getId()));
 
         //set hasToken true
-        TokenManager.getInstance().storeToken();
+        tokenManager.storeToken();
 
         //build ack message
         RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId(), receivedMessage.getContent());

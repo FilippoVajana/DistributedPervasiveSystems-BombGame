@@ -11,20 +11,13 @@ import com.fv.sdp.util.RandomIdGenerator;
  */
 public class TokenManager
 {
-    private static TokenManager instance = null;
-    private TokenManager()
+    public TokenManager()
     {
         //log
         PrettyPrinter.printClassInit(this);
 
         //init token lock
         tokenLock = new Object();
-    }
-    public static TokenManager getInstance()
-    {
-        if (instance == null)
-            instance = new TokenManager();
-        return instance;
     }
 
     private boolean hasToken = false;
