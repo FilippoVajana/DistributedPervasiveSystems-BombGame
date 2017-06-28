@@ -28,7 +28,6 @@ public class TokenHandler implements IMessageHandler
         appContext.TOKEN_MANAGER = new TokenManager(this.appContext);
     }
 
-    //TODO: test
     /**
      * Handle received TokenMessage setting hasToken property and sending back an ACK message
      * @param receivedMessage: message to be handled
@@ -44,7 +43,8 @@ public class TokenHandler implements IMessageHandler
 
         //build ack message
         RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId(), receivedMessage.getContent());
-        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //TODO: MAGIC HACK (send.SOURCE use message source address)
+        //MAGIC HACK (send.SOURCE use message source address)
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress());
 
         //send ack
         appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);

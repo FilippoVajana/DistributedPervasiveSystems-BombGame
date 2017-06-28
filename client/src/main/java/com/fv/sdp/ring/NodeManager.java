@@ -13,13 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**TODO: rimuovere implementazioni del pattern singleton dai vari moduli
- * salvare le istanze dei moduli funzionali all'interno di ApplicationContext con relativi get/set
- * rinominare ApplicationContext in AppContext
- * correggere i test, in particolare quelli con molteplici nodi
- */
-
-
 public class NodeManager implements ISocketObserver
 {
     //app context
@@ -57,7 +50,7 @@ public class NodeManager implements ISocketObserver
             appContext.SOCKET_CONNECTOR = new SocketConnector(appContext, observersList, 0);
 
             //init ack handler
-            ackHandler = AckHandler.getInstance();
+            ackHandler = new AckHandler(appContext);
             new Thread(() -> queueManager.observeQueue(MessageType.ACK, ackHandler)).start();
 
             //game handler

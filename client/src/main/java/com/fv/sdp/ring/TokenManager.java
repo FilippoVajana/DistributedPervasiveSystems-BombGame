@@ -55,7 +55,7 @@ public class TokenManager
         RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId());
 
         //build ack queue
-        AckHandler.getInstance().addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
+        appContext.ACK_HANDLER.addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
 
         //send message via socket
         appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);

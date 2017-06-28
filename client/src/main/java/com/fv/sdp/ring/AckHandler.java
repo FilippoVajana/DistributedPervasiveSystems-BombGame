@@ -1,5 +1,6 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.PrettyPrinter;
 
@@ -11,18 +12,10 @@ import java.util.Map;
  */
 public class AckHandler implements IMessageHandler
 {
-    private static AckHandler instance = null;
-    public static AckHandler getInstance()
-    {
-        if (instance == null)
-            instance = new AckHandler();
-        return instance;
-    }
-
     private Map<String, Integer> queueMap; //retain a map of pending ack to be received (id:count)
     private Map<String, Object> observerMap; //retain a map between <ack queue> - <observer lock>
 
-    private AckHandler()
+    public AckHandler(ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
@@ -31,6 +24,9 @@ public class AckHandler implements IMessageHandler
         queueMap = new HashMap<>();
         //init synlock map
         observerMap = new HashMap<>();
+
+        //save handler into app context
+        appContext.ACK_HANDLER = this;
     }
 
     public synchronized void addPendingAck(String idAck, int requiredAck, Object observerLock)
