@@ -81,7 +81,11 @@ public class SocketConnector
 
     public enum DestinationGroup {ALL, NEXT, SOURCE};
 
-    //TODO: return operation result
+    /**
+     * Convert message to JSON format and then send it to destination
+     * @param message
+     * @param destination
+     */
     private void send(RingMessage message, Player destination)
     {
         //set message origin
@@ -133,8 +137,14 @@ public class SocketConnector
         }
     }
 
-    //TODO: caller must check return value
-    //Output Side
+    /**
+     * Send a RingMessage to a list of destinations.
+     * Every send operation is performed on a dedicated thread.
+     * Method return only after every thread finished its job.
+     * @param message
+     * @param destinations
+     * @return true: if all send operations have succeeded
+     */
     public boolean sendMessage(RingMessage message, List<Player> destinations)
     {
         //send threads list
@@ -167,7 +177,14 @@ public class SocketConnector
         return true;
     }
 
-    //this method serves as router over DestinationGroup enum
+    //TODO: caller must check return value
+    /**
+     * Initialize message destinations based on DestinationGroup param value.
+     * @param message
+     * @param dstGroup
+     * @return true: if the message was sent to all destinations
+     * @implNote the method use sendMessage(RingMessage, List) to actually send the message
+     */
     public boolean sendMessage(RingMessage message, DestinationGroup dstGroup)
     {
        try

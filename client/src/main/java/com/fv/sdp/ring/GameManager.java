@@ -23,26 +23,31 @@ public class GameManager
     }
 
     /**
-     * Update players list. New player informations are stored into message content field as Json String
+     * Update players list. New player information are stored into message content field as Json String
      * @param message
      */
-    public void handleNewPlayerRingEntrance(RingMessage message)
+    public synchronized void handleNewPlayerRingEntrance(RingMessage message)
     {
         //get player info
         String playerJson = message.getContent().split("#")[1]; //TODO: set message format
         Player newPlayer = new Gson().fromJson(playerJson, Player.class);
 
         //update ring topology
-        appContext.RING_NETWORK.add(newPlayer); //TODO: check duplicated player
-
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", this.getClass().getSimpleName(), newPlayer.getId()));
+        if (!appContext.RING_NETWORK.contain(newPlayer)) //check duplicated player
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", this.getClass().getSimpleName(), newPlayer.getId()));
+            appContext.RING_NETWORK.add(newPlayer);
+        }
+        else
+        {
+            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added", this.getClass().getSimpleName(), newPlayer.getId()));
+        }
 
         //send back ACK
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
         response.setSourceAddress(message.getSourceAddress()); //MAGIC HACK
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
-        //TODO: context.getSocketConnector().sendMessage()....
     }
 
     public void notifyRingEntrance(Player newPlayer)
@@ -57,17 +62,18 @@ public class GameManager
 
         //build ack queue
         int ringNodesCount = appContext.RING_NETWORK.getList().size();
-        AckHandler.getInstance().addPendingAck(message.getId(), ringNodesCount, moduleLock);
+        appContext.ACK_HANDLER.addPendingAck(message.getId(), ringNodesCount, moduleLock);
 
         //send message
-       appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
+       appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);//TODO: check result
 
         //wait ack
         synchronized (moduleLock)
         {
             try
             {
-                moduleLock.wait();
+                moduleLock.wait(5000); //wait with 5s timeout
+                //TODO: check if this node/player must add himself to his local RING_NETWORK view
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
