@@ -101,21 +101,36 @@ public class TestMatchResource extends JerseyTest
     @Test
     public void removePlayerFromMatch()
     {
+        //set test model
         setModel();
-        Response response = target("match/game1/leave").request().post(Entity.entity("pl1", MediaType.APPLICATION_JSON));
+
+        //init player
+        Player player = new Player("pl1", "localhost", 0);
+        String playerJson = new Gson().toJson(player, Player.class);
+
+        //send first leaving REST message
+        Response response = target("match/game1/leave").request().post(Entity.entity(playerJson, MediaType.APPLICATION_JSON));
         assertEquals(200, response.getStatus());
 
-        Response r = target("match/game1/leave").request().post(Entity.entity("", MediaType.APPLICATION_JSON));
-        assertEquals(404, r.getStatus());
+        //send second leaving REST message
+        response = target("match/game1/leave").request().post(Entity.entity(playerJson, MediaType.APPLICATION_JSON));
+        assertEquals(404, response.getStatus());
     }
 
     @Test
     public void removeAllPlayers()
     {
+        //set test model
         setModel();
-        target("match/game4/leave").request().post(Entity.entity("pl1", MediaType.APPLICATION_JSON));
-        target("match/game4/leave").request().post(Entity.entity("pl2", MediaType.APPLICATION_JSON));
-        target("match/game4/leave").request().post(Entity.entity("pl3", MediaType.APPLICATION_JSON));
+
+        //init players
+        String player1 = new Gson().toJson(new Player("pl1", "localhost", 0), Player.class);
+        String player2 = new Gson().toJson(new Player("pl2", "localhost", 0), Player.class);
+        String player3 = new Gson().toJson(new Player("pl3", "localhost", 0), Player.class);
+
+        target("match/game4/leave").request().post(Entity.entity(player1, MediaType.APPLICATION_JSON));
+        target("match/game4/leave").request().post(Entity.entity(player2, MediaType.APPLICATION_JSON));
+        target("match/game4/leave").request().post(Entity.entity(player3, MediaType.APPLICATION_JSON));
 
         Response r = target("match/game4").request().get(Response.class);
         assertEquals(404, r.getStatus());

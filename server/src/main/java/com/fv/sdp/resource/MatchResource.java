@@ -25,13 +25,14 @@ public class MatchResource
     {
         MatchModel.resetModel();
     }
+
+    //TODO: remove
     @GET
     @Path("/setTest")
     public void setResourceModel()
     {
         MatchModel.setTestModel();
     }
-
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -84,10 +85,13 @@ public class MatchResource
     @POST
     @Path("/{matchId}/leave")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response leaveMatch(@PathParam("matchId") String matchId, String playerId) //todo change to Player-json
+    public Response leaveMatch(@PathParam("matchId") String matchId, String playerJson) //todo change to Player-json
     {
+        //parse Player from string
+        Player player = new Gson().fromJson(playerJson, Player.class);
+
         MatchModel model = MatchModel.getInstance();
-        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, playerId);
+        boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
         //check for match cancellation
         Match match = model.getMatch(matchId);
         if (match == null || match.getPlayers().getList().size() == 0)
