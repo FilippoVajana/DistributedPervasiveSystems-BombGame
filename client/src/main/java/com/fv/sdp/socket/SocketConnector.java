@@ -131,9 +131,16 @@ public class SocketConnector
             connection.close();
         }catch (Exception ex)
         {
-            ex.printStackTrace();
             //log
             PrettyPrinter.printTimestampLog(String.format("ERROR SENDING [%s - %s] TO %s:%d", message.getId(), message.getType(), destination.getAddress(), destination.getPort()));
+            try
+            {
+                Thread.sleep(100);
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            ex.printStackTrace();
         }
     }
 

@@ -107,6 +107,7 @@ public class RESTConnectorTest extends JerseyTest
         //set JdkHttpServerTestContainer
         appContext.REST_BASE_URL = "http://localhost:9998/";
 
+        System.out.println("\n\nSTARTING RESTConnector TEST");
         //init REST connector
         connector = new RESTConnector(appContext);
 
@@ -115,7 +116,7 @@ public class RESTConnectorTest extends JerseyTest
         connector.createServerMatch(match);
 
         //create player
-        appContext.setPlayerInfo("PL1", "127.0.0.1", 6453);
+        appContext.setPlayerInfo("PL1", appContext.LISTENER_ADDR, appContext.LISTENER_PORT);
         Player player = appContext.getPlayerInfo();
 
         //join
