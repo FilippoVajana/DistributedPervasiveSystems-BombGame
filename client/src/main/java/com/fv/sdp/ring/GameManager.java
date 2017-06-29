@@ -19,14 +19,19 @@ public class GameManager
 
     public GameManager(ApplicationContext appContext)
     {
+        //log
+        PrettyPrinter.printClassInit(this);
+
+        //save app context
         this.appContext = appContext;
+        this.appContext.GAME_MANAGER = this;
     }
 
     /**
      * Update players list. New player information are stored into message content field as Json String
      * @param message
      */
-    public synchronized void handleNewPlayerRingEntrance(RingMessage message)
+    public synchronized void handleNewPlayerJoin(RingMessage message)
     {
         //get player info
         String playerJson = message.getContent().split("#")[1]; //TODO: set message format
@@ -50,7 +55,7 @@ public class GameManager
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
     }
 
-    public void notifyRingEntrance(Player newPlayer)
+    public void notifyPlayerJoin(Player newPlayer)
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notify new player %s", this.getClass().getSimpleName(), newPlayer.getId()));

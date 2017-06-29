@@ -3,6 +3,7 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
 import com.fv.sdp.rest.RESTConnector;
+import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
@@ -94,10 +95,15 @@ public class RESTConnectorTest extends JerseyTest
     }
 
     @Test
-    public void joinMatchTest()
+    public void joinMatchTest() throws InterruptedException
     {
+        //init node
+        NodeManager node =  new NodeManager();
+        node.startupNode();
+        Thread.sleep(1000);
+
         //app context
-        ApplicationContext appContext = new ApplicationContext();
+        ApplicationContext appContext =node.appContext;
         //set JdkHttpServerTestContainer
         appContext.REST_BASE_URL = "http://localhost:9998/";
 
@@ -118,7 +124,7 @@ public class RESTConnectorTest extends JerseyTest
         //check result
         Assert.assertTrue(joinResult);
         //check server match status
-        ArrayList<Match> matchList = connector.getServerMatchList(); //todo add contain method to ConcurrentArrayList
+        ArrayList<Match> matchList = connector.getServerMatchList();
         Assert.assertEquals(1, matchList.size());
 
         Assert.assertEquals(match, appContext.PLAYER_MATCH);

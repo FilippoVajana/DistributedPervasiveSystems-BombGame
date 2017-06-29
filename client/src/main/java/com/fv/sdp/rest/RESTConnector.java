@@ -75,7 +75,7 @@ public class RESTConnector
         return matches;
     }
 
-    //TODO: test
+    //TODO: review
     public boolean joinServerMatch(Match match, Player player)
     {
         //set web target
@@ -94,8 +94,12 @@ public class RESTConnector
             Match joinedMatch = response.readEntity(Match.class);
             //set match
             appContext.PLAYER_MATCH = joinedMatch;
+
             //set ring node
-            appContext.RING_NETWORK = joinedMatch.getPlayers();
+            appContext.RING_NETWORK = joinedMatch.getPlayers(); //TODO: remove current player
+
+            //notify ring
+            appContext.GAME_MANAGER.notifyPlayerJoin(player);
 
             return true;
         }
