@@ -92,10 +92,11 @@ public class MatchResource
 
         MatchModel model = MatchModel.getInstance();
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
+
         //check for match cancellation
         Match match = model.getMatch(matchId);
         if (match == null || match.getPlayers().getList().size() == 0)
-            model.deleteMatch(matchId);
+            model.deleteMatch(matchId); //TODO: need notify???
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
         return Response.status(Response.Status.NOT_FOUND).build();

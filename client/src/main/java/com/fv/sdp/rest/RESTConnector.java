@@ -3,6 +3,7 @@ package com.fv.sdp.rest;
 import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -28,12 +29,18 @@ public class RESTConnector
 
     public RESTConnector(@NotNull ApplicationContext appContext)
     {
-        //config
+        //log
+        PrettyPrinter.printClassInit(this);
+
+        //save app context
         this.appContext = appContext;
+
         //client
         restClient = ClientBuilder.newClient();
+
         //base url
         restBaseUrl = restClient.target(this.appContext.REST_BASE_URL);
+
         //endpoints
         restEndpointsIndex = this.appContext.REST_ENDPOINTS;
     }
@@ -75,7 +82,6 @@ public class RESTConnector
         return matches;
     }
 
-    //TODO: review
     public boolean joinServerMatch(Match match, Player player)
     {
         //set web target
@@ -105,7 +111,9 @@ public class RESTConnector
         }
         else
         {
-            System.out.println(response.getStatusInfo().getReasonPhrase());
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR joining match %s: %s", this.getClass().getSimpleName(), match.getId(), response.getStatusInfo().getReasonPhrase()));
+            //TODO: fault strategy
             return false;
         }
     }
@@ -127,10 +135,47 @@ public class RESTConnector
             return true;
         else
         {
-            System.out.println(response.getStatusInfo().getReasonPhrase());
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR creating match %s: %s", this.getClass().getSimpleName(), match.getId(), response.getStatusInfo().getReasonPhrase()));
+            //TODO: fault strategy
             return false;
         }
 
+    }
+
+    public boolean leaveServerMatch(Match match, Player player)
+    {
+        //set web target
+        WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+        WebTarget leaveTarget = matchTarget.path(String.format("%s/leave", match.getId()));
+
+        //invocation
+        Invocation.Builder invocation = leaveTarget.request();
+
+        //make request
+        Response response = invocation.post(Entity.entity(player, MediaType.APPLICATION_JSON));
+
+        //read response
+        if (response.getStatus() == 200)
+        {
+            //notify ring
+            appContext.GAME_MANAGER.notifyPlayerLeave(player);
+
+            //clear match
+            appContext.PLAYER_MATCH = null;
+
+            //clear ring nodes
+            appContext.RING_NETWORK = null;
+
+            return true;
+        }
+        else
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR leaving match %s: %s", this.getClass().getSimpleName(), match.getId(), response.getStatusInfo().getReasonPhrase()));
+            //TODO: fault strategy
+            return false;
+        }
     }
 }
 
