@@ -47,9 +47,10 @@ public class GameHandler implements IMessageHandler
         switch (messageType)
         {
             case "ENTER-PLAYER":
-                gameManager.handleNewPlayerJoin(receivedMessage);
+                gameManager.handleJoin(receivedMessage);
                 break;
             case "EXIT-PLAYER":
+                gameManager.handleLeave(receivedMessage);
                 break;
             default:
                 return;

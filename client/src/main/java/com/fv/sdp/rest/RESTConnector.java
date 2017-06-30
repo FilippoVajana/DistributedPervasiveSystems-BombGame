@@ -105,7 +105,7 @@ public class RESTConnector
             appContext.RING_NETWORK = joinedMatch.getPlayers(); //TODO: remove current player
 
             //notify ring
-            appContext.GAME_MANAGER.notifyPlayerJoin(player);
+            appContext.GAME_MANAGER.notifyJoin(player);
 
             return true;
         }
@@ -159,7 +159,7 @@ public class RESTConnector
         if (response.getStatus() == 200)
         {
             //notify ring
-            appContext.GAME_MANAGER.notifyPlayerLeave(player);
+            appContext.GAME_MANAGER.notifyLeave(player);
 
             //clear match
             appContext.PLAYER_MATCH = null;

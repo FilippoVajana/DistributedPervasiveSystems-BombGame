@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import org.junit.Assert;
 import org.junit.Test;
 import util.MockSocketListener;
+import util.RingBuilder;
 
 import java.util.ArrayList;
 
@@ -21,4 +22,28 @@ public class GameTest
     //@Rule
     //public Timeout globalTimeout = Timeout.seconds(10); // 10 seconds max per method tested
 
+    @Test
+    public void joinTest() throws InterruptedException
+    {
+        //setup ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
+
+        //setup new node
+        NodeManager node = new NodeManager();
+        node.appContext.RING_NETWORK = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList());
+        node.startupNode();
+        Thread.sleep(500);
+
+        //new player
+        Player player = new Player("PL_new", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
+
+        //add player
+        node.appContext.GAME_MANAGER.notifyJoin(player);
+        Thread.sleep(500);
+
+        Assert.assertEquals(3, node.appContext.RING_NETWORK.getList().size()); //fake node
+        Assert.assertEquals(4, ring.get(0).appContext.RING_NETWORK.getList().size()); //old node
+    }
+
+    
 }
