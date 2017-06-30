@@ -45,5 +45,18 @@ public class GameTest
         Assert.assertEquals(4, ring.get(0).appContext.RING_NETWORK.getList().size()); //old node
     }
 
-    
+    @Test
+    public void leaveTest() throws InterruptedException
+    {
+        //setup ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
+
+        //leave ring
+        NodeManager node0 = ring.get(0);
+        node0.appContext.PLAYER_NICKNAME = "PL0";
+        node0.appContext.GAME_MANAGER.notifyLeave(node0.appContext.getPlayerInfo());
+        Thread.sleep(500);
+
+        Assert.assertEquals(2, ring.get(1).appContext.RING_NETWORK.getList().size());
+    }
 }
