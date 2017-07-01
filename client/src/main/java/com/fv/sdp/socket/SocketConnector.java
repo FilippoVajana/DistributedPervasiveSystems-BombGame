@@ -109,12 +109,12 @@ public class SocketConnector
             //check token
             if (!(appContext.TOKEN_MANAGER.isHasToken() || message.getType() == MessageType.ACK))
             {
-                Object tokenLock = appContext.TOKEN_MANAGER.getTokenLock();
-                synchronized (tokenLock)
+                Object hasTokenSignal = appContext.TOKEN_MANAGER.getHasTokenSignal();
+                synchronized (hasTokenSignal) //TODO: check
                 {
                     //log
                     PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
-                    tokenLock.wait();
+                    hasTokenSignal.wait();
                 }
             }
 

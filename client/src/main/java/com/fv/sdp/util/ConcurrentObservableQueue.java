@@ -5,11 +5,11 @@ import java.util.ArrayDeque;
 public class ConcurrentObservableQueue<E>
 {
     private ArrayDeque<E> queue;
-    private Object queueToken;
+    private Object queueSignal;
     public ConcurrentObservableQueue()
     {
         queue = new ArrayDeque<E>();
-        queueToken = new Object();
+        queueSignal = new Object();
     }
 
     public ArrayDeque<E> getQueue()
@@ -17,24 +17,24 @@ public class ConcurrentObservableQueue<E>
         return new ArrayDeque<E>(queue);
     }
 
-    public Object getQueueLock()
+    public Object getQueueSignal()
     {
-        return queueToken;
+        return queueSignal;
     }
 
     public boolean push(E item)
     {
-        synchronized (queueToken)
+        synchronized (queueSignal)
         {
             queue.push(item);
-            queueToken.notify();
+            queueSignal.notify();
         }
         return true;
     }
 
     public E pop()
     {
-        synchronized (queueToken)
+        synchronized (queueSignal)
         {
             if (queue.size() == 0)
                 return null;
@@ -45,7 +45,7 @@ public class ConcurrentObservableQueue<E>
 
     public int size()
     {
-        synchronized (queueToken)
+        synchronized (queueSignal)
         {
             return queue.size();
         }
@@ -53,7 +53,7 @@ public class ConcurrentObservableQueue<E>
 
     public void remove(E item)
     {
-        synchronized (queueToken)
+        synchronized (queueSignal)
         {
             queue.remove(item);
         }

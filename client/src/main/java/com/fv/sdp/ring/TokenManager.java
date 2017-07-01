@@ -31,18 +31,28 @@ public class TokenManager
 
     private boolean hasToken = false;
     private Object tokenLock = null;
+    private Object hasTokenSignal = null;
 
     public boolean isHasToken()
     {
         return hasToken;
     }
     public Object getTokenLock() { return tokenLock; }
+    public Object getHasTokenSignal() { return hasTokenSignal; }
 
     public void storeToken()
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
         hasToken = true;
+
+        //signal token awaiter
+        synchronized (hasTokenSignal)
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token", this.getClass().getSimpleName()));
+            hasTokenSignal.notify();
+        }
     }
 
     public synchronized void releaseToken()
@@ -60,13 +70,14 @@ public class TokenManager
         //send message via socket
         appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
-        //wait ack
         synchronized (tokenLock)
         {
             try
             {
-                System.out.println("WAIT TOKEN ACK");
-                tokenLock.wait();
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token release ACK", this.getClass().getSimpleName()));
+
+                tokenLock.wait(); //wait message ACK
                 //release token
                 hasToken = false;
                 //log

@@ -125,7 +125,7 @@ class MessageQueueManager
         //set queue
         ConcurrentObservableQueue<RingMessage> observedQueue = queuePool.get(queueType);
         //set queue lock
-        Object queueLock = observedQueue.getQueueLock(); //get sync lock
+        Object queueLock = observedQueue.getQueueSignal(); //get sync lock
 
         while (true)
         {
