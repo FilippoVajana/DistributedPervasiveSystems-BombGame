@@ -78,4 +78,11 @@ public class TokenManager
         }
     }
 
+    public void releaseTokenSilent()
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token SILENT", this.getClass().getSimpleName()));
+
+        hasToken = false;
+    }
 }
