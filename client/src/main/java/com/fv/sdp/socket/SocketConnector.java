@@ -107,7 +107,7 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
             //check token
-            if ((appContext.TOKEN_MANAGER.isHasToken() && message.getType() != MessageType.ACK))
+            if (!(appContext.TOKEN_MANAGER.isHasToken() || message.getType() == MessageType.ACK))
             {
                 Object tokenLock = appContext.TOKEN_MANAGER.getTokenLock();
                 synchronized (tokenLock)
@@ -164,6 +164,10 @@ public class SocketConnector
             Runnable sendTask = () -> send(message, p);
             //thread
             Thread sendThread = new Thread(sendTask);
+
+            //add thread to list
+            sendThreadList.add(sendThread);
+
             //start thread
             sendThread.start();
         }
