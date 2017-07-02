@@ -54,7 +54,9 @@ public class GameTest
 
 
         //wait notify end
-        Thread.sleep(10000);
+        //Thread.sleep(10000);
+        notifyJoinThread.join(5000);
+
         Assert.assertEquals(4, node.appContext.RING_NETWORK.getList().size()); //fake node
         Assert.assertEquals(4, ring.get(0).appContext.RING_NETWORK.getList().size()); //old node
         Assert.assertEquals(false, node.appContext.TOKEN_MANAGER.isHasToken());
@@ -84,20 +86,21 @@ public class GameTest
     {
         //setup ring
         ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
-        for (NodeManager node : ring)
-        {
-            System.out.println(String.format("Node %s:%d", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT));
-        }
 
         //setting node
         NodeManager node0 = ring.get(0);
         node0.appContext.PLAYER_NICKNAME = "PL0";
-        node0.appContext.TOKEN_MANAGER.storeToken();
 
         //leave ring
-        node0.appContext.GAME_MANAGER.notifyLeave(node0.appContext.getPlayerInfo());
-        Thread.sleep(500);
+        Thread notifyLeaveThread = new Thread(() -> node0.appContext.GAME_MANAGER.notifyLeave(node0.appContext.getPlayerInfo()));
+        notifyLeaveThread.start();
 
+        //node2 release token
+        Thread.sleep(2000);
+        ring.get(2).appContext.TOKEN_MANAGER.storeToken();
+        ring.get(2).appContext.TOKEN_MANAGER.releaseToken();
+
+        notifyLeaveThread.join();
         Assert.assertEquals(2, ring.get(1).appContext.RING_NETWORK.getList().size());
     }
 

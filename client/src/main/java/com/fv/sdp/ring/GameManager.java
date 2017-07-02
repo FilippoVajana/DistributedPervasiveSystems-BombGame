@@ -283,7 +283,8 @@ public class GameManager
         Object queueSignal = occupiedPositions.getQueueSignal(); //activated on queue.push()
 
         //send message
-        appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL); //check token
+        appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL); //check sync
+
 
         //loop on response
         while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size()) //check condition

@@ -53,9 +53,9 @@ public class TokenManager
         synchronized (hasTokenSignal)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token", this.getClass().getSimpleName()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", this.getClass().getSimpleName()));
 
-            hasTokenSignal.notify();
+            hasTokenSignal.notifyAll();
         }
     }
 
