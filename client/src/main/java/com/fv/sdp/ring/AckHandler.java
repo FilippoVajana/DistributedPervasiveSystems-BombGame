@@ -53,7 +53,7 @@ public class AckHandler implements IMessageHandler
         }catch (NullPointerException ex)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR: Queue %s not found", this.getClass().getSimpleName(), receivedMessage.getId()));
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR: Queue %s not found", this.getClass().getSimpleName(), receivedMessage.getId()));
 
             return;
         }
@@ -65,7 +65,7 @@ public class AckHandler implements IMessageHandler
             synchronized (moduleLock)
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK %s", this.getClass().getSimpleName(),  receivedMessage.getId()));
+                PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK queue %s", this.getClass().getSimpleName(),  receivedMessage.getId()));
 
                 //notify action module (GameHandler/TokenHandler)
                 moduleLock.notify();

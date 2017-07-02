@@ -22,6 +22,14 @@ public class PrettyPrinter
         System.out.println(String.format("%s: \t%s", timestamp, log));
     }
 
+    public static void printTimestampError(String error)
+    {
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
+        String timestamp = String.format("[%s]-(%d)", timeFormatter.format(LocalDateTime.now()), Thread.currentThread().getId());
+
+        System.err.println(String.format("%s: \t%s", timestamp, error));
+    }
+
     public static void printMatchDetails(Match match)
     {
         String playerDetails = "";
