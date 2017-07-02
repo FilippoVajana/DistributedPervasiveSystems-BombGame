@@ -52,6 +52,8 @@ public class GameHandler implements IMessageHandler
             case "EXIT-PLAYER":
                 gameManager.handleLeave(receivedMessage);
                 break;
+            case "CHECK-POSITION":
+                gameManager.handleCheckPosition(receivedMessage);
             default:
                 return;
         }
