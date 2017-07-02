@@ -1,11 +1,12 @@
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
+import com.fv.sdp.rest.RESTConnector;
+import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
-import com.fv.sdp.SessionConfig;
-import com.fv.sdp.rest.RESTConnector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Assert;
@@ -37,12 +38,12 @@ public class RESTConnectorTest extends JerseyTest
         new MatchResource().resetResourceModel();
 
         //init session parameters
-        SessionConfig config = SessionConfig.getInstance();
+        ApplicationContext appContext = new ApplicationContext();
         //set JdkHttpServerTestContainer
-        config.REST_BASE_URL = "http://localhost:9998/";
+        appContext.REST_BASE_URL = "http://localhost:9998/";
 
         //init rest connector
-        connector = new RESTConnector();
+        connector = new RESTConnector(appContext);
     }
     private void setServerTestModel()
     {
@@ -63,19 +64,6 @@ public class RESTConnectorTest extends JerseyTest
         Match m4 = new Match("game4", 34,67, pList4);
         target("match").request().post(Entity.entity(m4, MediaType.APPLICATION_JSON));
     }
-    private void printMatchDetails(Match match)
-    {
-        String playerDetails = "";
-        for (Player p : match.getPlayers().getList())
-        {
-            playerDetails += String.format("\tId: %s\t" +
-                    "Address: %s:%d\n", p.getId(), p.getAddress(), p.getPort());
-        }
-        System.out.println(String.format("Id: %s\n" +
-                "Players: \n%s" +
-                "Points_V: %d\n" +
-                "Points_E: %d\n\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
-    }
 
     @Test
     public void getMatchList()
@@ -87,7 +75,7 @@ public class RESTConnectorTest extends JerseyTest
         //check return
         Assert.assertEquals(4, matchList.size());
         for (Match m : matchList)
-            printMatchDetails(m);
+            PrettyPrinter.printMatchDetails(m);
     }
 
     @Test
@@ -103,19 +91,33 @@ public class RESTConnectorTest extends JerseyTest
         ArrayList<Match> matchList = connector.getServerMatchList();
         //check response
         for (Match e : matchList)
-            printMatchDetails(e);
+            PrettyPrinter.printMatchDetails(e);
     }
 
     @Test
-    public void joinMatchTest()
+    public void joinMatchTest() throws InterruptedException
     {
+        //init node
+        NodeManager node =  new NodeManager();
+        node.startupNode();
+        Thread.sleep(1000);
+
+        //app context
+        ApplicationContext appContext =node.appContext;
+        //set JdkHttpServerTestContainer
+        appContext.REST_BASE_URL = "http://localhost:9998/";
+
+        System.out.println("\n\nSTARTING RESTConnector TEST");
+        //init REST connector
+        connector = new RESTConnector(appContext);
+
         //create match
         Match match = new Match("Glory", 56, 67);
         connector.createServerMatch(match);
 
         //create player
-        SessionConfig.getInstance().setPlayerInfo("PL1", "127.0.0.1", 6453);
-        Player player = SessionConfig.getInstance().getPlayerInfo();
+        appContext.setPlayerInfo("PL1", appContext.LISTENER_ADDR, appContext.LISTENER_PORT);
+        Player player = appContext.getPlayerInfo();
 
         //join
         boolean joinResult = connector.joinServerMatch(new Match("Glory",0,0), player);
@@ -123,18 +125,55 @@ public class RESTConnectorTest extends JerseyTest
         //check result
         Assert.assertTrue(joinResult);
         //check server match status
-        ArrayList<Match> matchList = connector.getServerMatchList(); //todo add contain method to ConcurrentArrayList
+        ArrayList<Match> matchList = connector.getServerMatchList();
         Assert.assertEquals(1, matchList.size());
 
-        Assert.assertEquals(match, SessionConfig.getInstance().PLAYER_MATCH);
+        Assert.assertEquals(match, appContext.PLAYER_MATCH);
         System.out.println("Current match: ");
-        PrettyPrinter.printMatchDetails(SessionConfig.getInstance().PLAYER_MATCH);
+        PrettyPrinter.printMatchDetails(appContext.PLAYER_MATCH);
 
         //chech session config node
-        Assert.assertEquals(1, SessionConfig.getInstance().RING_NETWORK.getList().size());
+        Assert.assertEquals(1, appContext.RING_NETWORK.getList().size());
         System.out.println("Ring topology: ");
-        for (Player p : SessionConfig.getInstance().RING_NETWORK.getList())
+        for (Player p : appContext.RING_NETWORK.getList())
             PrettyPrinter.printPlayerDetails(p);
     }
 
+    @Test
+    public void leaveMatchTest() throws Exception
+    {
+        //init node
+        NodeManager node =  new NodeManager();
+        node.startupNode();
+        Thread.sleep(1000);
+
+        //app context
+        ApplicationContext appContext =node.appContext;
+        //set JdkHttpServerTestContainer
+        appContext.REST_BASE_URL = "http://localhost:9998/";
+
+        System.out.println("\n\nSTARTING RESTConnector TEST");
+        //init REST connector
+        connector = new RESTConnector(appContext);
+
+        //create match
+        Match match = new Match("Glory", 56, 67);
+        connector.createServerMatch(match);
+
+        //create player
+        appContext.setPlayerInfo("PL1", appContext.LISTENER_ADDR, appContext.LISTENER_PORT);
+        Player player = appContext.getPlayerInfo();
+
+        //join
+        boolean joinResult = connector.joinServerMatch(new Match("Glory",0,0), player);
+        Thread.sleep(1000);
+
+        //leave match
+        boolean leaveResult = connector.leaveServerMatch(match, player);
+
+        Assert.assertTrue(leaveResult);
+
+        ArrayList<Match> matchList = connector.getServerMatchList();
+        Assert.assertEquals(0, matchList.size());
+    }
 }

@@ -1,11 +1,12 @@
 package com.fv.sdp.socket;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
-import com.fv.sdp.SessionConfig;
 
+import javax.validation.constraints.NotNull;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -21,13 +22,19 @@ import java.util.stream.Stream;
  */
 public class SocketConnector
 {
+    //app context
+    private ApplicationContext appContext;
+
     private ServerSocket listeningServer;
     private List<ISocketObserver> observersList;
 
-    public SocketConnector(List<ISocketObserver> observers, int listenerPort)
+    public SocketConnector(@NotNull ApplicationContext appContext, List<ISocketObserver> observers, int listenerPort)
     {
         //log
         PrettyPrinter.printClassInit(this);
+
+        //save context
+        this.appContext = appContext;
 
         //check observers list
         if (observers == null)
@@ -39,8 +46,8 @@ public class SocketConnector
             //create listener
             listeningServer = new ServerSocket(listenerPort);
             //update session config
-            SessionConfig.getInstance().LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
-            SessionConfig.getInstance().LISTENER_PORT = listeningServer.getLocalPort();
+            this.appContext.LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
+            this.appContext.LISTENER_PORT = listeningServer.getLocalPort();
 
         }catch (Exception ex)
         {
@@ -48,22 +55,11 @@ public class SocketConnector
         }
     }
 
-    //TODO: remove method
-    /**
-     * Temporary method.
-     * Use only for sendMessage()
-     */
-    public SocketConnector()
-    {
-        //log
-        //PrettyPrinter.printTimestampLog("Initialize temporary" + this.getClass().getSimpleName());
-    }
-
     //Input Side
     public boolean startListener() //syncronous op.
     {
         //wait on client
-        PrettyPrinter.printTimestampLog(String.format("[%s] LISTENING AT %s:%d", this.getClass().getSimpleName(), getListenerAddress().getHostAddress(), getListenerPort()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Listening at %s:%d", this.getClass().getSimpleName(), getListenerAddress().getHostAddress(), getListenerPort()));
 
         while (true) //start stream reader foreach accepted connection
         {
@@ -85,20 +81,27 @@ public class SocketConnector
 
     public enum DestinationGroup {ALL, NEXT, SOURCE};
 
-    //TODO: return operation result
+    /**
+     * Convert message to JSON format and then send it to destination
+     * @param message
+     * @param destination
+     */
     private void send(RingMessage message, Player destination)
     {
         //set message origin
-        String ip = SessionConfig.getInstance().LISTENER_ADDR;
-        int port = SessionConfig.getInstance().LISTENER_PORT;
+        String ip = appContext.LISTENER_ADDR;
+        int port = appContext.LISTENER_PORT;
         String messageSource = String.format("%s:%d", ip, port);
         message.setSourceAddress(messageSource);
         try
         {
             //connect socket
             Socket connection = new Socket(InetAddress.getByName(destination.getAddress()), destination.getPort());
+            //Thread.sleep(100);
+
             //log
             //PrettyPrinter.printTimestampLog(String.format("[%s] Created socket %s:%d", this.getClass().getSimpleName(), connection.getInetAddress().getHostAddress(), connection.getLocalPort()));
+            //Thread.sleep(100);
 
             //get writer
             PrintWriter writer = new PrintWriter(connection.getOutputStream());
@@ -107,16 +110,19 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
             //check token
-            if ((TokenManager.getInstance().isHasToken() && message.getType() != MessageType.ACK))
-            {
-                Object tokenLock = TokenManager.getInstance().getTokenLock();
-                synchronized (tokenLock)
+            if (message.getType() == MessageType.ACK)
+            { }
+            else
+                if (appContext.TOKEN_MANAGER.isHasToken() == false)
                 {
-                    //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] WAITING TOKEN", this.getClass().getSimpleName()));
-                    tokenLock.wait();
+                    Object hasTokenSignal = appContext.TOKEN_MANAGER.getHasTokenSignal();
+                    synchronized (hasTokenSignal) //TODO: check
+                    {
+                        //log
+                        PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
+                        hasTokenSignal.wait();
+                    }
                 }
-            }
 
             //log
             PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort());
@@ -131,30 +137,71 @@ public class SocketConnector
             connection.close();
         }catch (Exception ex)
         {
-            ex.printStackTrace();
             //log
             PrettyPrinter.printTimestampLog(String.format("ERROR SENDING [%s - %s] TO %s:%d", message.getId(), message.getType(), destination.getAddress(), destination.getPort()));
+            try
+            {
+                Thread.sleep(100);
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            ex.printStackTrace();
         }
     }
 
-    //TODO: test
-    //TODO: check send result
-    //Output Side
+    /**
+     * Send a RingMessage to a list of destinations.
+     * Every send operation is performed on a dedicated thread.
+     * Method return only after every thread finished its job.
+     * @param message
+     * @param destinations
+     * @return true: if all send operations have succeeded
+     */
     public boolean sendMessage(RingMessage message, List<Player> destinations)
     {
+        //send threads list
+        ArrayList<Thread> sendThreadList = new ArrayList<>();
+
+        //launch send threads
         for (Player p : destinations)
         {
             //task
             Runnable sendTask = () -> send(message, p);
             //thread
             Thread sendThread = new Thread(sendTask);
+
+            //add thread to list
+            sendThreadList.add(sendThread);
+
             //start thread
             sendThread.start();
         }
+
+        //wait send threads
+        for (Thread t : sendThreadList)
+        {
+            try
+            {
+                t.join();
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+                return false;
+            }
+        }
+
         return true;
     }
 
-    //this method serves as router over DestinationGroup enum
+    //TODO: caller must check return value
+    /**
+     * Initialize message destinations based on DestinationGroup param value.
+     * @param message
+     * @param dstGroup
+     * @return true: if the message was sent to all destinations
+     * @implNote the method use sendMessage(RingMessage, List) to actually send the message
+     */
     public boolean sendMessage(RingMessage message, DestinationGroup dstGroup)
     {
        try
@@ -163,25 +210,30 @@ public class SocketConnector
            {
                case ALL:
                    //call send
-                   sendMessage(message, SessionConfig.getInstance().RING_NETWORK.getList());
-                   break;
+                   return sendMessage(message, appContext.RING_NETWORK.getList());
+
                case NEXT:
-                   //find next node
-                   Player nextPlayer = findNextNode();
-                    //call send
-                   send(message, nextPlayer);
-                   break;
-               case SOURCE:
                    //destination
                    ArrayList<Player> destination = new ArrayList<>();
-                   //build dummy player for source node
+                   //find next node
+                   destination.add(findNextNode());
+                    //call send
+                   return sendMessage(message, destination);
+
+               case SOURCE:
+                   //set destinations list
+                   ArrayList<Player> dst = new ArrayList<>();
+
+                   //get source address
                    String ip = message.getSourceAddress().split(":")[0];
                    int port = Integer.parseInt(message.getSourceAddress().split(":")[1]);
+
+                   //build dummy player
                    Player sourcePlayer = new Player("DummyPlayer", ip, port);
-                   destination.add(sourcePlayer);
+                   dst.add(sourcePlayer);
+
                    //call send
-                   sendMessage(message, destination);
-                   break;
+                   return sendMessage(message, dst);
            }
        }catch (Exception ex)
        {
@@ -206,23 +258,22 @@ public class SocketConnector
 
     private Player findNextNode()
     {
-        Player thisNode = SessionConfig.getInstance().getPlayerInfo();
+        Player thisNode = appContext.getPlayerInfo();
         Player nextNode;
-        ArrayList<Player> ringNodes = SessionConfig.getInstance().RING_NETWORK.getList();
+        ArrayList<Player> ringNodes = appContext.RING_NETWORK.getList();
 
         try
         {
             int thisPlayerIndex = 0;
             for (Player p : ringNodes)
             {
-                if (p.getAddress().equals(thisNode.getAddress()))
+                if (p.getCompleteAddress().equals(thisNode.getCompleteAddress()))
                 {
-                    thisPlayerIndex++;
                     break;
                 }
                 thisPlayerIndex++;
             }
-            nextNode = ringNodes.get(thisPlayerIndex);
+            nextNode = ringNodes.get((thisPlayerIndex + 1));
         }catch (IndexOutOfBoundsException ex)
         {
             nextNode = ringNodes.get(0);
@@ -288,14 +339,6 @@ class SocketListenerRunner implements Runnable
            {
                //json parsing
                RingMessage message = new Gson().fromJson(input, RingMessage.class);
-
-               //set message source address //TODO: rivedere pesantemente -> le risposte devono essere inviate al LISTENER del client!!!
-               /*
-               String ip = client.getInetAddress().getHostAddress();
-               int port = client.getPort();
-               String messageSource = String.format("%s:%d", ip, port);
-               message.setSourceAddress(messageSource);
-                */
 
                //print log
                PrettyPrinter.printReceivedRingMessage(message);

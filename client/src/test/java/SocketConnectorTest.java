@@ -1,16 +1,19 @@
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentList;
+import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 import util.MockSocketClient;
 import util.MockSocketListener;
 import util.MockSocketObserver;
+import util.RingBuilder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,6 +24,10 @@ import java.util.List;
  */
 public class SocketConnectorTest
 {
+    private String getCurrentMethodName()
+    {
+        return Thread.currentThread().getStackTrace()[2].getMethodName();
+    }
     private List<ISocketObserver> getObserversList()
     {
         List<ISocketObserver> mockObserverList = new ArrayList<>();
@@ -36,7 +43,7 @@ public class SocketConnectorTest
     {
         List<ISocketObserver> mockObserverList = getObserversList();
 
-        SocketConnector connector = new SocketConnector(mockObserverList, 0);
+        SocketConnector connector = new SocketConnector(new ApplicationContext(), mockObserverList, 0);
         System.out.println(connector.getListenerAddress());
         System.out.println(connector.getListenerPort());
 
@@ -48,7 +55,7 @@ public class SocketConnectorTest
     {
         List<ISocketObserver> mockObserverList = getObserversList();
         //server creation
-        SocketConnector connector = new SocketConnector(mockObserverList, 0);
+        SocketConnector connector = new SocketConnector(new ApplicationContext(), mockObserverList, 0);
         Runnable task = () -> connector.startListener();
         Thread thread = new Thread(task);
         thread.start();
@@ -68,7 +75,7 @@ public class SocketConnectorTest
     public void multiClientDeliveryTest() throws InterruptedException {
         List<ISocketObserver> mockObserverList = getObserversList();
         //server creation
-        SocketConnector connector = new SocketConnector(mockObserverList, 0);
+        SocketConnector connector = new SocketConnector(new ApplicationContext(), mockObserverList, 0);
         Runnable task = () -> connector.startListener();
         Thread thread = new Thread(task);
         thread.start();
@@ -91,105 +98,98 @@ public class SocketConnectorTest
     @Test
     public void sendSourceTest() throws Exception
     {
-        //start mock listener
-        MockSocketListener mockListener = new MockSocketListener();
-        Runnable listenerTask = () -> mockListener.startListener();
-        Thread listenerThread = new Thread(listenerTask);
-        listenerThread.start();
-        Thread.sleep(500);
+        //build test ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
 
-        //setting session config
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>();
+        //test message
+        RingMessage message = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), getCurrentMethodName());
 
-        //init sender
-        SocketConnector sender = new SocketConnector();
+        //set message source
+        NodeManager node0 = ring.get(0);
+        message.setSourceAddress(String.format("%s:%d", node0.appContext.LISTENER_ADDR, node0.appContext.LISTENER_PORT));
 
-        //build message
-        String sourceAddress = String.format("%s:%d", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
-        String messageId = RandomIdGenerator.getRndId();
-        String messageContent = "TEST MESSAGE";
-        RingMessage outMessage = new RingMessage(MessageType.ACK, sourceAddress, messageId, messageContent);
-
-        //send message
-        sender.sendMessage(outMessage, SocketConnector.DestinationGroup.SOURCE);
+        //node1 -> TOKEN -> node0
+        NodeManager node1 = ring.get(1);
+        node1.appContext.TOKEN_MANAGER.storeToken();
+        node1.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.SOURCE);
+        node1.appContext.TOKEN_MANAGER.releaseTokenSilent();
 
         Thread.sleep(1000);
 
-        //check
-        Assert.assertTrue(MockSocketListener.lastMessageReceived.contains("ACK"));
-        Assert.assertTrue(MockSocketListener.lastMessageReceived.contains(messageId));
-        Assert.assertTrue(MockSocketListener.lastMessageReceived.contains(messageContent));
+        Assert.assertEquals(true, node0.appContext.TOKEN_MANAGER.isHasToken());
     }
 
     @Test
-    public  void sendNextTest() throws Exception {
-        //start mock listener
-        MockSocketListener mockListener = new MockSocketListener();
-        Runnable listenerTask = () -> mockListener.startListener();
-        Thread listenerThread = new Thread(listenerTask);
-        listenerThread.start();
-        Thread.sleep(500);
+    public  void sendNextTest() throws Exception
+    {
+        //build test ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
 
-        //setting session config
-        ArrayList<Player> ring = new ArrayList<>();
-        Player p1 = new Player("NextPlayer", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
-        ring.add(p1);
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
+        //test message
+        RingMessage message = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), getCurrentMethodName());
 
-        //init sender
-        SocketConnector sender = new SocketConnector();
+        //get nodes
+        NodeManager node0 = ring.get(0);
+        NodeManager node1 = ring.get(1);
+        NodeManager node2 = ring.get(2);
 
-        //build message
-        String sourceAddress = String.format("%s:%d", mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
-        String messageId = RandomIdGenerator.getRndId();
-        String messageContent = "TEST MESSAGE";
-        RingMessage outMessage = new RingMessage(MessageType.ACK, sourceAddress, messageId, messageContent);
-
-        //send message
-        sender.sendMessage(outMessage, SocketConnector.DestinationGroup.NEXT);
+        //node0 -> TOKEN -> node1
+        System.out.println("\n\nNode0 -> Node1");
+        node0.appContext.TOKEN_MANAGER.storeToken();
+        node0.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
+        node0.appContext.TOKEN_MANAGER.releaseTokenSilent();
 
         Thread.sleep(1000);
+        Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(true, node1.appContext.TOKEN_MANAGER.isHasToken());
 
-        //check
-        Assert.assertTrue(MockSocketListener.lastMessageReceived.contains("ACK"));
-        Assert.assertTrue(MockSocketListener.lastMessageReceived.contains(messageId));
-        Assert.assertTrue(MockSocketListener.lastMessageReceived.contains(messageContent));
+
+        //node1 -> TOKEN -> node2
+        System.out.println("\n\nNode1 -> Node2");
+        node1.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
+        node1.appContext.TOKEN_MANAGER.releaseTokenSilent();
+
+        Thread.sleep(1000);
+        Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(false, node1.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(true, node2.appContext.TOKEN_MANAGER.isHasToken());
+
+
+        //node2 -> TOKEN -> node0
+        System.out.println("\n\nNode2 -> Node0");
+        node2.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
+        node2.appContext.TOKEN_MANAGER.releaseTokenSilent();
+
+        Thread.sleep(1000);
+        Assert.assertEquals(true, node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(false, node1.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(false, node2.appContext.TOKEN_MANAGER.isHasToken());
+
+        //L'errore sulla coda ACK in node0 è giustificato dal non aver utilizzato la procedura corretta per il rilascio del token
     }
 
     @Test
-    public  void sendAllTest() throws Exception {
-        //start mock listener
-        ArrayList<Player> ring = new ArrayList<>();
-        for (int i = 0; i < 4; i++)
-        {
-            MockSocketListener mockListener = new MockSocketListener();
-            Runnable listenerTask = () -> mockListener.startListener();
-            Thread listenerThread = new Thread(listenerTask);
-            listenerThread.start();
+    public  void sendAllTest() throws Exception
+    {
+        //build test ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
 
-            //add ring node
-            Player p = new Player("NextPlayer" + i, mockListener.listenSocket.getInetAddress().getHostAddress(), mockListener.listenSocket.getLocalPort());
-            ring.add(p);
-        }
+        //test message
+        RingMessage message = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), getCurrentMethodName());
 
-        Thread.sleep(1000);
+        //set message source
+        NodeManager node0 = ring.get(0);
 
-        //setting session config
-        SessionConfig.getInstance().RING_NETWORK = new ConcurrentList<>(ring);
-
-        //init sender
-        SocketConnector sender = new SocketConnector();
-
-        //build message
-        String sourceAddress = "127.0.0.1:8000";
-        String messageId = RandomIdGenerator.getRndId();
-        String messageContent = "TEST MESSAGE";
-        RingMessage outMessage = new RingMessage(MessageType.ACK, sourceAddress, messageId, messageContent);
-
-        //send message
-        sender.sendMessage(outMessage, SocketConnector.DestinationGroup.ALL);
+        //node0 -> TOKEN -> node1
+        NodeManager node1 = ring.get(1);
+        node0.appContext.TOKEN_MANAGER.storeToken();
+        node0.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
 
         Thread.sleep(1000);
+
+        Assert.assertEquals(true, node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(true, node1.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(true, ring.get(2).appContext.TOKEN_MANAGER.isHasToken());
     }
 }
 

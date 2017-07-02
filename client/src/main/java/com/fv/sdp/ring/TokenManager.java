@@ -1,46 +1,62 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by filip on 6/16/2017.
  */
 public class TokenManager
 {
-    private static TokenManager instance = null;
-    private TokenManager()
+    //app context
+    private ApplicationContext appContext;
+
+    public TokenManager(@NotNull ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
 
         //init token lock
         tokenLock = new Object();
-    }
-    public static TokenManager getInstance()
-    {
-        if (instance == null)
-            instance = new TokenManager();
-        return instance;
+
+        //init token signal
+        hasTokenSignal = new Object();
+
+        //save app context
+        this.appContext = appContext;
     }
 
     private boolean hasToken = false;
     private Object tokenLock = null;
+    private Object hasTokenSignal = null;
 
     public boolean isHasToken()
     {
         return hasToken;
     }
     public Object getTokenLock() { return tokenLock; }
+    public Object getHasTokenSignal() { return hasTokenSignal; }
 
     public void storeToken()
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
         hasToken = true;
+
+        //signal token awaiter
+        synchronized (hasTokenSignal)
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", this.getClass().getSimpleName()));
+
+            hasTokenSignal.notifyAll();
+        }
     }
 
     public synchronized void releaseToken()
@@ -53,19 +69,19 @@ public class TokenManager
         RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId());
 
         //build ack queue
-        AckHandler.getInstance().addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
+        appContext.ACK_HANDLER.addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
 
         //send message via socket
-        SocketConnector connector = new SocketConnector();
-        connector.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
+        appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
 
-        //wait ack
         synchronized (tokenLock)
         {
             try
             {
-                System.out.println("WAIT TOKEN ACK");
-                tokenLock.wait();
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token release ACK", this.getClass().getSimpleName()));
+
+                tokenLock.wait(); //wait message ACK
                 //release token
                 hasToken = false;
                 //log
@@ -77,4 +93,11 @@ public class TokenManager
         }
     }
 
+    public void releaseTokenSilent()
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token SILENT", this.getClass().getSimpleName()));
+
+        hasToken = false;
+    }
 }

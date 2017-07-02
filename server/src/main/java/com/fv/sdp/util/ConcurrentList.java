@@ -49,7 +49,7 @@ public class ConcurrentList<E>
     }
 
     //remove element
-    public void remove(E item)
+    public boolean remove(E item)
     {
         synchronized (list)
         {
@@ -57,9 +57,10 @@ public class ConcurrentList<E>
                 if (i.equals(item))
                 {
                     list.remove(i);
-                    return;
+                    return true;
                 }
             //log action
+            return false;
         }
     }
 

@@ -1,11 +1,11 @@
+import com.fv.sdp.ApplicationContext;
+import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.resource.MatchResource;
+import com.fv.sdp.rest.RESTConnector;
 import com.fv.sdp.util.ConcurrentList;
 import com.google.gson.Gson;
-import com.fv.sdp.gui.GUIManager;
-import com.fv.sdp.SessionConfig;
-import com.fv.sdp.rest.RESTConnector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Assert;
@@ -37,12 +37,12 @@ public class GUIManagerTest extends JerseyTest
         new MatchResource().resetResourceModel();
 
         //init session parameters
-        SessionConfig config = SessionConfig.getInstance();
+        ApplicationContext appContext = new ApplicationContext();
         //set JdkHttpServerTestContainer
-        config.REST_BASE_URL = "http://localhost:9998/";
+        appContext.REST_BASE_URL = "http://localhost:9998/";
 
         //init gui manager
-        gui = new GUIManager();
+        gui = new GUIManager(appContext);
     }
 
     private void setServerTestModel()
@@ -75,26 +75,31 @@ public class GUIManagerTest extends JerseyTest
 
         gui.setNickname();
 
-        Assert.assertNotNull(SessionConfig.getInstance().PLAYER_NICKNAME);
-        Assert.assertEquals("Filippo", SessionConfig.getInstance().PLAYER_NICKNAME);
+        Assert.assertNotNull(gui.getAppContext().PLAYER_NICKNAME);
+        Assert.assertEquals("Filippo", gui.getAppContext().PLAYER_NICKNAME);
     }
 
     @Test
     public void joinMatch()
     {
+        //set test model
         setServerTestModel();
 
+        //set mock app context
+        ApplicationContext appContext = new ApplicationContext();
+
         //set mock player
-        SessionConfig.getInstance().PLAYER_NICKNAME = "Rambo";
-        SessionConfig.getInstance().LISTENER_ADDR = "192.168.1.1";
-        SessionConfig.getInstance().LISTENER_PORT = 4567;
+        appContext.PLAYER_NICKNAME = "Rambo";
+        appContext.LISTENER_ADDR = "192.168.1.1";
+        appContext.LISTENER_PORT = 4567;
+
         //enter match id
         Integer matchIndex = 0;
         System.setIn(new java.io.ByteArrayInputStream(matchIndex.toString().getBytes())); //mock input utente
         gui.joinMatch();
 
         //check
-        ArrayList<Match> matchList = new RESTConnector().getServerMatchList();
+        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
         Assert.assertEquals(1, matchList.get(matchIndex).getPlayers().getList().size());
     }
 
@@ -108,7 +113,7 @@ public class GUIManagerTest extends JerseyTest
         gui.createMatch();
 
         //check
-        ArrayList<Match> matchList = new RESTConnector().getServerMatchList();
+        ArrayList<Match> matchList = new RESTConnector(new ApplicationContext()).getServerMatchList();
         Assert.assertEquals(1, matchList.size());
         Assert.assertTrue(matchList.get(0).getId().equals("GloryX"));
         Assert.assertTrue(matchList.get(0).getEdgeLength() == 50);

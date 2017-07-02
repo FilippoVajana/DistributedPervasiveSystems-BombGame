@@ -1,29 +1,33 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.PrettyPrinter;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by filip on 6/18/2017.
  */
 public class TokenHandler implements IMessageHandler
 {
-    private static TokenHandler instance;
-    public static TokenHandler getInstance()
-    {
-        if (instance == null)
-            instance = new TokenHandler();
-        return instance;
-    }
-    private TokenHandler()
+    //app context
+    private ApplicationContext appContext;
+
+    public TokenHandler(@NotNull ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
+
+        //save app context
+        this.appContext = appContext;
+
+        //init token logic
+        appContext.TOKEN_MANAGER = new TokenManager(this.appContext);
     }
 
-    //TODO: test
     /**
      * Handle received TokenMessage setting hasToken property and sending back an ACK message
      * @param receivedMessage: message to be handled
@@ -35,13 +39,14 @@ public class TokenHandler implements IMessageHandler
         PrettyPrinter.printTimestampLog(String.format("[%s] Handling [TOKEN %s]", this.getClass().getSimpleName(), receivedMessage.getId()));
 
         //set hasToken true
-        TokenManager.getInstance().storeToken();
+        appContext.TOKEN_MANAGER.storeToken();
 
         //build ack message
         RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId(), receivedMessage.getContent());
-        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //TODO: MAGIC HACK (send.SOURCE use message source address)
+        //MAGIC HACK (send.SOURCE use message source address)
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress());
 
         //send ack
-        new SocketConnector().sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
+        appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
     }
 }

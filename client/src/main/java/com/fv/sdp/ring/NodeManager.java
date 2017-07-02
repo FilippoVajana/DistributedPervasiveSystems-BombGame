@@ -1,32 +1,24 @@
 package com.fv.sdp.ring;
 
-import com.fv.sdp.SessionConfig;
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.gui.GUIManager;
+import com.fv.sdp.socket.ISocketObserver;
+import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentObservableQueue;
-import com.fv.sdp.socket.ISocketObserver;
-import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.util.PrettyPrinter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**TODO: rimuovere implementazioni del pattern singleton dai vari moduli
- * salvare le istanze dei moduli funzionali all'interno di SessionConfig con relativi get/set
- * rinominare SessionConfig in AppContext
- * correggere i test, in particolare quelli con molteplici nodi
- */
-
-
 public class NodeManager implements ISocketObserver
 {
     //app context
-    SessionConfig appContext;
+    public ApplicationContext appContext;
 
     //network modules
-    private SocketConnector listenerSocket;
     private MessageQueueManager queueManager;
 
     //functional modules
@@ -41,14 +33,10 @@ public class NodeManager implements ISocketObserver
         PrettyPrinter.printClassInit(this);
 
         //init app context
-        appContext = SessionConfig.getInstance();
+        appContext = new ApplicationContext();
 
         //init queue manager
         queueManager = new MessageQueueManager();
-    }
-
-    public SocketConnector getListenerSocket() {
-        return listenerSocket;
     }
 
     public boolean startupNode()
@@ -59,10 +47,10 @@ public class NodeManager implements ISocketObserver
             ArrayList<ISocketObserver> observersList = new ArrayList<>();
             observersList.add(this);
             //init socket connector
-            listenerSocket = new SocketConnector(observersList, 0);
+            appContext.SOCKET_CONNECTOR = new SocketConnector(appContext, observersList, 0);
 
             //init ack handler
-            ackHandler = AckHandler.getInstance();
+            ackHandler = new AckHandler(appContext);
             new Thread(() -> queueManager.observeQueue(MessageType.ACK, ackHandler)).start();
 
             //game handler
@@ -70,11 +58,11 @@ public class NodeManager implements ISocketObserver
             new Thread(() -> queueManager.observeQueue(MessageType.GAME, gameHandler)).start();
 
             //token handler
-            tokenHandler = TokenHandler.getInstance();
+            tokenHandler = new TokenHandler(appContext);
             new Thread(() -> queueManager.observeQueue(MessageType.TOKEN, tokenHandler)).start();
 
             //start socket listener
-            new Thread(() -> listenerSocket.startListener()).start();
+            new Thread(() -> appContext.SOCKET_CONNECTOR.startListener()).start();
 
             //startup GUI manager
             //exit on return
@@ -137,7 +125,7 @@ class MessageQueueManager
         //set queue
         ConcurrentObservableQueue<RingMessage> observedQueue = queuePool.get(queueType);
         //set queue lock
-        Object queueLock = observedQueue.getQueueLock(); //get sync lock
+        Object queueLock = observedQueue.getQueueSignal(); //get sync lock
 
         while (true)
         {

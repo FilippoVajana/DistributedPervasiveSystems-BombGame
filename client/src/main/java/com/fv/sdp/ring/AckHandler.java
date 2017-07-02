@@ -1,5 +1,6 @@
 package com.fv.sdp.ring;
 
+import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.PrettyPrinter;
 
@@ -11,18 +12,10 @@ import java.util.Map;
  */
 public class AckHandler implements IMessageHandler
 {
-    private static AckHandler instance = null;
-    public static AckHandler getInstance()
-    {
-        if (instance == null)
-            instance = new AckHandler();
-        return instance;
-    }
-
     private Map<String, Integer> queueMap; //retain a map of pending ack to be received (id:count)
     private Map<String, Object> observerMap; //retain a map between <ack queue> - <observer lock>
 
-    private AckHandler()
+    public AckHandler(ApplicationContext appContext)
     {
         //log
         PrettyPrinter.printClassInit(this);
@@ -31,6 +24,9 @@ public class AckHandler implements IMessageHandler
         queueMap = new HashMap<>();
         //init synlock map
         observerMap = new HashMap<>();
+
+        //save handler into app context
+        appContext.ACK_HANDLER = this;
     }
 
     public synchronized void addPendingAck(String idAck, int requiredAck, Object observerLock)
@@ -50,11 +46,17 @@ public class AckHandler implements IMessageHandler
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Handling ACK %s", this.getClass().getSimpleName(), receivedMessage.getId()));
 
-        //find message ack queue
-        //Integer ackCount = queueMap.get(receivedMessage.getId());
         //decrement ack count
-        //ackCount--;
-        queueMap.put(receivedMessage.getId(), queueMap.get(receivedMessage.getId()) - 1);
+        try
+        {
+            queueMap.put(receivedMessage.getId(), queueMap.get(receivedMessage.getId()) - 1);
+        }catch (NullPointerException ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR: Queue %s not found", this.getClass().getSimpleName(), receivedMessage.getId()));
+
+            return;
+        }
 
         if (queueMap.get(receivedMessage.getId()) == 0)
         {
@@ -63,7 +65,7 @@ public class AckHandler implements IMessageHandler
             synchronized (moduleLock)
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK %s", this.getClass().getSimpleName(),  receivedMessage.getId()));
+                PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK queue %s", this.getClass().getSimpleName(),  receivedMessage.getId()));
 
                 //notify action module (GameHandler/TokenHandler)
                 moduleLock.notify();

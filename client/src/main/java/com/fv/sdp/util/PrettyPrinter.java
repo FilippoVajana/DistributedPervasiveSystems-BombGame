@@ -5,8 +5,6 @@ import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 
-import java.lang.reflect.Type;
-import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -22,6 +20,14 @@ public class PrettyPrinter
         String timestamp = String.format("[%s]-(%d)", timeFormatter.format(LocalDateTime.now()), Thread.currentThread().getId());
 
         System.out.println(String.format("%s: \t%s", timestamp, log));
+    }
+
+    public static void printTimestampError(String error)
+    {
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
+        String timestamp = String.format("[%s]-(%d)", timeFormatter.format(LocalDateTime.now()), Thread.currentThread().getId());
+
+        System.err.println(String.format("%s: \t%s", timestamp, error));
     }
 
     public static void printMatchDetails(Match match)
