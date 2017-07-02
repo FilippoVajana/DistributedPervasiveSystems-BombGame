@@ -25,6 +25,9 @@ public class TokenManager
         //init token lock
         tokenLock = new Object();
 
+        //init token signal
+        hasTokenSignal = new Object();
+
         //save app context
         this.appContext = appContext;
     }

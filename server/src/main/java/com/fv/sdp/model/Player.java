@@ -46,6 +46,10 @@ public class Player
         this.port = port;
     }
 
+    public String getCompleteAddress()
+    {
+        return String.format("%s:%d", this.address, this.port);
+    }
     @Override
     //equality over id
     public boolean equals(Object player)

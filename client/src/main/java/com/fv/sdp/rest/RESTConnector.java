@@ -99,7 +99,7 @@ public class RESTConnector
         {
             Match joinedMatch = response.readEntity(Match.class);
             //set match
-            appContext.PLAYER_MATCH = joinedMatch;
+            appContext.PLAYER_MATCH = joinedMatch; //TODO: rivedere pesantemente andando a demandare le azioni a GameManager
 
             //set ring node
             appContext.RING_NETWORK = joinedMatch.getPlayers(); //TODO: remove current player
@@ -159,7 +159,7 @@ public class RESTConnector
         if (response.getStatus() == 200)
         {
             //notify ring
-            appContext.GAME_MANAGER.notifyLeave(player);
+            appContext.GAME_MANAGER.notifyLeave(player); //TODO: rivedere pesantemente andando a demandare le azioni a GameManager
 
             //clear match
             appContext.PLAYER_MATCH = null;

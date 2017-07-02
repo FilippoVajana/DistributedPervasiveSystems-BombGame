@@ -3,6 +3,7 @@ package util;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.util.ConcurrentList;
+import com.fv.sdp.util.PrettyPrinter;
 
 import java.util.ArrayList;
 
@@ -44,6 +45,12 @@ public class RingBuilder
         for (NodeManager node : nodesList)
         {
             node.appContext.RING_NETWORK = new ConcurrentList<>(playersList);
+
+            //print node ring view
+            System.out.println("\nRing view");
+            for (Player pl : node.appContext.RING_NETWORK.getList())
+                PrettyPrinter.printPlayerDetails(pl);
+
         }
 
         //print white lines
