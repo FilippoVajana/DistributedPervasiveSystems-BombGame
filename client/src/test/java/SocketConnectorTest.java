@@ -110,7 +110,9 @@ public class SocketConnectorTest
 
         //node1 -> TOKEN -> node0
         NodeManager node1 = ring.get(1);
+        node1.appContext.TOKEN_MANAGER.storeToken();
         node1.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.SOURCE);
+        node1.appContext.TOKEN_MANAGER.releaseTokenSilent();
 
         Thread.sleep(1000);
 
@@ -126,17 +128,44 @@ public class SocketConnectorTest
         //test message
         RingMessage message = new RingMessage(MessageType.TOKEN, RandomIdGenerator.getRndId(), getCurrentMethodName());
 
-        //set message source
+        //get nodes
         NodeManager node0 = ring.get(0);
+        NodeManager node1 = ring.get(1);
+        NodeManager node2 = ring.get(2);
 
         //node0 -> TOKEN -> node1
-        NodeManager node1 = ring.get(1);
+        System.out.println("\n\nNode0 -> Node1");
+        node0.appContext.TOKEN_MANAGER.storeToken();
         node0.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
+        node0.appContext.TOKEN_MANAGER.releaseTokenSilent();
 
         Thread.sleep(1000);
-
         Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());
         Assert.assertEquals(true, node1.appContext.TOKEN_MANAGER.isHasToken());
+
+
+        //node1 -> TOKEN -> node2
+        System.out.println("\n\nNode1 -> Node2");
+        node1.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
+        node1.appContext.TOKEN_MANAGER.releaseTokenSilent();
+
+        Thread.sleep(1000);
+        Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(false, node1.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(true, node2.appContext.TOKEN_MANAGER.isHasToken());
+
+
+        //node2 -> TOKEN -> node0
+        System.out.println("\n\nNode2 -> Node0");
+        node2.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
+        node2.appContext.TOKEN_MANAGER.releaseTokenSilent();
+
+        Thread.sleep(1000);
+        Assert.assertEquals(true, node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(false, node1.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(false, node2.appContext.TOKEN_MANAGER.isHasToken());
+
+        //L'errore sulla coda ACK in node0 è giustificato dal non aver utilizzato la procedura corretta per il rilascio del token
     }
 
     @Test
@@ -153,6 +182,7 @@ public class SocketConnectorTest
 
         //node0 -> TOKEN -> node1
         NodeManager node1 = ring.get(1);
+        node0.appContext.TOKEN_MANAGER.storeToken();
         node0.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
 
         Thread.sleep(1000);
