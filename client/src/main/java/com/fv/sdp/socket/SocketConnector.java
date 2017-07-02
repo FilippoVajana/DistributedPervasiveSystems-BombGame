@@ -97,8 +97,11 @@ public class SocketConnector
         {
             //connect socket
             Socket connection = new Socket(InetAddress.getByName(destination.getAddress()), destination.getPort());
+            //Thread.sleep(100);
+
             //log
             //PrettyPrinter.printTimestampLog(String.format("[%s] Created socket %s:%d", this.getClass().getSimpleName(), connection.getInetAddress().getHostAddress(), connection.getLocalPort()));
+            //Thread.sleep(100);
 
             //get writer
             PrintWriter writer = new PrintWriter(connection.getOutputStream());
@@ -107,16 +110,19 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
             //check token
-            if (!(appContext.TOKEN_MANAGER.isHasToken() || message.getType() == MessageType.ACK))
-            {
-                Object hasTokenSignal = appContext.TOKEN_MANAGER.getHasTokenSignal();
-                synchronized (hasTokenSignal) //TODO: check
+            if (message.getType() == MessageType.ACK)
+            { }
+            else
+                if (appContext.TOKEN_MANAGER.isHasToken() == false)
                 {
-                    //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
-                    hasTokenSignal.wait();
+                    Object hasTokenSignal = appContext.TOKEN_MANAGER.getHasTokenSignal();
+                    synchronized (hasTokenSignal) //TODO: check
+                    {
+                        //log
+                        PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
+                        hasTokenSignal.wait();
+                    }
                 }
-            }
 
             //log
             PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort());

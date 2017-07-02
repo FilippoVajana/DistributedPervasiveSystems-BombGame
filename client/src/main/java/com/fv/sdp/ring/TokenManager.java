@@ -54,6 +54,7 @@ public class TokenManager
         {
             //log
             PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token", this.getClass().getSimpleName()));
+
             hasTokenSignal.notify();
         }
     }
