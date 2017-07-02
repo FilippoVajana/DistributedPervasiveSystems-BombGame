@@ -261,14 +261,13 @@ public class SocketConnector
             int thisPlayerIndex = 0;
             for (Player p : ringNodes)
             {
-                if (p.getAddress().equals(thisNode.getAddress()))
+                if (p.getCompleteAddress().equals(thisNode.getCompleteAddress()))
                 {
-                    thisPlayerIndex++;
                     break;
                 }
                 thisPlayerIndex++;
             }
-            nextNode = ringNodes.get(thisPlayerIndex);
+            nextNode = ringNodes.get((thisPlayerIndex + 1));
         }catch (IndexOutOfBoundsException ex)
         {
             nextNode = ringNodes.get(0);
