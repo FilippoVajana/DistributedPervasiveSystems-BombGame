@@ -65,7 +65,9 @@ public class NodeManager implements ISocketObserver
             new Thread(() -> appContext.SOCKET_CONNECTOR.startListener()).start();
 
             //startup GUI manager
-            //exit on return
+            guiManager = new GUIManager(appContext);
+            appContext.GUI_MANAGER = guiManager;
+            //new Thread(() -> guiManager.showMenu()).start();
 
             return true;
         }catch (Exception ex)
@@ -75,6 +77,19 @@ public class NodeManager implements ISocketObserver
         }
     }
 
+    public void shutdownNode()
+    {
+        ackHandler = null;
+        appContext.ACK_HANDLER = null;
+
+        gameHandler = null;
+        appContext.GAME_MANAGER = null;
+
+        tokenHandler = null;
+        appContext.TOKEN_MANAGER = null;
+
+        appContext.SOCKET_CONNECTOR = null; //TODO: dispose listener
+    }
 
     /**
      * Push received message to a MessageQueueManager
@@ -85,6 +100,7 @@ public class NodeManager implements ISocketObserver
     {
         new Thread(() -> queueManager.routeMessage(message)).start();
     }
+
 }
 
 
