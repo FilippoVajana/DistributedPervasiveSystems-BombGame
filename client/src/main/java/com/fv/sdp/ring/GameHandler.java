@@ -54,6 +54,9 @@ public class GameHandler implements IMessageHandler
                 break;
             case "CHECK-POSITION":
                 gameManager.handleCheckPosition(receivedMessage);
+                break;
+            case "MOVE":
+                gameManager.handleMovement(receivedMessage);
             default:
                 return;
         }

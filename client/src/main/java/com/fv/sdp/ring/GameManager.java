@@ -73,6 +73,7 @@ public class GameManager
         2) receive a check-position reply -> route to occupied queue
          */
 
+        String messageId = message.getId();
         String messageData = message.getContent();
         //check message type
         try
@@ -110,7 +111,7 @@ public class GameManager
             //build message
             String playerPositionJson = new Gson().toJson(playerPosition, GridPosition.class);
             String playerPositionMessage = String.format("CHECK-POSITION#%s", playerPositionJson);
-            RingMessage messageResponse = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), playerPositionMessage);
+            RingMessage messageResponse = new RingMessage(MessageType.GAME, messageId, playerPositionMessage);
             messageResponse.setSourceAddress(message.getSourceAddress());
 
             //send message
@@ -241,7 +242,8 @@ public class GameManager
 
         //build message
         String positionJson = new Gson().toJson(playerPosition, GridPosition.class);
-        String messageData = String.format("MOVE#%s#%s", appContext.getPlayerInfo(), positionJson); //TODO: message format
+        String playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
+        String messageData = String.format("MOVE#%s#%s", playerJson, positionJson); //TODO: message format
         RingMessage moveMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
 
         //build ack queue
@@ -268,8 +270,14 @@ public class GameManager
     }
 
     //ACTION ENDPOINT
-    public boolean joinMatchGrid(Player player)
+    public boolean joinMatchGrid(Player player, Match match) //TODO: add GameEngine init with Match, remove from RESTConnector
     {
+        //set player game match
+        appContext.PLAYER_MATCH = match;
+
+        //set network ring
+        appContext.RING_NETWORK = match.getPlayers();
+
         //init game engine
         if (appContext.PLAYER_MATCH == null)
         {
@@ -359,7 +367,7 @@ public class GameManager
                 synchronized (queueSignal)
                 {
                     //wait response
-                    queueSignal.wait();
+                    queueSignal.wait(5000); //timeout before another check on while condition
                 }
 
             } catch (InterruptedException e)
@@ -369,20 +377,92 @@ public class GameManager
         }
 
         //compute position
-        GridPosition startingPosition = gameEngine.computeFreePosition(occupiedPositions);
-
+        GridPosition startingPosition = gameEngine.setStartingPosition(occupiedPositions);
         //set position
-        gameEngine.gameGrid.setPlayerPosition(startingPosition);
+        //gameEngine.gameGrid.setPlayerPosition(startingPosition); //already in setStartingPosition()
 
         //release ring token
         appContext.TOKEN_MANAGER.releaseToken();
     }
+    private void addPlayerToGrid(Player player)
+    {
+        //set player position
+        GridPosition startingPosition = gameEngine.setStartingPosition(new ConcurrentObservableQueue<>());
 
-    //public void handleMove(RingMessage message){}
-    //public void notifyMove(GameAction movement){}
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Setting first player position (%d,%d)", this.getClass().getSimpleName(), startingPosition.x, startingPosition.y));
+    }
+    public GridPosition getPlayerPosition()
+    {
+        return gameEngine.gameGrid.getPlayerPosition();
+    }
+
+
+    public boolean movePlayer(String movementKey)
+    {
+        //remove case sensitiveness
+        movementKey = movementKey.toUpperCase();
+
+        //parse movement
+        switch (movementKey)
+        {
+            case "W":
+                gameEngine.moveUp();
+                break;
+            case "S":
+                gameEngine.moveDown();
+                break;
+            case "A":
+                gameEngine.moveLeft();
+                break;
+            case "D":
+                gameEngine.moveRight();
+        }
+
+        //get new player position
+        GridPosition playerPosition = getPlayerPosition();
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Player moved to (%d,%d)", this.getClass().getSimpleName(), playerPosition.x, playerPosition.y));
+
+        notifyMove(playerPosition);
+
+        return true;
+    }
+
+    public void handleMovement(RingMessage receivedMessage)
+    {
+        //message content
+        String messageData = receivedMessage.getContent();
+
+        //get player
+        Player movedPlayer = new Gson().fromJson(messageData.split("#")[1], Player.class);
+
+        //check player id
+        if (movedPlayer.equals(appContext.getPlayerInfo()) == false) //sender != receiver
+        {
+            //get position
+            GridPosition movedPosition = new Gson().fromJson(messageData.split("#")[2], GridPosition.class);
+
+            //check for overlay
+            if (movedPosition.equals(gameEngine.gameGrid.getPlayerPosition()))
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Player %s killed by %s", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId(), movedPlayer.getId()));
+                //call palyer killed procedure
+
+                return;
+            }
+        }
+
+        //send back ack
+        RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //hack
+        appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
+    }
+
 
     //public void handleBomb(RingMessage message){}
-    //public void notifyBomb(GameAction bomb){}
+    //private void notifyBomb(GameAction bomb){}
 }
 
 
@@ -432,91 +512,73 @@ class GameEngine
 
             if (positionClear)
             {
-                return new GridPosition(x, y);
+                //set player position
+                gameGrid.setPlayerPosition(candidatePosition);
+                return candidatePosition;
             }
         }
+    }
+
+    public GridPosition moveUp()
+    {
+        //get present player position
+        GridPosition playerPosition = gameGrid.getPlayerPosition();
+
+        //move player
+        playerPosition.x = (playerPosition.x + 1)%gameGrid.getGridEdge();
+
+        //set new position
+        gameGrid.setPlayerPosition(playerPosition);
+
+        return playerPosition;
+    }
+
+    public GridPosition moveDown()
+    {
+        //get present player position
+        GridPosition playerPosition = gameGrid.getPlayerPosition();
+
+        //move player
+        playerPosition.x = (playerPosition.x - 1)%gameGrid.getGridEdge();
+        if (playerPosition.x < 0)
+            playerPosition.x = gameGrid.getGridEdge() - 1;
+
+        //set new position
+        gameGrid.setPlayerPosition(playerPosition);
+
+        return playerPosition;
+    }
+
+    public GridPosition moveRight()
+    {
+        //get present player position
+        GridPosition playerPosition = gameGrid.getPlayerPosition();
+
+        //move player
+        playerPosition.y = (playerPosition.y + 1)%gameGrid.getGridEdge();
+
+        //set new position
+        gameGrid.setPlayerPosition(playerPosition);
+
+        return playerPosition;
+    }
+
+    public GridPosition moveLeft()
+    {
+        //get present player position
+        GridPosition playerPosition = gameGrid.getPlayerPosition();
+
+        //move player
+        playerPosition.y = (playerPosition.y - 1)%gameGrid.getGridEdge();
+        if (playerPosition.y < 0)
+            playerPosition.y = gameGrid.getGridEdge() - 1;
+
+        //set new position
+        gameGrid.setPlayerPosition(playerPosition);
+
+        return playerPosition;
     }
 }
 
 enum GridSector {Green, Red, Yellow, Blue};
 
-class Grid
-{
-    //grid params
-    private final int gridEdge; //TODO: check value
-
-    private GridPosition playerPosition;
-    private GridSector playerSector;
-
-    public Grid(int edge)
-    {
-        gridEdge = edge;
-    }
-
-    //player position get/set
-    public void setPlayerPosition(GridPosition position)
-    {
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Player located at (%d,%d)", this.getClass().getSimpleName(), position.x, position.y));
-
-        playerPosition = position;
-        playerSector = setPlayerSector(position);
-    }
-    public GridPosition getPlayerPosition()
-    {
-        return playerPosition;
-    }
-
-    //grid edge get
-    public int getGridEdge() {
-        return gridEdge;
-    }
-
-    private GridSector setPlayerSector(@NotNull GridPosition position)
-    {
-        int x = position.x;
-        int y = position.y;
-
-        if (x < gridEdge/2 && y < gridEdge/2)
-        {
-            return GridSector.Blue;
-        }
-        if (x < gridEdge/2 && y >= gridEdge/2)
-        {
-            return GridSector.Green;
-        }
-        if (x >= gridEdge/2 && y < gridEdge/2)
-        {
-            return GridSector.Yellow;
-        }
-        if (x >= gridEdge/2 && y >= gridEdge/2)
-        {
-            return GridSector.Red;
-        }
-
-        //return default
-        return GridSector.Blue;
-    }
-    public GridSector getPlayerSector()
-    {
-        return playerSector;
-    }
-}
-
-class GridPosition
-{
-    public int x, y;
-
-    public GridPosition(int playerX, int playerY)
-    {
-        x = playerX;
-        y = playerY;
-    }
-
-    public static boolean equals(GridPosition pos1, GridPosition pos2)
-    {
-        if (pos1.x == pos2.x && pos1.y == pos2.y)
-            return true;
-        return false;
-    }
-}

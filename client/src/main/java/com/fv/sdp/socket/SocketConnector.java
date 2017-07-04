@@ -190,7 +190,6 @@ public class SocketConnector
                 return false;
             }
         }
-
         return true;
     }
 
