@@ -99,13 +99,13 @@ public class RESTConnector
         {
             Match joinedMatch = response.readEntity(Match.class);
             //set match
-            appContext.PLAYER_MATCH = joinedMatch; //TODO: rivedere pesantemente andando a demandare le azioni a GameManager
+            //appContext.PLAYER_MATCH = joinedMatch; //TODO: rivedere pesantemente andando a demandare le azioni a GameManager
 
             //set ring node
-            appContext.RING_NETWORK = joinedMatch.getPlayers(); //TODO: remove current player
+            //appContext.RING_NETWORK = joinedMatch.getPlayers(); //TODO: remove current player
 
             //notify ring
-            appContext.GAME_MANAGER.notifyJoin(player);
+            appContext.GAME_MANAGER.joinMatchGrid(player, joinedMatch);
 
             return true;
         }
