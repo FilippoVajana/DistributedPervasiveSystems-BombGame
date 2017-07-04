@@ -17,7 +17,7 @@ public class GameTest
     public Timeout globalTimeout = Timeout.seconds(10); // 10 seconds max per method tested
 */
     @Test
-    public void joinTest() throws InterruptedException
+    public void joinRingTest() throws InterruptedException
     {
         //set mock match
         Match mockMatch = new Match("MockMatch", 10, 10);
@@ -44,7 +44,7 @@ public class GameTest
         //add player to the network ring
         Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.notifyJoin(player));
         notifyJoinThread.start();
-        Thread.sleep(5000);
+        Thread.sleep(3000);
         System.out.println("\n\n");
 
         //simulate token arrival
@@ -64,6 +64,33 @@ public class GameTest
     }
 
     @Test
+    public void joinEmptyRingTest() throws Exception
+    {
+        //set mock match
+        Match mockMatch = new Match("MockMatch", 10, 10);
+
+        //setup new node
+        NodeManager node = new NodeManager();
+        node.appContext.RING_NETWORK = new ConcurrentList<>();
+        node.appContext.PLAYER_MATCH = mockMatch;
+        node.startupNode();
+        Thread.sleep(1000);
+
+        //new node mock player
+        Player player = new Player("PL_NEW", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
+        node.appContext.RING_NETWORK.add(player); //done by RESTConnector
+
+        //add player to the network ring
+        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player));
+        notifyJoinThread.start();
+        System.out.println("\n\n");
+
+        notifyJoinThread.join(10000);
+        Assert.assertEquals(1, node.appContext.RING_NETWORK.getList().size()); //fake node
+        Assert.assertEquals(true, node.appContext.TOKEN_MANAGER.isHasToken());
+    }
+
+    @Test
     public void leaveTest() throws InterruptedException
     {
         //setup ring
@@ -71,7 +98,6 @@ public class GameTest
 
         //setting node
         NodeManager node0 = ring.get(0);
-        node0.appContext.PLAYER_NICKNAME = "PL0";
         node0.appContext.TOKEN_MANAGER.storeToken();
 
         //leave ring
@@ -89,7 +115,6 @@ public class GameTest
 
         //setting node
         NodeManager node0 = ring.get(0);
-        node0.appContext.PLAYER_NICKNAME = "PL0";
 
         //leave ring
         Thread notifyLeaveThread = new Thread(() -> node0.appContext.GAME_MANAGER.notifyLeave(node0.appContext.getPlayerInfo()));
@@ -107,6 +132,14 @@ public class GameTest
     @Test
     public void moveTest() throws InterruptedException
     {
+        //setup ring
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
 
+        //setting node
+        NodeManager node0 = ring.get(0);
+        node0.appContext.TOKEN_MANAGER.storeToken();
+
+        //move player
+        node0.appContext.GAME_MANAGER.movePlayer("w");
     }
 }
