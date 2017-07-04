@@ -154,7 +154,7 @@ public class GameManager
     }
 
     //ACTION NOTIFIER
-    public void notifyJoin(Player newPlayer)
+    private void notifyJoin(Player newPlayer)
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notify new player %s", this.getClass().getSimpleName(), newPlayer.getId()));
@@ -179,7 +179,6 @@ public class GameManager
         {
             appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
         }
-
 
         //set player position
         synchronized (moduleLock)
@@ -281,15 +280,15 @@ public class GameManager
             initGameEngine();
         }
 
-        //set token
-        appContext.TOKEN_MANAGER.storeToken();
-
         //add player to game grid
         try
         {
             //check if match first player
             if (appContext.RING_NETWORK.size() <= 1)
             {
+                //set token
+                appContext.TOKEN_MANAGER.storeToken();
+
                 //direct add player to grid
                 addPlayerToGrid(player);
             }

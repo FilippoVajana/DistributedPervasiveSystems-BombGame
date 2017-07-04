@@ -17,7 +17,7 @@ public class GameTest
     public Timeout globalTimeout = Timeout.seconds(10); // 10 seconds max per method tested
 */
     @Test
-    public void joinRingTest() throws InterruptedException
+    public void joinMatchTest() throws InterruptedException
     {
         //set mock match
         Match mockMatch = new Match("MockMatch", 10, 10);
@@ -35,16 +35,16 @@ public class GameTest
         node.appContext.RING_NETWORK = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList());
         node.appContext.PLAYER_MATCH = mockMatch;
         node.startupNode();
-        Thread.sleep(1000);
+        Thread.sleep(250);
 
         //new node mock player
-        Player player = new Player("PL_new", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
+        Player player = new Player("PL_NEW", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
         node.appContext.RING_NETWORK.add(player);
 
         //add player to the network ring
-        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.notifyJoin(player));
+        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player));
         notifyJoinThread.start();
-        Thread.sleep(3000);
+        Thread.sleep(5000);
         System.out.println("\n\n");
 
         //simulate token arrival
@@ -54,8 +54,7 @@ public class GameTest
 
 
         //wait notify end
-        //Thread.sleep(10000);
-        notifyJoinThread.join(5000);
+        notifyJoinThread.join();
 
         Assert.assertEquals(4, node.appContext.RING_NETWORK.getList().size()); //fake node
         Assert.assertEquals(4, ring.get(0).appContext.RING_NETWORK.getList().size()); //old node
@@ -64,7 +63,7 @@ public class GameTest
     }
 
     @Test
-    public void joinEmptyRingTest() throws Exception
+    public void joinEmptyMatchTest() throws Exception
     {
         //set mock match
         Match mockMatch = new Match("MockMatch", 10, 10);
