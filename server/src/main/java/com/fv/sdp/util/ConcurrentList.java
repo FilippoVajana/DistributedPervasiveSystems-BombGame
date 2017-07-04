@@ -87,5 +87,14 @@ public class ConcurrentList<E>
             return null;
         }
     }
+
+    //return list size
+    public int size()
+    {
+        synchronized (list)
+        {
+            return list.size();
+        }
+    }
 }
 
