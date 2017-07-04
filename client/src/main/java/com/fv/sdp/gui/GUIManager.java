@@ -17,7 +17,7 @@ import java.util.Scanner;
 public class GUIManager
 {
     //app context
-    ApplicationContext appContext;
+    public ApplicationContext appContext;
 
     public GUIManager(@NotNull ApplicationContext appContext)
     {
@@ -26,17 +26,10 @@ public class GUIManager
 
         //save context
         this.appContext = appContext;
-        //testing
-        //System.out.println("Requesting server test data model . . .\n\n");
-        //new RESTConnector().requestSetTestModel();
+
         //welcome
         welcome();
         //TODO: show menu
-    }
-
-    public ApplicationContext getAppContext()
-    {
-        return appContext;
     }
 
     //welcome message
@@ -69,8 +62,14 @@ public class GUIManager
                 joinMatch();
                 break;
             case 4:
+                exitApplication();
                 return;
         }
+    }
+
+    private void exitApplication()
+    {
+        System.exit(0);
     }
 
     //set nickname
@@ -114,6 +113,10 @@ public class GUIManager
         if (joinResult)
         {
             System.out.println(String.format("Successfully joined match %s", matchList.get(index).getId()));
+
+            //TODO: start play module
+            play();
+
             return true;
         }
         else
@@ -127,7 +130,7 @@ public class GUIManager
         Match match = new Match();
         Scanner inputReader = new Scanner(System.in);
 
-        System.out.println("### Match creation menù ###\n");
+        System.out.println("### Match creation menu ###\n");
         //match id
         System.out.print("Enter match id: ");
         match.setId( inputReader.nextLine());
@@ -144,6 +147,28 @@ public class GUIManager
     }
 
     //todo play
+    public void play()
+    {
 
+    }
 
+    public void notifyPlayerKilled(Player killer)
+    {
+        //console output
+        System.out.println(String.format("### YOU LOST ###\n" +
+                "### %s KILLED YOU ###", killer.getId()));
+    }
+    public void notifyPlayerWin()
+    {
+        //console output
+        System.out.println(String.format("### YOU WIN ###\n" +
+                "### PLAYER SCORE: %d", appContext.GAME_MANAGER.getPlayerScore()));
+    }
+
+    public void notifyPlayerKill(Player killedPlayer)
+    {
+        //console output
+        System.out.println(String.format("### YOU KILLED %s ###\n" +
+                "### SCORE: %d ###", killedPlayer.getId(), appContext.GAME_MANAGER.getPlayerScore()));
+    }
 }

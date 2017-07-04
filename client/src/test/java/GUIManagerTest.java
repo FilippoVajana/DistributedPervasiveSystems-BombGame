@@ -75,8 +75,8 @@ public class GUIManagerTest extends JerseyTest
 
         gui.setNickname();
 
-        Assert.assertNotNull(gui.getAppContext().PLAYER_NICKNAME);
-        Assert.assertEquals("Filippo", gui.getAppContext().PLAYER_NICKNAME);
+        Assert.assertNotNull(gui.appContext.PLAYER_NICKNAME);
+        Assert.assertEquals("Filippo", gui.appContext.PLAYER_NICKNAME);
     }
 
     @Test
