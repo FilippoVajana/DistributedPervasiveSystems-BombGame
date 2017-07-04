@@ -35,9 +35,6 @@ public class GameManager
 
     public void initGameEngine()
     {
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] INIT GameEngine", this.getClass().getSimpleName()));
-
         gameEngine = new GameEngine(appContext.PLAYER_MATCH);
     }
 
@@ -156,19 +153,9 @@ public class GameManager
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
     }
 
-    //ACTION NOTIFICATION
+    //ACTION NOTIFIER
     public void notifyJoin(Player newPlayer)
     {
-        //init game engine
-        if (appContext.PLAYER_MATCH == null)
-        {
-            gameEngine = new GameEngine(appContext.PLAYER_MATCH);
-        }
-        else
-        {
-            initGameEngine();
-        }
-
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notify new player %s", this.getClass().getSimpleName(), newPlayer.getId()));
 
@@ -248,8 +235,84 @@ public class GameManager
         }
     }
 
+    private void notifyMove(GridPosition playerPosition)
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notifing player movement", this.getClass().getSimpleName()));
+
+        //build message
+        String positionJson = new Gson().toJson(playerPosition, GridPosition.class);
+        String messageData = String.format("MOVE#%s#%s", appContext.getPlayerInfo(), positionJson); //TODO: message format
+        RingMessage moveMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
+
+        //build ack queue
+        int ringNodesCount = appContext.RING_NETWORK.getList().size();
+        appContext.ACK_HANDLER.addPendingAck(moveMessage.getId(), ringNodesCount, moduleLock);
+
+        //send message
+        appContext.SOCKET_CONNECTOR.sendMessage(moveMessage, SocketConnector.DestinationGroup.ALL); //TODO: check result
+
+        //wait ack
+        synchronized (moduleLock)
+        {
+            try
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting movement ACK", this.getClass().getSimpleName()));
+
+                moduleLock.wait();
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //ACTION ENDPOINT
+    public boolean joinMatchGrid(Player player)
+    {
+        //init game engine
+        if (appContext.PLAYER_MATCH == null)
+        {
+            gameEngine = new GameEngine(appContext.PLAYER_MATCH);
+        }
+        else
+        {
+            initGameEngine();
+        }
+
+        //set token
+        appContext.TOKEN_MANAGER.storeToken();
+
+        //add player to game grid
+        try
+        {
+            //check if match first player
+            if (appContext.RING_NETWORK.size() <= 1)
+            {
+                //direct add player to grid
+                addPlayerToGrid(player);
+            }
+            else
+            {
+                //start new player notification process
+                notifyJoin(player);
+            }
+        }catch (Exception ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR", this.getClass().getSimpleName()));
+            ex.printStackTrace();
+
+            return false;
+        }
+
+        return true;
+    }
 
 
+
+    //HELPER METHOD
     private ConcurrentObservableQueue<GridPosition> occupiedPositions;
     private void setPlayerStartingPosition() //TODO: test
     {
@@ -342,7 +405,7 @@ class GameEngine
         playerScore = 0;
     }
 
-    public GridPosition computeFreePosition(ConcurrentObservableQueue<GridPosition> occupiedPositions)
+    public GridPosition setStartingPosition(ConcurrentObservableQueue<GridPosition> occupiedPositions)
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Computing player starting position", this.getClass().getSimpleName()));
@@ -355,8 +418,8 @@ class GameEngine
         while (1 == 1)
         {
             //TODO: check bounds
-            int x = rndGen.nextInt(gameGrid.getGridEdge() + 1);
-            int y = rndGen.nextInt(gameGrid.getGridEdge() + 1);
+            int x = rndGen.nextInt(gameGrid.getGridEdge());
+            int y = rndGen.nextInt(gameGrid.getGridEdge());
             GridPosition candidatePosition = new GridPosition(x, y);
 
             //check position
