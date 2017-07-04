@@ -49,6 +49,12 @@ public class ApplicationContext
         LISTENER_ADDR = address;
         LISTENER_PORT = port;
     }
+    public void setPlayerInfo(Player player)
+    {
+        PLAYER_NICKNAME = player.getId();
+        LISTENER_ADDR = player.getAddress();
+        LISTENER_PORT = player.getPort();
+    }
     public Player getPlayerInfo()
     {
         return new Player(PLAYER_NICKNAME, LISTENER_ADDR, LISTENER_PORT);
