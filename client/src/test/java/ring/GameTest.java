@@ -143,7 +143,8 @@ public class GameTest
     public void moveTest() throws InterruptedException
     {
         //setup ring
-        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch();
+        Match testMatch = new Match("TEST_MATCH", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 4);
 
         //setting node
         NodeManager node0 = ring.get(0);
@@ -151,7 +152,55 @@ public class GameTest
 
         //move player
         System.out.println("\n\nMoving Node0");
-        GridPosition oldPosition = node0.appContext.GAME_MANAGER.getPlayerPosition();
+        //UP
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 0)); //starting position
         node0.appContext.GAME_MANAGER.movePlayer("w");
+        Assert.assertTrue(GridPosition.equals(new GridPosition(0, 1), node0.appContext.GAME_MANAGER.getPlayerPosition()));
+
+        //DOWN
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 0)); //starting position
+        node0.appContext.GAME_MANAGER.movePlayer("s");
+        Assert.assertTrue(GridPosition.equals(new GridPosition(0, 9), node0.appContext.GAME_MANAGER.getPlayerPosition()));
+
+        //LEFT
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 0)); //starting position
+        node0.appContext.GAME_MANAGER.movePlayer("a");
+        Assert.assertTrue(GridPosition.equals(new GridPosition(9, 0), node0.appContext.GAME_MANAGER.getPlayerPosition()));
+
+        //RIGHT
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 0)); //starting position
+        node0.appContext.GAME_MANAGER.movePlayer("d");
+        Assert.assertTrue(GridPosition.equals(new GridPosition(1, 0), node0.appContext.GAME_MANAGER.getPlayerPosition()));
+
+    }
+
+    @Test
+    public void killTest() throws Exception
+    {
+        /*
+        Node1 kill Node0
+         */
+
+        //setup ring
+        Match testMatch = new Match("TEST_MATCH", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 2);
+
+        //setting node0
+        NodeManager node0 = ring.get(0);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0,0));
+
+        //setting node1
+        NodeManager node1 = ring.get(1);
+        node1.appContext.TOKEN_MANAGER.storeToken();
+        node1.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0,1));
+
+        //move node1 on node0
+        Thread node1MoveThread = new Thread(() -> node1.appContext.GAME_MANAGER.movePlayer("s"));
+        node1MoveThread.start();
+
+        node1MoveThread.join(2000);
+        Thread.sleep(1000);
+        Assert.assertEquals(1, node1.appContext.GAME_MANAGER.getPlayerScore());
+        Assert.assertEquals(1, node1.appContext.RING_NETWORK.size());
     }
 }

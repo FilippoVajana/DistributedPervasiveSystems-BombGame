@@ -57,6 +57,9 @@ public class GameHandler implements IMessageHandler
                 break;
             case "MOVE":
                 gameManager.handleMovement(receivedMessage);
+                break;
+            case "KILLED":
+                gameManager.handleKilledPlayer(receivedMessage);
             default:
                 return;
         }
