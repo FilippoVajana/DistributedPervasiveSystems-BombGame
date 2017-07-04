@@ -61,15 +61,14 @@ public class RingBuilder
         return nodesList;
     }
 
-    public ArrayList<NodeManager> buildTestMatch()
+    public ArrayList<NodeManager> buildTestMatch(Match testMatch, int playerCount)
     {
         try
         {
             //test match
             System.out.println("INITIALIZING  RING NODES");
-            Match testMatch = new Match("Mock_Match", 20, 10);
             //init nodes
-            final int NODES_COUNT = 3;
+            final int NODES_COUNT = playerCount;
             ArrayList<NodeManager> nodeList = new ArrayList<>();
 
             for (int i = 0; i < NODES_COUNT; i++)
