@@ -16,4 +16,14 @@ public class GridPosition
             return true;
         return false;
     }
+
+    @Override
+    public boolean equals(Object position)
+    {
+        GridPosition pos = (GridPosition) position;
+
+        if (x == pos.x && y == pos.y)
+            return true;
+        return false;
+    }
 }
