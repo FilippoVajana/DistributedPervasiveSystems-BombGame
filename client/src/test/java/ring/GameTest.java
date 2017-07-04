@@ -2,7 +2,9 @@ package ring;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.ring.GridPosition;
 import com.fv.sdp.ring.NodeManager;
+import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.ConcurrentList;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,17 +34,22 @@ public class GameTest
 
         //setup new node
         NodeManager node = new NodeManager();
-        node.appContext.RING_NETWORK = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList());
+        //node.appContext.RING_NETWORK = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList());
         node.appContext.PLAYER_MATCH = mockMatch;
         node.startupNode();
         Thread.sleep(250);
 
         //new node mock player
         Player player = new Player("PL_NEW", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
-        node.appContext.RING_NETWORK.add(player);
+        //node.appContext.RING_NETWORK.add(player);
+
+        //set match players
+        ConcurrentList<Player> matchPlayers = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList()); //old ring
+        matchPlayers.add(player); //old ring + new player
+        mockMatch.setPlayers(matchPlayers);
 
         //add player to the network ring
-        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player));
+        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player, mockMatch));
         notifyJoinThread.start();
         Thread.sleep(5000);
         System.out.println("\n\n");
@@ -77,10 +84,14 @@ public class GameTest
 
         //new node mock player
         Player player = new Player("PL_NEW", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
-        node.appContext.RING_NETWORK.add(player); //done by RESTConnector
+
+        //set match players
+        ArrayList<Player> matchPlayers = new ArrayList<>();
+        matchPlayers.add(player);
+        mockMatch.setPlayers(new ConcurrentList<>(matchPlayers));
 
         //add player to the network ring
-        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player));
+        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player, mockMatch));
         notifyJoinThread.start();
         System.out.println("\n\n");
 
@@ -132,13 +143,15 @@ public class GameTest
     public void moveTest() throws InterruptedException
     {
         //setup ring
-        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch();
 
         //setting node
         NodeManager node0 = ring.get(0);
         node0.appContext.TOKEN_MANAGER.storeToken();
 
         //move player
+        System.out.println("\n\nMoving Node0");
+        GridPosition oldPosition = node0.appContext.GAME_MANAGER.getPlayerPosition();
         node0.appContext.GAME_MANAGER.movePlayer("w");
     }
 }
