@@ -1,9 +1,11 @@
 package com.fv.sdp;
 
+import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.AckHandler;
 import com.fv.sdp.ring.GameManager;
+import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentList;
@@ -32,10 +34,12 @@ public class ApplicationContext
     public ConcurrentList<Player> RING_NETWORK = new ConcurrentList<>();
 
     //NODE
+    public NodeManager NODE_MANAGER;
     public SocketConnector SOCKET_CONNECTOR;
     public AckHandler ACK_HANDLER;
     public GameManager GAME_MANAGER;
     public TokenManager TOKEN_MANAGER;
+    public GUIManager GUI_MANAGER;
 
     //PLAYER
     public String PLAYER_NICKNAME;
