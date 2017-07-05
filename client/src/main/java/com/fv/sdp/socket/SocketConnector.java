@@ -119,7 +119,7 @@ public class SocketConnector
                     synchronized (tokenSignal)
                     {
                         //log
-                        PrettyPrinter.printTimestampLog(String.format("[%s] Socket wait token for message %s - %d", appContext.getPlayerInfo().getId(), message.getType(), message.getId()));
+                        PrettyPrinter.printTimestampLog(String.format("[%s] Socket wait token for message %s - %s", appContext.getPlayerInfo().getId(), message.getType(), message.getId()));
                         //wait for token store
                         tokenSignal.wait(1000);
                     }

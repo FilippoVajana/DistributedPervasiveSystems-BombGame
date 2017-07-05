@@ -112,7 +112,6 @@ public class SocketConnectorTest
         NodeManager node1 = ring.get(1);
         node1.appContext.TOKEN_MANAGER.storeToken();
         node1.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.SOURCE);
-        node1.appContext.TOKEN_MANAGER.releaseTokenSilent();
 
         Thread.sleep(1000);
 
@@ -137,7 +136,7 @@ public class SocketConnectorTest
         System.out.println("\n\nNode0 -> Node1");
         node0.appContext.TOKEN_MANAGER.storeToken();
         node0.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
-        node0.appContext.TOKEN_MANAGER.releaseTokenSilent();
+        node0.appContext.TOKEN_MANAGER.releaseToken();
 
         Thread.sleep(1000);
         Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());
@@ -147,7 +146,7 @@ public class SocketConnectorTest
         //node1 -> TOKEN -> node2
         System.out.println("\n\nNode1 -> Node2");
         node1.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
-        node1.appContext.TOKEN_MANAGER.releaseTokenSilent();
+        node1.appContext.TOKEN_MANAGER.releaseToken();
 
         Thread.sleep(1000);
         Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());
@@ -158,7 +157,7 @@ public class SocketConnectorTest
         //node2 -> TOKEN -> node0
         System.out.println("\n\nNode2 -> Node0");
         node2.appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.NEXT);
-        node2.appContext.TOKEN_MANAGER.releaseTokenSilent();
+        node2.appContext.TOKEN_MANAGER.releaseToken();
 
         Thread.sleep(1000);
         Assert.assertEquals(true, node0.appContext.TOKEN_MANAGER.isHasToken());
