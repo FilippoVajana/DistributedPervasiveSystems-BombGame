@@ -11,7 +11,6 @@ import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import com.google.gson.Gson;
 
-import javax.validation.constraints.NotNull;
 import java.util.Random;
 
 /**
@@ -67,20 +66,61 @@ public class GameManager
 
     public synchronized void handleCheckPosition(RingMessage message)
     {
-        /*
-        2 cases
-        1) receive a check-position request  -> send check-position reply
-        2) receive a check-position reply -> route to occupied queue
-         */
-
         String messageId = message.getId();
         String messageData = message.getContent();
+
+        //parse message data
+        String[] messageDataComponents = messageData.split("#");
         //check message type
+
+        if (messageDataComponents.length > 1)
+        {
+            //POSITION CHECK RESPONSE (CHECK-POSITION#player_position_json)
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Handling position check response %s", this.getClass().getSimpleName(), message.getId()));
+
+            //parse player position
+            String positionJson = messageDataComponents[1];
+            GridPosition position = new Gson().fromJson(positionJson, GridPosition.class);
+
+            //add position to occupied positions queue
+            occupiedPositions.push(position);
+
+            return;
+        }
+        else
+        {
+            //POSITION CHECK REQUEST (CHECK-POSITION#null)
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Handling position check request %s", this.getClass().getSimpleName(), message.getId()));
+
+            //get player position
+            GridPosition playerPosition = gameEngine.gameGrid.getPlayerPosition();
+
+            //check for auto-message
+            if (playerPosition == null)
+            {
+                playerPosition = new GridPosition(-1, -1); //position out of grid
+            }
+
+            //build message
+            String playerPositionJson = new Gson().toJson(playerPosition, GridPosition.class);
+            String playerPositionMessage = String.format("CHECK-POSITION#%s", playerPositionJson);
+
+            RingMessage messageResponse = new RingMessage(MessageType.GAME, messageId, playerPositionMessage);
+            messageResponse.setSourceAddress(message.getSourceAddress());
+            messageResponse.setNeedToken(false);
+
+            //send message
+            appContext.SOCKET_CONNECTOR.sendMessage(messageResponse, SocketConnector.DestinationGroup.SOURCE);
+        }
+
+        /*
         try
         {
             //POSITION CHECK RESPONSE (CHECK-POSITION#player_position_json)
 
-            //parse node position
+            //parse player position
             String positionJson = messageData.split("#")[1];
             GridPosition position = new Gson().fromJson(positionJson, GridPosition.class);
 
@@ -125,7 +165,7 @@ public class GameManager
             {
                 appContext.SOCKET_CONNECTOR.sendMessage(messageResponse, SocketConnector.DestinationGroup.SOURCE);
             }
-        }
+        }*/
     }
 
     public synchronized void handleLeave(RingMessage message)
@@ -225,33 +265,25 @@ public class GameManager
         //build message
         String playerJson = new Gson().toJson(newPlayer, Player.class);
         String messageContent = String.format("ENTER-PLAYER#%s", playerJson);
-        RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
+        RingMessage joinMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
+        joinMessage.setNeedToken(false);
 
-        //build ack queue
-        int ringNodesCount = appContext.RING_NETWORK.getList().size();
-        appContext.ACK_HANDLER.addPendingAck(message.getId(), ringNodesCount, moduleLock);
+        //setup ack queue
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(joinMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
         //send join message
-        if (appContext.TOKEN_MANAGER.isHasToken() == false)
-        {
-            appContext.TOKEN_MANAGER.storeToken(); //Token hack
-            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
-            appContext.TOKEN_MANAGER.releaseTokenSilent(); //Token hack
-        }
-        else
-        {
-            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
-        }
+        appContext.SOCKET_CONNECTOR.sendMessage(joinMessage, SocketConnector.DestinationGroup.ALL);
 
         //set player position
-        synchronized (moduleLock)
+        synchronized (ackWaitLock)
         {
             try
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting new player ACK", this.getClass().getSimpleName()));
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting new player notification ACK", this.getClass().getSimpleName()));
 
-                moduleLock.wait(); //wait ACK
+                ackWaitLock.wait(); //wait ACK
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -269,22 +301,22 @@ public class GameManager
         String messageContent = String.format("EXIT-PLAYER#%s", playerJson);
         RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
 
-        //build ack queue
-        int ringNodesCount = appContext.RING_NETWORK.getList().size();
-        appContext.ACK_HANDLER.addPendingAck(message.getId(), ringNodesCount, moduleLock);
+        //setup ack queue
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(message.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
         //send message
-        appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);//TODO: check result
+        appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
 
         //wait ack
-        synchronized (moduleLock)
+        synchronized (ackWaitLock)
         {
             try
             {
-                moduleLock.wait();
+                ackWaitLock.wait();
 
                 //token dispose
-                appContext.TOKEN_MANAGER.releaseToken();
+                appContext.TOKEN_MANAGER.releaseToken(); //TODO: move to endpoint
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -304,21 +336,21 @@ public class GameManager
         RingMessage moveMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
 
         //build ack queue
-        int ringNodesCount = appContext.RING_NETWORK.getList().size();
-        appContext.ACK_HANDLER.addPendingAck(moveMessage.getId(), ringNodesCount, moduleLock);
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(moveMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
         //send message
         appContext.SOCKET_CONNECTOR.sendMessage(moveMessage, SocketConnector.DestinationGroup.ALL); //TODO: check result
 
         //wait ack
-        synchronized (moduleLock)
+        synchronized (ackWaitLock)
         {
             try
             {
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Waiting movement ACK", this.getClass().getSimpleName()));
 
-                moduleLock.wait();
+                ackWaitLock.wait();
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -379,6 +411,21 @@ public class GameManager
 
         return true;
     }
+    public boolean leaveMatchGrid()
+    {
+        //notify
+        notifyLeave(appContext.getPlayerInfo());
+
+        //release token
+        appContext.TOKEN_MANAGER.releaseToken();
+
+
+        //clean app context
+        appContext.PLAYER_MATCH = null;
+        appContext.RING_NETWORK = null;
+
+        return true;
+    }
     public boolean movePlayer(String movementKey)
     {
         //remove case sensitiveness
@@ -425,8 +472,8 @@ public class GameManager
         PrettyPrinter.printTimestampLog(String.format("[%s] Setting player starting position", this.getClass().getSimpleName()));
 
         //wait ring token
-        Object hasTokenSignal = appContext.TOKEN_MANAGER.getHasTokenSignal();
-        if (appContext.TOKEN_MANAGER.isHasToken() == false)
+        Object hasTokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
+        while(appContext.TOKEN_MANAGER.isHasToken() == false)
         {
             try
             {
@@ -434,7 +481,7 @@ public class GameManager
                 {
                     //log
                     PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
-                    hasTokenSignal.wait();
+                    hasTokenSignal.wait(1000);
                 }
             } catch (InterruptedException e)
             {
@@ -450,9 +497,12 @@ public class GameManager
         occupiedPositions = new ConcurrentObservableQueue<>();
         Object queueSignal = occupiedPositions.getQueueSignal(); //activated on queue.push()
 
-        //send message
-        appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL); //check sync
-
+        //lock down token module during socket send
+        synchronized (appContext.TOKEN_MANAGER.getModuleLock())
+        {
+            //send message
+            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL); //check sync
+        }
 
         //loop on response
         while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size()) //check condition
@@ -504,32 +554,26 @@ public class GameManager
         //build message
         String playerKilledJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
         String messageData = String.format("KILLED#%s", playerKilledJson);
-        RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
-        message.setSourceAddress(killer.getCompleteAddress()); //hack
+
+        RingMessage killedMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
+        killedMessage.setSourceAddress(killer.getCompleteAddress()); //hack
+        killedMessage.setNeedToken(false);
 
         //prepare ack queue
-        appContext.ACK_HANDLER.addPendingAck(message.getId(), 1, moduleLock);
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(killedMessage.getId(), 1, ackWaitLock);
 
         //send message
-        if (appContext.TOKEN_MANAGER.isHasToken() == false)
-        {
-            appContext.TOKEN_MANAGER.storeToken(); //hack
-            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.SOURCE);
-            appContext.TOKEN_MANAGER.releaseTokenSilent(); //hack
-        }
-        else
-        {
-            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.SOURCE);
-        }
+        appContext.SOCKET_CONNECTOR.sendMessage(killedMessage, SocketConnector.DestinationGroup.SOURCE);
 
         //wait ack
-        synchronized (moduleLock)
+        synchronized (ackWaitLock)
         {
             try
             {
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Wait on player killed ACK", this.getClass().getSimpleName()));
-                moduleLock.wait(5000); //wait with 5s timeout
+                ackWaitLock.wait(); //wait
             } catch (InterruptedException e)
             {
                 e.printStackTrace();

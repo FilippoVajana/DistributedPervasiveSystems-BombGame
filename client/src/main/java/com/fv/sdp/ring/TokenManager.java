@@ -22,8 +22,8 @@ public class TokenManager
         //log
         PrettyPrinter.printClassInit(this);
 
-        //init token lock
-        tokenLock = new Object();
+        //init module lock
+        moduleLock = new Object();
 
         //init token signal
         tokenStoreSignal = new Object();
@@ -33,9 +33,9 @@ public class TokenManager
     }
 
     private boolean hasToken = false;
-    private Object tokenStoreSignal = null;
+    private Object tokenStoreSignal;
 
-    private Object moduleLock = new Object(); //TODO: add module lock system used by external caller (GameEngine)
+    private Object moduleLock; //TODO: test module lock system
 
     public boolean isHasToken()
     {
