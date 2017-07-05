@@ -40,7 +40,6 @@ public class TokenManager
     {
         return hasToken;
     }
-    public Object getTokenLock() { return tokenLock; }
     public Object getHasTokenSignal() { return hasTokenSignal; }
 
     public void storeToken()
