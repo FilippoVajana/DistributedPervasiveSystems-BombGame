@@ -71,8 +71,8 @@ public class GameManager
 
         //parse message data
         String[] messageDataComponents = messageData.split("#");
-        //check message type
 
+        //check message type
         if (messageDataComponents.length > 1)
         {
             //POSITION CHECK RESPONSE (CHECK-POSITION#player_position_json)
@@ -114,58 +114,6 @@ public class GameManager
             //send message
             appContext.SOCKET_CONNECTOR.sendMessage(messageResponse, SocketConnector.DestinationGroup.SOURCE);
         }
-
-        /*
-        try
-        {
-            //POSITION CHECK RESPONSE (CHECK-POSITION#player_position_json)
-
-            //parse player position
-            String positionJson = messageData.split("#")[1];
-            GridPosition position = new Gson().fromJson(positionJson, GridPosition.class);
-
-            //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Handling position check response %s", this.getClass().getSimpleName(), message.getId()));
-
-            //add position to occupied positions queue
-            occupiedPositions.push(position);
-
-            return;
-
-        }catch (IndexOutOfBoundsException ex)
-        {
-            //POSITION CHECK REQUEST (CHECK-POSITION#null)
-
-            //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Handling position check request %s", this.getClass().getSimpleName(), message.getId()));
-
-            //get player position
-            GridPosition playerPosition = gameEngine.gameGrid.getPlayerPosition();
-
-            //check for auto-message
-            if (playerPosition == null)
-            {
-                playerPosition = new GridPosition(-1, -1); //position out of grid
-            }
-
-            //build message
-            String playerPositionJson = new Gson().toJson(playerPosition, GridPosition.class);
-            String playerPositionMessage = String.format("CHECK-POSITION#%s", playerPositionJson);
-            RingMessage messageResponse = new RingMessage(MessageType.GAME, messageId, playerPositionMessage);
-            messageResponse.setSourceAddress(message.getSourceAddress());
-
-            //send message
-            if (appContext.TOKEN_MANAGER.isHasToken() == false)
-            {
-                appContext.TOKEN_MANAGER.storeToken(); //token hack for not-ACK response
-                appContext.SOCKET_CONNECTOR.sendMessage(messageResponse, SocketConnector.DestinationGroup.SOURCE);
-                appContext.TOKEN_MANAGER.releaseTokenSilent(); //token hack
-            }
-            else
-            {
-                appContext.SOCKET_CONNECTOR.sendMessage(messageResponse, SocketConnector.DestinationGroup.SOURCE);
-            }
-        }*/
     }
 
     public synchronized void handleLeave(RingMessage message)
@@ -461,6 +409,10 @@ public class GameManager
 
         return true;
     }
+    public boolean releaseBomb(GridBomb bomb)
+    {
+        return false;
+    }
 
 
 
@@ -640,8 +592,7 @@ class GameEngine
         //compute random position
         boolean positionClear = true;
         while (1 == 1)
-        {
-            //TODO: check bounds
+        { //TODO: fix loop on collision
             int x = rndGen.nextInt(gameGrid.getGridEdge());
             int y = rndGen.nextInt(gameGrid.getGridEdge());
             GridPosition candidatePosition = new GridPosition(x, y);
@@ -655,7 +606,7 @@ class GameEngine
                     System.out.println(String.format("Position occupied (%d, %d)", candidatePosition.x, candidatePosition.y));
                     try
                     {
-                        Thread.sleep(250);
+                        Thread.sleep(500);
                         break;
                     } catch (InterruptedException e)
                     {
