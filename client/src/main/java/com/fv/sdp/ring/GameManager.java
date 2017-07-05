@@ -251,12 +251,7 @@ public class GameManager
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Waiting new player ACK", this.getClass().getSimpleName()));
 
-                moduleLock.wait(); //wait ACK //TODO: set timeout?
-                //TODO: check if this node/player must add himself to his local RING_NETWORK view
-
-                //set player starting position
-                setPlayerStartingPosition();
-
+                moduleLock.wait(); //wait ACK
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -286,7 +281,7 @@ public class GameManager
         {
             try
             {
-                moduleLock.wait(5000); //wait with 5s timeout
+                moduleLock.wait();
 
                 //token dispose
                 appContext.TOKEN_MANAGER.releaseToken();
@@ -300,7 +295,7 @@ public class GameManager
     private void notifyMove(GridPosition playerPosition)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Notifing player movement", this.getClass().getSimpleName()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notifying player movement", this.getClass().getSimpleName()));
 
         //build message
         String positionJson = new Gson().toJson(playerPosition, GridPosition.class);
@@ -360,12 +355,18 @@ public class GameManager
                 appContext.TOKEN_MANAGER.storeToken();
 
                 //direct add player to grid
-                addPlayerToGrid(player);
+                addPlayerToGrid();
             }
             else
             {
                 //start new player notification process
                 notifyJoin(player);
+
+                //set player starting position
+                setPlayerStartingPosition();
+
+                //release token
+                appContext.TOKEN_MANAGER.releaseToken();
             }
         }catch (Exception ex)
         {
@@ -401,10 +402,15 @@ public class GameManager
 
         //get new player position
         GridPosition playerPosition = getPlayerPosition();
+
+        //notify other players
+        notifyMove(playerPosition);
+
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Player moved to (%d,%d)", this.getClass().getSimpleName(), playerPosition.x, playerPosition.y));
 
-        notifyMove(playerPosition);
+        //release token
+        appContext.TOKEN_MANAGER.releaseToken();
 
         return true;
     }
@@ -459,7 +465,7 @@ public class GameManager
                 synchronized (queueSignal)
                 {
                     //wait response
-                    queueSignal.wait(5000); //timeout before another check on while condition
+                    queueSignal.wait(1000); //timeout before another check on while condition
                 }
 
             } catch (InterruptedException e)
@@ -469,14 +475,11 @@ public class GameManager
         }
 
         //compute position
-        GridPosition startingPosition = gameEngine.setStartingPosition(occupiedPositions);
-        //set position
-        //gameEngine.gameGrid.setPlayerPosition(startingPosition); //already in setStartingPosition()
-
-        //release ring token
-        appContext.TOKEN_MANAGER.releaseToken();
+        GridPosition playerStartingPosition = gameEngine.setStartingPosition(occupiedPositions);
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Player %s start at position (%d,%d)", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId(), playerStartingPosition.x, playerStartingPosition.y));
     }
-    private void addPlayerToGrid(Player player)
+    private void addPlayerToGrid()
     {
         //set player position
         GridPosition startingPosition = gameEngine.setStartingPosition(new ConcurrentObservableQueue<>());
@@ -605,6 +608,16 @@ class GameEngine
                 if (candidatePosition.equals(pos))
                 {
                     positionClear = false;
+                    System.out.println(String.format("Position occupied (%d, %d)", candidatePosition.x, candidatePosition.y));
+                    try
+                    {
+                        Thread.sleep(250);
+                        break;
+                    } catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                        break;
+                    }
                 }
             }
 
