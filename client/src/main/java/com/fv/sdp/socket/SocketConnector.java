@@ -2,7 +2,6 @@ package com.fv.sdp.socket;
 
 import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Player;
-import com.fv.sdp.ring.TokenManager;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
 
@@ -109,27 +108,29 @@ public class SocketConnector
             //build json message
             String jsonMessage = new Gson().toJson(message);
 
-            //check token
-            if (message.getType() == MessageType.ACK)
-            { }
-            else
-                if (appContext.TOKEN_MANAGER.isHasToken() == false)
+
+            if (message.getNeedToken() == true) //TODO: check
+            {
+                //check token
+                while (appContext.TOKEN_MANAGER.isHasToken() == false) //no token
                 {
-                    Object hasTokenSignal = appContext.TOKEN_MANAGER.getHasTokenSignal();
-                    synchronized (hasTokenSignal) //TODO: check
+                    //token signal
+                    Object tokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
+                    synchronized (tokenSignal)
                     {
                         //log
-                        PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
-                        hasTokenSignal.wait();
+                        PrettyPrinter.printTimestampLog(String.format("[%s] Socket wait token for message %s - %d", appContext.getPlayerInfo().getId(), message.getType(), message.getId()));
+                        //wait for token store
+                        tokenSignal.wait(1000);
                     }
                 }
-
-            //log
-            PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort());
+            }
 
             //send message
             writer.println(jsonMessage);
             writer.flush();
+            //log
+            PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort());
 
             //close writer
             writer.close();
