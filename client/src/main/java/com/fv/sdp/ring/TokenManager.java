@@ -35,6 +35,7 @@ public class TokenManager
     private boolean hasToken = false;
     private Object tokenLock = null;
     private Object hasTokenSignal = null;
+    //TODO: add module lock system used by external caller (GameEngine)
 
     public boolean isHasToken()
     {
@@ -54,7 +55,7 @@ public class TokenManager
             //log
             PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", this.getClass().getSimpleName()));
 
-            hasTokenSignal.notifyAll();
+            hasTokenSignal.notifyAll(); //TODO: notify with same delay between each notification
         }
     }
 
@@ -92,7 +93,7 @@ public class TokenManager
         }
     }
 
-    public void releaseTokenSilent()
+    public void releaseTokenSilent() //TODO: remove
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token SILENT", this.getClass().getSimpleName()));

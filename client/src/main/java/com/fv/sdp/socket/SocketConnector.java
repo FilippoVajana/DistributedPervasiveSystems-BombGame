@@ -119,7 +119,7 @@ public class SocketConnector
                     synchronized (hasTokenSignal) //TODO: check
                     {
                         //log
-                        PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
+                        PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
                         hasTokenSignal.wait();
                     }
                 }

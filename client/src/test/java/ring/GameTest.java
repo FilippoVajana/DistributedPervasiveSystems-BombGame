@@ -21,7 +21,7 @@ public class GameTest
     public void joinMatchTest() throws InterruptedException
     {
         //set mock match
-        Match mockMatch = new Match("MockMatch", 2, 10);
+        Match mockMatch = new Match("MockMatch", 10, 10);
 
         //setup ring
         final int playerCount = 3;
@@ -45,7 +45,7 @@ public class GameTest
         notifyJoinThread.start();
 
         //simulate token arrival
-        Thread.sleep(5000);
+        //Thread.sleep(5000);
         System.out.println("\n\n");
         NodeManager nodeToken = ring.get(playerCount - 1);
         nodeToken.appContext.TOKEN_MANAGER.storeToken();
