@@ -22,82 +22,85 @@ public class TokenManager
         //log
         PrettyPrinter.printClassInit(this);
 
-        //init token lock
-        tokenLock = new Object();
+        //init module lock
+        moduleLock = new Object();
 
         //init token signal
-        hasTokenSignal = new Object();
+        tokenStoreSignal = new Object();
 
         //save app context
         this.appContext = appContext;
     }
 
     private boolean hasToken = false;
-    private Object tokenLock = null;
-    private Object hasTokenSignal = null;
-    //TODO: add module lock system used by external caller (GameEngine)
+    private Object tokenStoreSignal;
+
+    private Object moduleLock; //TODO: test module lock system
 
     public boolean isHasToken()
     {
         return hasToken;
     }
-    public Object getHasTokenSignal() { return hasTokenSignal; }
+    public Object getTokenStoreSignal() { return tokenStoreSignal; }
+    public Object getModuleLock()
+    {
+        return moduleLock;
+    }
 
     public void storeToken()
     {
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
-        hasToken = true;
-
-        //signal token awaiter
-        synchronized (hasTokenSignal)
+        synchronized (moduleLock)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", this.getClass().getSimpleName()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
+            hasToken = true;
 
-            hasTokenSignal.notifyAll(); //TODO: notify with same delay between each notification
+            //signal token awaiter
+            synchronized (tokenStoreSignal)
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", this.getClass().getSimpleName()));
+
+                tokenStoreSignal.notifyAll();
+            }
         }
     }
 
     public synchronized void releaseToken()
     {
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token", this.getClass().getSimpleName()));
-        System.out.println("\n\nThere is only one Lord of the Ring,\nonly one who can bend it to his will.\nAnd he does not share power.\n\n");
-
-        //create new token message
-        RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId());
-
-        //build ack queue
-        appContext.ACK_HANDLER.addPendingAck(tokenMessage.getId(), 1, tokenLock); //ack from token receiver
-
-        //send message via socket
-        appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
-
-        synchronized (tokenLock)
+        synchronized (moduleLock)
         {
-            try
-            {
-                //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token release ACK", this.getClass().getSimpleName()));
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token", this.getClass().getSimpleName()));
+            System.out.println("\n\nThere is only one Lord of the Ring,\nonly one who can bend it to his will.\nAnd he does not share power.\n\n");
 
-                tokenLock.wait(); //wait message ACK
-                //release token
-                hasToken = false;
-                //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Token released", this.getClass().getSimpleName()));
-            } catch (InterruptedException e)
+            //create new token message
+            RingMessage tokenMessage = new RingMessage(MessageType.TOKEN, new RandomIdGenerator().getRndId());
+
+            //build ack queue
+            Object ackWaitLock = new Object();
+            appContext.ACK_HANDLER.addPendingAck(tokenMessage.getId(), 1, ackWaitLock); //ack from token receiver
+
+            //send message via socket
+            appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
+
+            synchronized (ackWaitLock)
             {
-                e.printStackTrace();
+                try
+                {
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token release ACK", this.getClass().getSimpleName()));
+
+                    ackWaitLock.wait(); //wait message ACK
+                    //release token
+                    hasToken = false;
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Token released", this.getClass().getSimpleName()));
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-
-    public void releaseTokenSilent() //TODO: remove
-    {
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token SILENT", this.getClass().getSimpleName()));
-
-        hasToken = false;
     }
 }

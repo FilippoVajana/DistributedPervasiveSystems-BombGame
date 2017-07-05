@@ -41,7 +41,7 @@ public class TokenTest
         //send mock token message to node1
         node0.appContext.TOKEN_MANAGER.storeToken();
         node0.appContext.SOCKET_CONNECTOR.sendMessage(tokenMessage, SocketConnector.DestinationGroup.NEXT);
-        node0.appContext.TOKEN_MANAGER.releaseTokenSilent();
+        node0.appContext.TOKEN_MANAGER.releaseToken();
         Thread.sleep(1000);
 
         Assert.assertEquals(false, node0.appContext.TOKEN_MANAGER.isHasToken());

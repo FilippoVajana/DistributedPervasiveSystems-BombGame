@@ -45,8 +45,8 @@ public class GameTest
         notifyJoinThread.start();
 
         //simulate token arrival
-        //Thread.sleep(5000);
-        System.out.println("\n\n");
+        Thread.sleep(5000);
+        System.out.println("\n\n FAKE STORING TOKEN");
         NodeManager nodeToken = ring.get(playerCount - 1);
         nodeToken.appContext.TOKEN_MANAGER.storeToken();
         nodeToken.appContext.TOKEN_MANAGER.releaseToken();
@@ -124,11 +124,11 @@ public class GameTest
         notifyLeaveThread.start();
 
         //node2 release token
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         ring.get(2).appContext.TOKEN_MANAGER.storeToken();
         ring.get(2).appContext.TOKEN_MANAGER.releaseToken();
 
-        notifyLeaveThread.join();
+        notifyLeaveThread.join(10000);
         Assert.assertEquals(2, ring.get(1).appContext.RING_NETWORK.getList().size());
     }
 

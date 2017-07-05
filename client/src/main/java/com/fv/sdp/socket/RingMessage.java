@@ -69,6 +69,10 @@ public class RingMessage
     {
         this.needToken = needToken;
     }
+    public boolean getNeedToken()
+    {
+        return needToken;
+    }
 
     @Override
     public String toString()
