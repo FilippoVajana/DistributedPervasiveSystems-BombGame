@@ -4,7 +4,6 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.GridPosition;
 import com.fv.sdp.ring.NodeManager;
-import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.ConcurrentList;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,26 +21,19 @@ public class GameTest
     public void joinMatchTest() throws InterruptedException
     {
         //set mock match
-        Match mockMatch = new Match("MockMatch", 10, 10);
+        Match mockMatch = new Match("MockMatch", 2, 10);
 
         //setup ring
-        ArrayList<NodeManager> ring = new RingBuilder().buildTestRing();
-        for (NodeManager node : ring)
-        {
-            node.appContext.PLAYER_MATCH = mockMatch;
-            node.appContext.GAME_MANAGER.initGameEngine();
-        }
+        final int playerCount = 3;
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(mockMatch, playerCount);
 
         //setup new node
-        NodeManager node = new NodeManager();
-        //node.appContext.RING_NETWORK = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList());
-        node.appContext.PLAYER_MATCH = mockMatch;
-        node.startupNode();
+        NodeManager nodeNew = new NodeManager();
+        nodeNew.startupNode();
         Thread.sleep(250);
-
         //new node mock player
-        Player player = new Player("PL_NEW", node.appContext.LISTENER_ADDR, node.appContext.LISTENER_PORT);
-        //node.appContext.RING_NETWORK.add(player);
+        Player player = new Player("PL_NEW", nodeNew.appContext.LISTENER_ADDR, nodeNew.appContext.LISTENER_PORT);
+        nodeNew.appContext.setPlayerInfo(player);
 
         //set match players
         ConcurrentList<Player> matchPlayers = new ConcurrentList<>(ring.get(0).appContext.RING_NETWORK.getList()); //old ring
@@ -49,23 +41,24 @@ public class GameTest
         mockMatch.setPlayers(matchPlayers);
 
         //add player to the network ring
-        Thread notifyJoinThread = new Thread(() -> node.appContext.GAME_MANAGER.joinMatchGrid(player, mockMatch));
+        Thread notifyJoinThread = new Thread(() -> nodeNew.appContext.GAME_MANAGER.joinMatchGrid(player, mockMatch));
         notifyJoinThread.start();
-        Thread.sleep(5000);
-        System.out.println("\n\n");
 
         //simulate token arrival
-        NodeManager node2 = ring.get(2);
-        node2.appContext.TOKEN_MANAGER.storeToken();
-        node2.appContext.TOKEN_MANAGER.releaseToken();
+        Thread.sleep(5000);
+        System.out.println("\n\n");
+        NodeManager nodeToken = ring.get(playerCount - 1);
+        nodeToken.appContext.TOKEN_MANAGER.storeToken();
+        nodeToken.appContext.TOKEN_MANAGER.releaseToken();
 
 
-        //wait notify end
+        //wait join notify
         notifyJoinThread.join();
 
-        Assert.assertEquals(4, node.appContext.RING_NETWORK.getList().size()); //fake node
-        Assert.assertEquals(4, ring.get(0).appContext.RING_NETWORK.getList().size()); //old node
-        Assert.assertEquals(false, node.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(playerCount + 1, nodeNew.appContext.RING_NETWORK.getList().size()); //fake node
+        Assert.assertEquals(playerCount + 1, ring.get(0).appContext.RING_NETWORK.getList().size()); //old node
+        Assert.assertFalse(nodeNew.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertTrue(ring.get(0).appContext.TOKEN_MANAGER.isHasToken());
 
     }
 
@@ -172,6 +165,8 @@ public class GameTest
         node0.appContext.GAME_MANAGER.movePlayer("d");
         Assert.assertTrue(GridPosition.equals(new GridPosition(1, 0), node0.appContext.GAME_MANAGER.getPlayerPosition()));
 
+        //check token
+        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
     }
 
     @Test
