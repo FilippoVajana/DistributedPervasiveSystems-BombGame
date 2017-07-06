@@ -421,7 +421,15 @@ public class GameManager
     private void setPlayerStartingPosition()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Setting player starting position", this.getClass().getSimpleName()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Setting player starting position", appContext.getPlayerInfo().getCompleteAddress()));
+
+        //build message
+        String messageContent = String.format("CHECK-POSITION");
+        RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
+
+        //init response queue
+        occupiedPositions = new ConcurrentObservableQueue<>();
+        Object queueSignal = occupiedPositions.getQueueSignal(); //activated on queue.push()
 
         //wait ring token
         Object hasTokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
@@ -432,7 +440,8 @@ public class GameManager
                 synchronized (hasTokenSignal)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", this.getClass().getSimpleName()));
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
+
                     hasTokenSignal.wait(1000);
                 }
             } catch (InterruptedException e)
@@ -440,14 +449,6 @@ public class GameManager
                 e.printStackTrace();
             }
         }
-
-        //build message
-        String messageContent = String.format("CHECK-POSITION");
-        RingMessage message = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageContent);
-
-        //init response queue
-        occupiedPositions = new ConcurrentObservableQueue<>();
-        Object queueSignal = occupiedPositions.getQueueSignal(); //activated on queue.push()
 
         //lock down token module during socket send
         synchronized (appContext.TOKEN_MANAGER.getModuleLock())
@@ -457,12 +458,12 @@ public class GameManager
         }
 
         //loop on response
-        while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size()) //check condition
+        while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size())
         {
             try
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", this.getClass().getSimpleName()));
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
 
                 synchronized (queueSignal)
                 {
@@ -479,7 +480,7 @@ public class GameManager
         //compute position
         GridPosition playerStartingPosition = gameEngine.setStartingPosition(occupiedPositions);
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Player %s start at position (%d,%d)", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId(), playerStartingPosition.x, playerStartingPosition.y));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Player %s start at position (%d,%d)", appContext.getPlayerInfo().getCompleteAddress(), appContext.getPlayerInfo().getId(), playerStartingPosition.x, playerStartingPosition.y));
     }
     private void addPlayerToGrid()
     {
@@ -497,7 +498,6 @@ public class GameManager
         //notify killer
         notifyPlayerKilled(killer);
     }
-
     private void notifyPlayerKilled(Player killer)
     {
         //log
@@ -548,10 +548,6 @@ public class GameManager
         return gameEngine.getPlayerScore();
     }
 
-
-
-    //public void handleBomb(RingMessage message){}
-    //private void notifyBomb(GameAction bomb){}
 }
 
 //GAME ENGINE
