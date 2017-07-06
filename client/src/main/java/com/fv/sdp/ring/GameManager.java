@@ -63,7 +63,6 @@ public class GameManager
         response.setSourceAddress(message.getSourceAddress()); //MAGIC HACK
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
     }
-
     public synchronized void handleCheckPosition(RingMessage message)
     {
         String messageId = message.getId();
@@ -115,7 +114,6 @@ public class GameManager
             appContext.SOCKET_CONNECTOR.sendMessage(messageResponse, SocketConnector.DestinationGroup.SOURCE);
         }
     }
-
     public synchronized void handleLeave(RingMessage message)
     {
         //get player json data
@@ -141,7 +139,6 @@ public class GameManager
         response.setSourceAddress(message.getSourceAddress()); //MAGIC HACK
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
     }
-
     public void handleMovement(RingMessage receivedMessage)
     {
         //send back ack
@@ -174,7 +171,6 @@ public class GameManager
             }
         }
     }
-
     public void handleKilledPlayer(RingMessage receivedMessage)
     {
         //send back ack
@@ -193,7 +189,7 @@ public class GameManager
         gameEngine.incrementPlayerScore();
 
         //notify gui
-        appContext.GUI_MANAGER.notifyPlayerKill(killedPlayer);
+        appContext.GUI_MANAGER.notifyKill(killedPlayer);
 
         //check victory condition
         if (appContext.RING_NETWORK.size() == 1 && appContext.RING_NETWORK.contain(appContext.getPlayerInfo()))
@@ -201,6 +197,20 @@ public class GameManager
             //notify gui victory
             appContext.GUI_MANAGER.notifyPlayerWin();
         }
+    }
+    public void handleBombRelease(RingMessage receivedMessage)
+    {
+        //send back ack
+        RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //hack
+        appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
+
+        //parse json
+        String bombJson = receivedMessage.getContent().split("#")[1];
+        GridBomb bomb = new Gson().fromJson(bombJson, GridBomb.class);
+
+        //notify gui
+        appContext.GUI_MANAGER.notifyBombRelease(bomb);
     }
 
 
@@ -375,7 +385,7 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notified bomb release in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
     }
-    private void notifyBombExplosion(GridBomb bomb)
+    private void notifyBombExplosion(GridBomb bomb) //TODO
     {
         //5 second timeout
         try
@@ -620,7 +630,7 @@ public class GameManager
     private void playerKilled(Player killer)
     {
         //notify gui manager
-        appContext.GUI_MANAGER.notifyPlayerKilled(killer);
+        appContext.GUI_MANAGER.notifyPlayerLost(killer);
 
         //notify killer
         notifyPlayerKilled(killer);

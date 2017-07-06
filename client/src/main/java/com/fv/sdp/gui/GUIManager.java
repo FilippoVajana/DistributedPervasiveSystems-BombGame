@@ -4,6 +4,7 @@ import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.rest.RESTConnector;
+import com.fv.sdp.ring.GridBomb;
 import com.fv.sdp.util.PrettyPrinter;
 
 import javax.validation.constraints.NotNull;
@@ -152,23 +153,26 @@ public class GUIManager
 
     }
 
-    public void notifyPlayerKilled(Player killer)
+    public void notifyPlayerLost(Player killer)
     {
         //console output
-        System.out.println(String.format("### YOU LOST ###\n" +
+        System.out.println(String.format("\n### YOU LOST ###\n" +
                 "### %s KILLED YOU ###", killer.getId()));
     }
     public void notifyPlayerWin()
     {
         //console output
-        System.out.println(String.format("### YOU WIN ###\n" +
+        System.out.println(String.format("\n### YOU WIN ###\n" +
                 "### PLAYER SCORE: %d", appContext.GAME_MANAGER.getPlayerScore()));
     }
-
-    public void notifyPlayerKill(Player killedPlayer)
+    public void notifyKill(Player killedPlayer)
     {
         //console output
-        System.out.println(String.format("### YOU KILLED %s ###\n" +
+        System.out.println(String.format("\n### YOU KILLED %s ###\n" +
                 "### SCORE: %d ###", killedPlayer.getId(), appContext.GAME_MANAGER.getPlayerScore()));
+    }
+    public void notifyBombRelease(GridBomb bomb)
+    {
+        System.out.println(String.format("\n### BOMB RELEASE IN %s SECTOR", bomb.getBombSOE()));
     }
 }
