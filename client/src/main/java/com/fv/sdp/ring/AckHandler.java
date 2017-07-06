@@ -12,8 +12,8 @@ import java.util.Map;
  */
 public class AckHandler implements IMessageHandler
 {
-    private Map<String, Integer> queueMap; //retain a map of pending ack to be received (id:count)
-    private Map<String, Object> observerMap; //retain a map between <ack queue> - <observer lock>
+    private Map<String, Integer> queueMap; //map of pending ack to be received (id:count)
+    private Map<String, Object> observerMap; //map between <ack queue> - <observer lock>
 
     public AckHandler(ApplicationContext appContext)
     {
@@ -38,6 +38,19 @@ public class AckHandler implements IMessageHandler
 
         //set token
         observerMap.put(idAck, observerLock);
+    }
+
+    public synchronized boolean isQueueEmpty(String idAck)
+    {
+        try
+        {
+            queueMap.get(idAck);
+            return true;
+
+        }catch (NullPointerException ex)
+        {
+            return false;
+        }
     }
 
     @Override
