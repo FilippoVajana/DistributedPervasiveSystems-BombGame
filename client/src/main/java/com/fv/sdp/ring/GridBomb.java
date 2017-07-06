@@ -4,13 +4,13 @@ public class GridBomb
 {
     private GridSector SOE; //Sector Of Explosion
 
-    public GridBomb(int value)
+    public GridBomb(double value)
     {
         //compute sector id
-        int sectId = value % 4;
+        int sectId = (int) (value % 4);
 
         //set bomb sector
-        switch (value)
+        switch (sectId)
         {
             case 0:
                 SOE = GridSector.Green;
