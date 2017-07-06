@@ -381,9 +381,6 @@ public class GameManager
                 }
             }
         }
-
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Notified bomb release in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
     }
     private void notifyBombExplosion(GridBomb bomb) //TODO
     {
@@ -522,15 +519,19 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Releasing bomb in sector %s", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
 
-        //check token
-        if (appContext.TOKEN_MANAGER.isHasToken() == false)
+        //wait ring token
+        Object hasTokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
+        while (appContext.TOKEN_MANAGER.isHasToken() == false)
         {
             try
             {
-                //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
+                synchronized (hasTokenSignal)
+                {
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
 
-                appContext.TOKEN_MANAGER.getTokenStoreSignal().wait(); //wait token
+                    hasTokenSignal.wait(1000);
+                }
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -547,10 +548,15 @@ public class GameManager
             //start bomb explosion notify thread
             new Thread(() -> notifyBombExplosion(bomb)).start();
 
-            return true;
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Bomb released in sector %s", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
         }
-    }
 
+        //release token
+        appContext.TOKEN_MANAGER.releaseToken();
+
+        return true;
+    }
 
 
     //HELPER METHOD
@@ -649,6 +655,8 @@ public class GameManager
     {
         return gameEngine.getPlayerScore();
     }
+    public ConcurrentObservableQueue<GridBomb> getBombQueue() { return gameEngine.getBombQueue(); }
+
 
 }
 
@@ -822,5 +830,6 @@ class GameEngine
     }
 }
 
-enum GridSector {Green, Red, Yellow, Blue};
+
+;
 

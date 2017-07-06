@@ -21,7 +21,7 @@ import java.util.ArrayList;
 /**
  * Created by filip on 14/06/2017.
  */
-public class RESTConnectorTest extends JerseyTest
+public class RESTConnectorTest extends JerseyTest //TODO: review
 {
     private RESTConnector connector;
 

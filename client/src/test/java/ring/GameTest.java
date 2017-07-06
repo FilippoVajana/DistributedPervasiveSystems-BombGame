@@ -2,7 +2,9 @@ package ring;
 
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.ring.GridBomb;
 import com.fv.sdp.ring.GridPosition;
+import com.fv.sdp.ring.GridSector;
 import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.util.ConcurrentList;
 import org.junit.Assert;
@@ -197,5 +199,41 @@ public class GameTest
         Thread.sleep(1000);
         Assert.assertEquals(1, node1.appContext.GAME_MANAGER.getPlayerScore());
         Assert.assertEquals(1, node1.appContext.RING_NETWORK.size());
+    }
+
+    @Test
+    public void bombReleaseTest() throws InterruptedException {
+        //setup ring
+        Match testMatch = new Match("TEST_MATCH", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 2);
+
+        //setting node0
+        NodeManager node0 = ring.get(0);
+        GridBomb bomb = new GridBomb(0);
+        node0.appContext.GAME_MANAGER.getBombQueue().push(bomb);
+        Assert.assertTrue(bomb.getBombSOE() == GridSector.Green);
+
+        //set node0 token
+        node0.appContext.TOKEN_MANAGER.releaseToken();
+        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
+
+        //node0 release bomb
+        Thread releaseBombThread = new Thread(() -> node0.appContext.GAME_MANAGER.releaseBomb());
+        releaseBombThread.start();
+
+        //node1 release token
+        //Thread.sleep(5000);
+        System.out.println("\nNODE1 RELEASING TOKEN");
+
+        NodeManager node1 = ring.get(1);
+        node1.appContext.TOKEN_MANAGER.storeToken();
+        node1.appContext.TOKEN_MANAGER.releaseToken();
+
+        //wait release
+        releaseBombThread.join();
+        Thread.sleep(6000); //wait explosion
+
+        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
+
     }
 }
