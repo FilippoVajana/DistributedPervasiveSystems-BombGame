@@ -409,8 +409,20 @@ public class GameManager
 
         return true;
     }
-    public boolean releaseBomb(GridBomb bomb)
+    public boolean releaseBomb()
     {
+        //get first bomb
+        GridBomb bomb = gameEngine.getBombQueue().pop();
+
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Releasing bomb in sector %s", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
+
+        //lock token
+
+
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Bomb released in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
+
         return false;
     }
 
@@ -433,7 +445,7 @@ public class GameManager
 
         //wait ring token
         Object hasTokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
-        while(appContext.TOKEN_MANAGER.isHasToken() == false)
+        while (appContext.TOKEN_MANAGER.isHasToken() == false)
         {
             try
             {
@@ -555,6 +567,7 @@ class GameEngine
 {
     public Grid gameGrid;
     private int  playerScore;
+    private ConcurrentObservableQueue<GridBomb> bombQueue;
 
     public GameEngine(Match match)
     {
@@ -566,8 +579,12 @@ class GameEngine
 
         //init player score
         playerScore = 0;
+
+        //init bomb queue
+        bombQueue = new ConcurrentObservableQueue<>();
     }
 
+    //Score
     public int getPlayerScore()
     {
         return playerScore;
@@ -577,6 +594,13 @@ class GameEngine
         playerScore++;
     }
 
+    //Bomb
+    public ConcurrentObservableQueue<GridBomb> getBombQueue()
+    {
+        return bombQueue;
+    }
+
+    //Movement
     public GridPosition setStartingPosition(ConcurrentObservableQueue<GridPosition> occupiedPositions)
     {
         //log
@@ -620,7 +644,6 @@ class GameEngine
             }
         }
     }
-
     public GridPosition moveRight()
     {
         //get present player position
@@ -634,7 +657,6 @@ class GameEngine
 
         return playerPosition;
     }
-
     public GridPosition moveLeft()
     {
         //get present player position
@@ -650,7 +672,6 @@ class GameEngine
 
         return playerPosition;
     }
-
     public GridPosition moveUp()
     {
         //get present player position
@@ -664,7 +685,6 @@ class GameEngine
 
         return playerPosition;
     }
-
     public GridPosition moveDown()
     {
         //get present player position
@@ -679,6 +699,36 @@ class GameEngine
         gameGrid.setPlayerPosition(playerPosition);
 
         return playerPosition;
+    }
+
+    //Data Analysis
+    private final double ALFA = 1;
+    private final double TH = 10;
+    private double EMA_prev = 0;
+
+    public void checkSensorData(int[] data)
+    {
+        //compute average
+        double M = 0;
+        for (int d : data)
+            M+= d;
+        M = M/data.length;
+
+        //compute EMA
+        double EMA = EMA_prev + ALFA * (M - EMA_prev);
+
+        //debug
+        System.err.println(String.format("Avg. : %d, EMA : %d", M, EMA));
+
+        //check for outliers
+        if (EMA - EMA_prev > TH) //found outlier
+        {
+            //build new bomb
+            GridBomb bomb = new GridBomb(EMA);
+
+            //store bomb
+            bombQueue.push(bomb);
+        }
     }
 }
 
