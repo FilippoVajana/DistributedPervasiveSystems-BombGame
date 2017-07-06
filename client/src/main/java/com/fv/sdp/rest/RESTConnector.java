@@ -159,13 +159,7 @@ public class RESTConnector
         if (response.getStatus() == 200)
         {
             //notify ring
-            appContext.GAME_MANAGER.notifyLeave(player); //TODO: rivedere pesantemente andando a demandare le azioni a GameManager
-
-            //clear match
-            appContext.PLAYER_MATCH = null;
-
-            //clear ring nodes
-            appContext.RING_NETWORK = null;
+            appContext.GAME_MANAGER.leaveMatchGrid();
 
             return true;
         }

@@ -104,7 +104,7 @@ public class GameTest
         node0.appContext.TOKEN_MANAGER.storeToken();
 
         //leave ring
-        node0.appContext.GAME_MANAGER.notifyLeave(node0.appContext.getPlayerInfo());
+        node0.appContext.GAME_MANAGER.leaveMatchGrid();
         Thread.sleep(500);
 
         Assert.assertEquals(2, ring.get(1).appContext.RING_NETWORK.getList().size());
@@ -120,7 +120,7 @@ public class GameTest
         NodeManager node0 = ring.get(0);
 
         //leave ring
-        Thread notifyLeaveThread = new Thread(() -> node0.appContext.GAME_MANAGER.notifyLeave(node0.appContext.getPlayerInfo()));
+        Thread notifyLeaveThread = new Thread(() -> node0.appContext.GAME_MANAGER.leaveMatchGrid());
         notifyLeaveThread.start();
 
         //node2 release token

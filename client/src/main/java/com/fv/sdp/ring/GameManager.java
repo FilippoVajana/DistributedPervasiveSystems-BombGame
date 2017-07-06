@@ -238,7 +238,7 @@ public class GameManager
             }
         }
     }
-    public void notifyLeave(Player player)
+    private void notifyLeave(Player player)
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notify player %s exit", this.getClass().getSimpleName(), player.getId()));
@@ -261,9 +261,6 @@ public class GameManager
             try
             {
                 ackWaitLock.wait();
-
-                //token dispose
-                appContext.TOKEN_MANAGER.releaseToken(); //TODO: move to endpoint
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -465,7 +462,6 @@ public class GameManager
 
         //release token
         appContext.TOKEN_MANAGER.releaseToken();
-
 
         //clean app context
         appContext.PLAYER_MATCH = null;
