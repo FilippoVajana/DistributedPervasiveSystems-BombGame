@@ -238,7 +238,6 @@ public class GameManager
             }
         }
     }
-
     public void notifyLeave(Player player)
     {
         //log
@@ -271,7 +270,6 @@ public class GameManager
             }
         }
     }
-
     private void notifyMove(GridPosition playerPosition)
     {
         //log
@@ -305,6 +303,107 @@ public class GameManager
             }
         }
     }
+    private void notifyPlayerKilled(Player killer)
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notify player %s killed", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId()));
+
+        //build message
+        String playerKilledJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
+        String messageData = String.format("KILLED#%s", playerKilledJson);
+
+        RingMessage killedMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
+        killedMessage.setSourceAddress(killer.getCompleteAddress()); //hack
+        killedMessage.setNeedToken(false);
+
+        //prepare ack queue
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(killedMessage.getId(), 1, ackWaitLock);
+
+        //send message
+        appContext.SOCKET_CONNECTOR.sendMessage(killedMessage, SocketConnector.DestinationGroup.SOURCE);
+
+        //wait on ack
+        while (appContext.ACK_HANDLER.isQueueEmpty(killedMessage.getId()) == false)
+        {
+            synchronized (ackWaitLock)
+            {
+                try
+                {
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Wait player killed ACK", appContext.getPlayerInfo().getId()));
+
+                    ackWaitLock.wait(1000);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    private void notifyBombRelease(GridBomb bomb)
+    {
+        //message data
+        String bombJson = new Gson().toJson(bomb, GridBomb.class);
+        String messagePayload = String.format("BOMB-RELEASE#%s", bombJson);
+
+        //build message
+        RingMessage bombMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messagePayload);
+
+        //setup ack queue
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(bombMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
+
+        //send message
+        appContext.SOCKET_CONNECTOR.sendMessage(bombMessage, SocketConnector.DestinationGroup.ALL);
+
+        //wait on ack
+        while (appContext.ACK_HANDLER.isQueueEmpty(bombMessage.getId()) == false)
+        {
+            synchronized (ackWaitLock)
+            {
+                try
+                {
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Wait bomb release ACK", appContext.getPlayerInfo().getId()));
+
+                    ackWaitLock.wait(1000);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notified bomb release in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
+    }
+    private void notifyBombExplosion(GridBomb bomb)
+    {
+        //5 second timeout
+        try
+        {
+            Thread.sleep(5000);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        //message data
+
+        //build message
+
+        //setup ack queue
+
+        //send message
+
+        //wait ack
+
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notified bomb explosion in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
+    }
+
+
 
     //ACTION ENDPOINT
     public boolean joinMatchGrid(Player player, Match match)
@@ -417,13 +516,33 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Releasing bomb in sector %s", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
 
+        //check token
+        if (appContext.TOKEN_MANAGER.isHasToken() == false)
+        {
+            try
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
+
+                appContext.TOKEN_MANAGER.getTokenStoreSignal().wait(); //wait token
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
         //lock token
+        synchronized (appContext.TOKEN_MANAGER.getModuleLock())
+        {
+            //notify bomb release
+            notifyBombRelease(bomb);
 
+            //start bomb explosion notify thread
+            new Thread(() -> notifyBombExplosion(bomb)).start();
 
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Bomb released in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
-
-        return false;
+            return true;
+        }
     }
 
 
@@ -510,41 +629,6 @@ public class GameManager
         //notify killer
         notifyPlayerKilled(killer);
     }
-    private void notifyPlayerKilled(Player killer)
-    {
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Notify player %s killed", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId()));
-
-        //build message
-        String playerKilledJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
-        String messageData = String.format("KILLED#%s", playerKilledJson);
-
-        RingMessage killedMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
-        killedMessage.setSourceAddress(killer.getCompleteAddress()); //hack
-        killedMessage.setNeedToken(false);
-
-        //prepare ack queue
-        Object ackWaitLock = new Object();
-        appContext.ACK_HANDLER.addPendingAck(killedMessage.getId(), 1, ackWaitLock);
-
-        //send message
-        appContext.SOCKET_CONNECTOR.sendMessage(killedMessage, SocketConnector.DestinationGroup.SOURCE);
-
-        //wait ack
-        synchronized (ackWaitLock)
-        {
-            try
-            {
-                //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Wait on player killed ACK", this.getClass().getSimpleName()));
-                ackWaitLock.wait(); //wait
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-
 
     //GRID GETTER/SETTER
     public GridPosition getPlayerPosition()
