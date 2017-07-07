@@ -173,6 +173,6 @@ public class GUIManager
     }
     public void notifyBombRelease(GridBomb bomb)
     {
-        System.out.println(String.format("\n### BOMB RELEASE IN %s SECTOR", bomb.getBombSOE()));
+        System.out.println(String.format("\n### BOMB RELEASED IN %s SECTOR - Minus 5 Seconds To Detonation  - ###", bomb.getBombSOE()));
     }
 }

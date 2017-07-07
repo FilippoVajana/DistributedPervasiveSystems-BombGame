@@ -38,9 +38,6 @@ public class TokenHandler implements IMessageHandler
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Handling [TOKEN %s]", this.getClass().getSimpleName(), receivedMessage.getId()));
 
-        //set hasToken true
-        appContext.TOKEN_MANAGER.storeToken();
-
         //build ack message
         RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId(), receivedMessage.getContent());
         //MAGIC HACK (send.SOURCE use message source address)
@@ -48,5 +45,9 @@ public class TokenHandler implements IMessageHandler
 
         //send ack
         appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
+
+
+        //set hasToken true
+        appContext.TOKEN_MANAGER.storeToken();
     }
 }
