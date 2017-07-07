@@ -42,15 +42,11 @@ public class AckHandler implements IMessageHandler
 
     public synchronized boolean isQueueEmpty(String idAck)
     {
-        try
-        {
-            queueMap.get(idAck);
-            return true;
-
-        }catch (NullPointerException ex)
+        if (queueMap.get(idAck) != null)
         {
             return false;
         }
+        return true;
     }
 
     @Override
@@ -84,8 +80,11 @@ public class AckHandler implements IMessageHandler
                 moduleLock.notify();
             }
 
-            //delete empty queue
+            //delete empty ack queue
             queueMap.remove(receivedMessage.getId());
+
+            //delete ack queue observer map
+            observerMap.remove(receivedMessage.getId());
         }
     }
 }
