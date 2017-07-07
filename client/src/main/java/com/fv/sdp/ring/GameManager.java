@@ -11,6 +11,8 @@ import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import com.google.gson.Gson;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -149,7 +151,7 @@ public class GameManager
         //message content
         String messageData = receivedMessage.getContent();
 
-        //get player
+        //get moved player
         Player movedPlayer = new Gson().fromJson(messageData.split("#")[1], Player.class);
 
         //check player id
@@ -514,7 +516,7 @@ public class GameManager
     public boolean releaseBomb()
     {
         //get first bomb
-        GridBomb bomb = gameEngine.getBombQueue().pop();
+        GridBomb bomb = gameEngine.getAvailableBombsQueue().pop();
 
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Releasing bomb in sector %s", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
@@ -642,6 +644,10 @@ public class GameManager
         notifyPlayerKilled(killer);
     }
 
+
+
+
+
     //GRID GETTER/SETTER
     public GridPosition getPlayerPosition()
     {
@@ -655,7 +661,7 @@ public class GameManager
     {
         return gameEngine.getPlayerScore();
     }
-    public ConcurrentObservableQueue<GridBomb> getBombQueue() { return gameEngine.getBombQueue(); }
+    public ConcurrentObservableQueue<GridBomb> getBombQueue() { return gameEngine.getAvailableBombsQueue(); }
 
 
 }
@@ -665,7 +671,7 @@ class GameEngine
 {
     public Grid gameGrid;
     private int  playerScore;
-    private ConcurrentObservableQueue<GridBomb> bombQueue;
+    private ConcurrentObservableQueue<GridBomb> availableBombsQueue;
 
     public GameEngine(Match match)
     {
@@ -679,7 +685,7 @@ class GameEngine
         playerScore = 0;
 
         //init bomb queue
-        bombQueue = new ConcurrentObservableQueue<>();
+        availableBombsQueue = new ConcurrentObservableQueue<>();
     }
 
     //Score
@@ -687,15 +693,19 @@ class GameEngine
     {
         return playerScore;
     }
+    public void setPlayerScore(int playerScore)
+    {
+        this.playerScore = playerScore;
+    }
     public void incrementPlayerScore()
     {
         playerScore++;
     }
 
     //Bomb
-    public ConcurrentObservableQueue<GridBomb> getBombQueue()
+    public ConcurrentObservableQueue<GridBomb> getAvailableBombsQueue()
     {
-        return bombQueue;
+        return availableBombsQueue;
     }
 
     //Movement
@@ -804,7 +814,7 @@ class GameEngine
     private final double TH = 10;
     private double EMA_prev = 0;
 
-    public void checkSensorData(int[] data)
+    public void checkSensorData(int[] data) //TODO: check input type
     {
         //compute average
         double M = 0;
@@ -825,7 +835,7 @@ class GameEngine
             GridBomb bomb = new GridBomb(EMA);
 
             //store bomb
-            bombQueue.push(bomb);
+            availableBombsQueue.push(bomb);
         }
     }
 }
