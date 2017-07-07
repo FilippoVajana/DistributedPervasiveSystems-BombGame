@@ -158,6 +158,8 @@ public class GUIManager
         //console output
         System.out.println(String.format("\n### YOU LOST ###\n" +
                 "### %s KILLED YOU ###", killer.getId()));
+
+        //TODO: leave match
     }
     public void notifyPlayerWin()
     {
@@ -175,4 +177,10 @@ public class GUIManager
     {
         System.out.println(String.format("\n### BOMB RELEASED IN %s SECTOR - Minus 5 Seconds To Detonation  - ###", bomb.getBombSOE()));
     }
+    public void notifyBombKills(int killedPlayers)
+    {
+        System.out.println(String.format("\n### BOMB DETONATED - You Killed %d Players  - ###\n" +
+                "### SCORE: %d ###", killedPlayers, appContext.GAME_MANAGER.getPlayerScore()));
+    }
+
 }

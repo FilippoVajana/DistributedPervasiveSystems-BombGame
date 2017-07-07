@@ -226,30 +226,35 @@ public class GameManager
         GridBomb bomb = new Gson().fromJson(bombJson, GridBomb.class);
 
         //build message
-        RingMessage bombKillMessage = null;
-        if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //check player sector
-        {
-            String playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
-            bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#%s", playerJson));
-        }
+        RingMessage bombKillMessage;
+        String playerJson;
+        if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //player dead
+            playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
         else
-        {
-            bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#")); //TODO: check
-        }
+            playerJson = new Gson().toJson(new Player(), Player.class); //player alive
+
+        bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#%s", playerJson));
         bombKillMessage.setNeedToken(false);
         bombKillMessage.setSourceAddress(receivedMessage.getSourceAddress()); //hack
 
         //send message
         appContext.SOCKET_CONNECTOR.sendMessage(bombKillMessage, SocketConnector.DestinationGroup.SOURCE);
     }
-    public void handleBombKill(RingMessage receivedMessage) //TODO: push player into bomb kill queue
+
+    public void handleBombKill(RingMessage receivedMessage) //TODO: test
     {
-        PrettyPrinter.printTimestampLog("UNDER CONSTRUCTION");
+        //get explosion id
+        String explosionId = receivedMessage.getId();
 
+       //get player
+        String playerData = receivedMessage.getContent().split("#")[1];
+        Player player = new Gson().fromJson(playerData, Player.class);
 
+        //push player in bomb kill queue
+        ConcurrentObservableQueue<Player> queue = bombKillQueueMap.get(explosionId);
 
-        //push null if message player alive
-        //else push message player
+        //System.out.println("PUSH IN QUEUE " + explosionId);
+        queue.push(player);
     }
 
 
@@ -688,6 +693,10 @@ public class GameManager
 
         //compute position
         GridPosition playerStartingPosition = gameEngine.setStartingPosition(occupiedPositions);
+
+        //clean occupied positions
+        occupiedPositions = null;
+
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Player %s start at position (%d,%d)", appContext.getPlayerInfo().getCompleteAddress(), appContext.getPlayerInfo().getId(), playerStartingPosition.x, playerStartingPosition.y));
     }
@@ -714,14 +723,14 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Started Bomb(%s) kills monitor", appContext.getPlayerInfo().getId(), bombExplosionMessageId));
 
-        //init bomb kill queue
-        ConcurrentObservableQueue<Player> killQueue = new ConcurrentObservableQueue<>();
 
         //put in bomb kill map
-        bombKillQueueMap.put(bombExplosionMessageId, killQueue);
+        bombKillQueueMap.put(bombExplosionMessageId, new ConcurrentObservableQueue<>());
+        //System.out.println("CREATED QUEUE " + bombExplosionMessageId);
+        ConcurrentObservableQueue<Player> killQueue = bombKillQueueMap.get(bombExplosionMessageId);
 
         //loop on check queue size
-        while (killQueue.size() != 0) //TODO: check object reference into map
+        while (killQueue.size() != appContext.RING_NETWORK.size()) //TODO: check object reference into map
         {
             synchronized (killQueue.getQueueSignal())
             {
@@ -744,9 +753,6 @@ public class GameManager
 
             //clean queue map
             bombKillQueueMap.remove(bombExplosionMessageId);
-
-            //return
-            return;
         }
         else
         {
@@ -754,16 +760,17 @@ public class GameManager
             int killCount = 0;
             for (Player p : killQueue.getQueue())
             {
-                if (p != null) //player killed
+                if (!p.getId().equals("") && !p.getCompleteAddress().equals(":0")) //player killed //TODO: add nickname check in gui
                 {
                     killCount++;
-                    //notify gui
-                    appContext.GUI_MANAGER.notifyKill(p);
                 }
             }
 
             //update player score
             gameEngine.setPlayerScore(gameEngine.getPlayerScore() + Math.min(killCount, 3));
+
+            //notify gui
+            appContext.GUI_MANAGER.notifyBombKills(killCount);
 
             //clean queue map
             bombKillQueueMap.remove(bombExplosionMessageId);

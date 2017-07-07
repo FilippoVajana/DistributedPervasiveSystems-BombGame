@@ -13,7 +13,11 @@ public class Player
     private String address;
     private int port;
 
-    public Player() {
+    public Player()
+    {
+        id = "";
+        address = "";
+        port = 0;
     }
 
     public Player(String id, String address, int port) {

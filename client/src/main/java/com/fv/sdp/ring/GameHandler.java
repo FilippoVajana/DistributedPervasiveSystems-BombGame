@@ -63,6 +63,13 @@ public class GameHandler implements IMessageHandler
                 break;
             case "BOMB-RELEASE":
                 gameManager.handleBombRelease(receivedMessage);
+                break;
+            case "BOMB-EXPLOSION":
+                gameManager.handleBombExplosion(receivedMessage);
+                break;
+            case "BOMB-KILL":
+                gameManager.handleBombKill(receivedMessage);
+                break;
             default:
                 return;
         }
