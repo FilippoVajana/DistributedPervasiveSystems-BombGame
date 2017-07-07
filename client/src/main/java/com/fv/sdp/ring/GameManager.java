@@ -10,6 +10,7 @@ import com.fv.sdp.util.ConcurrentObservableQueue;
 import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import com.google.gson.Gson;
+import sun.security.krb5.internal.crypto.Des;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -214,6 +215,44 @@ public class GameManager
         //notify gui
         appContext.GUI_MANAGER.notifyBombRelease(bomb);
     }
+    public void handleBombExplosion(RingMessage receivedMessage)
+    {
+        //send back ack
+        RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //hack
+        appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
+
+        //parse json
+        String bombJson = receivedMessage.getContent().split("#")[1];
+        GridBomb bomb = new Gson().fromJson(bombJson, GridBomb.class);
+
+        //build message
+        RingMessage bombKillMessage = null;
+        if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //check player sector
+        {
+            String playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
+            bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#%s", playerJson));
+        }
+        else
+        {
+            bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#")); //TODO: check
+        }
+        bombKillMessage.setNeedToken(false);
+        bombKillMessage.setSourceAddress(receivedMessage.getSourceAddress()); //hack
+
+        //send message
+        appContext.SOCKET_CONNECTOR.sendMessage(bombKillMessage, SocketConnector.DestinationGroup.SOURCE);
+    }
+    public void handleBombKill(RingMessage receivedMessage) //TODO: push player into bomb kill queue
+    {
+        PrettyPrinter.printTimestampLog("UNDER CONSTRUCTION");
+
+
+
+        //push null if message player alive
+        //else push message player
+    }
+
 
 
     //ACTION NOTIFIER
@@ -352,6 +391,9 @@ public class GameManager
     }
     private void notifyBombRelease(GridBomb bomb)
     {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notifying bomb release", this.appContext.getPlayerInfo().getId()));
+
         //message data
         String bombJson = new Gson().toJson(bomb, GridBomb.class);
         String messagePayload = String.format("BOMB-RELEASE#%s", bombJson);
@@ -374,7 +416,7 @@ public class GameManager
                 try
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Wait bomb release ACK", appContext.getPlayerInfo().getId()));
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Wait bomb release ACK %s", appContext.getPlayerInfo().getId(), bombMessage.getId()));
 
                     ackWaitLock.wait(1000);
                 } catch (InterruptedException e)
@@ -384,27 +426,50 @@ public class GameManager
             }
         }
     }
-    private void notifyBombExplosion(GridBomb bomb) //TODO
+    private void notifyBombExplosion(GridBomb bomb)
     {
+        //message data
+        String bombJson = new Gson().toJson(bomb, GridBomb.class);
+        String messageData = String.format("BOMB-EXPLOSION#%s", bombJson);
+
+        //build message
+        RingMessage explosionMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
+        explosionMessage.setNeedToken(false);
+
         //5 second timeout
         try
         {
+            //start bomb kill monitor
+            new Thread(() -> monitorBombQueue(explosionMessage.getId())).start();
             Thread.sleep(5000);
         } catch (InterruptedException e)
         {
             e.printStackTrace();
         }
 
-        //message data
-
-        //build message
-
         //setup ack queue
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(explosionMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
         //send message
+        appContext.SOCKET_CONNECTOR.sendMessage(explosionMessage, SocketConnector.DestinationGroup.ALL);
 
         //wait ack
-
+        while (appContext.ACK_HANDLER.isQueueEmpty(explosionMessage.getId()) == false)
+        {
+            synchronized (ackWaitLock)
+            {
+                try
+                {
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting bomb explosion ACK", appContext.getPlayerInfo().getId()));
+                    ackWaitLock.wait(1000);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notified bomb explosion in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
     }
@@ -530,7 +595,7 @@ public class GameManager
                 synchronized (hasTokenSignal)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token for bomb release", appContext.getPlayerInfo().getId()));
 
                     hasTokenSignal.wait(1000);
                 }
