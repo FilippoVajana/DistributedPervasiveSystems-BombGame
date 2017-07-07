@@ -10,7 +10,6 @@ import com.fv.sdp.util.ConcurrentObservableQueue;
 import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import com.google.gson.Gson;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -709,6 +708,67 @@ public class GameManager
         notifyPlayerKilled(killer);
     }
 
+    private Map<String, ConcurrentObservableQueue<Player>> bombKillQueueMap = new HashMap<>();
+    private void monitorBombQueue(String bombExplosionMessageId)
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Started Bomb(%s) kills monitor", appContext.getPlayerInfo().getId(), bombExplosionMessageId));
+
+        //init bomb kill queue
+        ConcurrentObservableQueue<Player> killQueue = new ConcurrentObservableQueue<>();
+
+        //put in bomb kill map
+        bombKillQueueMap.put(bombExplosionMessageId, killQueue);
+
+        //loop on check queue size
+        while (killQueue.size() != 0) //TODO: check object reference into map
+        {
+            synchronized (killQueue.getQueueSignal())
+            {
+                //wait push
+                try
+                {
+                    killQueue.getQueueSignal().wait(1000);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //check player id
+        if (killQueue.getQueue().contains(appContext.getPlayerInfo())) //TODO: check
+        {
+            //notify gui player self killed
+            appContext.GUI_MANAGER.notifyPlayerLost(appContext.getPlayerInfo());
+
+            //clean queue map
+            bombKillQueueMap.remove(bombExplosionMessageId);
+
+            //return
+            return;
+        }
+        else
+        {
+            //count killed players
+            int killCount = 0;
+            for (Player p : killQueue.getQueue())
+            {
+                if (p != null) //player killed
+                {
+                    killCount++;
+                    //notify gui
+                    appContext.GUI_MANAGER.notifyKill(p);
+                }
+            }
+
+            //update player score
+            gameEngine.setPlayerScore(gameEngine.getPlayerScore() + Math.min(killCount, 3));
+
+            //clean queue map
+            bombKillQueueMap.remove(bombExplosionMessageId);
+        }
+    }
 
 
 
