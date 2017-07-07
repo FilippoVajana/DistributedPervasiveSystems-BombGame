@@ -202,7 +202,8 @@ public class GameTest
     }
 
     @Test
-    public void bombReleaseTest() throws InterruptedException {
+    public void bombReleaseTest() throws InterruptedException
+    {
         //setup ring
         Match testMatch = new Match("TEST_MATCH", 10, 10);
         ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 2);
@@ -218,11 +219,12 @@ public class GameTest
         Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
 
         //node0 release bomb
+        System.out.println("\n\nNODE0 RELEASING BOMB");
         Thread releaseBombThread = new Thread(() -> node0.appContext.GAME_MANAGER.releaseBomb());
         releaseBombThread.start();
 
-        //node1 release token
-        //Thread.sleep(5000);
+        //node1 release token to node0
+        //Thread.sleep(2000);
         System.out.println("\nNODE1 RELEASING TOKEN");
 
         NodeManager node1 = ring.get(1);
@@ -231,9 +233,50 @@ public class GameTest
 
         //wait release
         releaseBombThread.join();
-        Thread.sleep(6000); //wait explosion
+        System.out.println("\nWAITING BOMB EXPLOSION");
+        Thread.sleep(8000); //wait explosion
 
         Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
+    }
 
+    @Test
+    public void bombKillTest() throws Exception
+    {
+        //setup ring
+        Match testMatch = new Match("TEST_MATCH", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 5);
+
+        //setup node0
+        NodeManager node0 = ring.get(0);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0,0)); //blue sector
+        GridBomb bomb = new GridBomb(0);
+        node0.appContext.GAME_MANAGER.getBombQueue().push(bomb); //GREEN BOMB
+        Assert.assertTrue(bomb.getBombSOE() == GridSector.Green);
+
+        //setup node1
+        NodeManager node1 = ring.get(1);
+        node1.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 9)); //green sector
+        //setup node2
+        NodeManager node2 = ring.get(2);
+        node2.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(1, 9)); //green sector
+        //setup node3
+        NodeManager node3 = ring.get(3);
+        node3.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 8)); //green sector
+        //setup node4
+        NodeManager node4 = ring.get(4);
+        node4.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(1, 8)); //green sector
+
+        //node0 release bomb
+        System.out.println("\n\nNODE0 RELEASING BOMB");
+        Thread releaseBombThread = new Thread(() -> node0.appContext.GAME_MANAGER.releaseBomb());
+        releaseBombThread.start();
+
+        //wait release
+        releaseBombThread.join();
+        System.out.println("\nWAITING BOMB EXPLOSION");
+        Thread.sleep(12000); //wait explosion
+
+        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(3, node0.appContext.GAME_MANAGER.getPlayerScore());
     }
 }
