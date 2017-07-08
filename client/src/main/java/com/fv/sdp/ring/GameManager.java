@@ -194,9 +194,10 @@ public class GameManager
         appContext.GUI_MANAGER.notifyKill(killedPlayer);
 
         //check victory condition
-        if (appContext.RING_NETWORK.size() == 1 && appContext.RING_NETWORK.contain(appContext.getPlayerInfo()))
+        //check for victory
+        if (checkVictoryCondition())
         {
-            //notify gui victory
+            //notify gui
             appContext.GUI_MANAGER.notifyPlayerWin();
         }
     }
@@ -240,8 +241,7 @@ public class GameManager
         //send message
         appContext.SOCKET_CONNECTOR.sendMessage(bombKillMessage, SocketConnector.DestinationGroup.SOURCE);
     }
-
-    public void handleBombKill(RingMessage receivedMessage) //TODO: test
+    public void handleBombKill(RingMessage receivedMessage)
     {
         //get explosion id
         String explosionId = receivedMessage.getId();
@@ -632,6 +632,8 @@ public class GameManager
 
     //HELPER METHOD
     private ConcurrentObservableQueue<GridPosition> occupiedPositions;
+    private Map<String, ConcurrentObservableQueue<Player>> bombKillQueueMap = new HashMap<>();
+
     private void setPlayerStartingPosition()
     {
         //log
@@ -716,8 +718,6 @@ public class GameManager
         //notify killer
         notifyPlayerKilled(killer);
     }
-
-    private Map<String, ConcurrentObservableQueue<Player>> bombKillQueueMap = new HashMap<>();
     private void monitorBombQueue(String bombExplosionMessageId)
     {
         //log
@@ -730,7 +730,7 @@ public class GameManager
         ConcurrentObservableQueue<Player> killQueue = bombKillQueueMap.get(bombExplosionMessageId);
 
         //loop on check queue size
-        while (killQueue.size() != appContext.RING_NETWORK.size()) //TODO: check object reference into map
+        while (killQueue.size() != appContext.RING_NETWORK.size())
         {
             synchronized (killQueue.getQueueSignal())
             {
@@ -746,7 +746,7 @@ public class GameManager
         }
 
         //check player id
-        if (killQueue.getQueue().contains(appContext.getPlayerInfo())) //TODO: check
+        if (killQueue.getQueue().contains(appContext.getPlayerInfo())) //player suicide
         {
             //notify gui player self killed
             appContext.GUI_MANAGER.notifyPlayerLost(appContext.getPlayerInfo());
@@ -774,7 +774,28 @@ public class GameManager
 
             //clean queue map
             bombKillQueueMap.remove(bombExplosionMessageId);
+
+            //check for victory
+            if (checkVictoryCondition())
+            {
+                //notify gui
+                appContext.GUI_MANAGER.notifyPlayerWin();
+            }
         }
+    }
+    private boolean checkVictoryCondition()
+    {
+        //check victory condition
+        if (appContext.RING_NETWORK.size() == 1 && appContext.RING_NETWORK.contain(appContext.getPlayerInfo())) //1 player alive
+        {
+            return true;
+        }
+        else if (appContext.PLAYER_MATCH.getVictoryPoints() <= getPlayerScore()) //score
+        {
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -789,6 +810,7 @@ public class GameManager
     {
         gameEngine.gameGrid.setPlayerPosition(position);
     }
+    public GridSector getPlayerSector(){ return gameEngine.gameGrid.getPlayerSector(); }
     public int getPlayerScore()
     {
         return gameEngine.getPlayerScore();
@@ -852,7 +874,7 @@ class GameEngine
         //compute random position
         boolean positionClear = true;
         while (1 == 1)
-        { //TODO: fix loop on collision
+        { //TODO: fix loop with collision
             int x = rndGen.nextInt(gameGrid.getGridEdge());
             int y = rndGen.nextInt(gameGrid.getGridEdge());
             GridPosition candidatePosition = new GridPosition(x, y);
@@ -862,11 +884,11 @@ class GameEngine
             {
                 if (candidatePosition.equals(pos))
                 {
-                    positionClear = false;
-                    System.out.println(String.format("Position occupied (%d, %d)", candidatePosition.x, candidatePosition.y));
                     try
                     {
-                        Thread.sleep(500);
+                        positionClear = false;
+                        System.out.println(String.format("Occupied position (%d, %d)", candidatePosition.x, candidatePosition.y));
+                        Thread.sleep(100);
                         break;
                     } catch (InterruptedException e)
                     {
