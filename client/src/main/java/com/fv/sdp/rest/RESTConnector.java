@@ -145,6 +145,9 @@ public class RESTConnector
 
     public boolean leaveServerMatch(Match match, Player player)
     {
+        //log
+        PrettyPrinter.printTimestampLog("### LEAVING MATCH ###");
+
         //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
         WebTarget leaveTarget = matchTarget.path(String.format("%s/leave", match.getId()));

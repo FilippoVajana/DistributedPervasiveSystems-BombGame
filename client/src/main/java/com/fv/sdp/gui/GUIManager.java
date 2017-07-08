@@ -159,13 +159,18 @@ public class GUIManager
         System.out.println(String.format("\n### YOU LOST ###\n" +
                 "### %s KILLED YOU ###", killer.getId()));
 
-        //TODO: leave match
+        //call REST leave match procedure
+        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo());
     }
+
     public void notifyPlayerWin()
     {
         //console output
         System.out.println(String.format("\n### YOU WIN ###\n" +
                 "### PLAYER SCORE: %d", appContext.GAME_MANAGER.getPlayerScore()));
+
+        //call REST leave procedure
+        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo());
     }
     public void notifyKill(Player killedPlayer)
     {
@@ -182,5 +187,4 @@ public class GUIManager
         System.out.println(String.format("\n### BOMB DETONATED - You Killed %d Players  - ###\n" +
                 "### SCORE: %d ###", killedPlayers, appContext.GAME_MANAGER.getPlayerScore()));
     }
-
 }
