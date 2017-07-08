@@ -135,11 +135,44 @@ public class GameTest
     }
 
     @Test
+    public void getGridSectorTest()
+    {
+        //setup ring
+        Match testMatch = new Match("TEST_MATCH", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 1);
+
+        //setting node position
+        NodeManager node0 = ring.get(0);
+
+        //grid corners check
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0,0));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Blue);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(9,9));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Red);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0,9));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Green);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(9,0));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Yellow);
+
+        //sectors borders check
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(4,4));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Blue);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(5,4));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Yellow);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(4,5));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Green);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(5,5));
+        Assert.assertEquals(node0.appContext.GAME_MANAGER.getPlayerSector(), GridSector.Red);
+
+
+    }
+
+    @Test
     public void moveTest() throws InterruptedException
     {
         //setup ring
         Match testMatch = new Match("TEST_MATCH", 10, 10);
-        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 4);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 1);
 
         //setting node
         NodeManager node0 = ring.get(0);
@@ -278,5 +311,37 @@ public class GameTest
 
         Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
         Assert.assertEquals(3, node0.appContext.GAME_MANAGER.getPlayerScore());
+    }
+
+    @Test
+    public void bombSelfKillTest() throws Exception
+    {
+        //setup ring
+        Match testMatch = new Match("TEST_MATCH", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 2);
+
+        //setup node0
+        NodeManager node0 = ring.get(0);
+        node0.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0,7)); //green sector
+        GridBomb bomb = new GridBomb(0);
+        node0.appContext.GAME_MANAGER.getBombQueue().push(bomb); //GREEN BOMB
+        Assert.assertTrue(bomb.getBombSOE() == GridSector.Green);
+
+        //setup node1
+        NodeManager node1 = ring.get(1);
+        node1.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 9)); //green sector
+
+        //node0 release bomb
+        System.out.println("\n\nNODE0 RELEASING BOMB");
+        Thread releaseBombThread = new Thread(() -> node0.appContext.GAME_MANAGER.releaseBomb());
+        releaseBombThread.start();
+
+        //wait release
+        releaseBombThread.join();
+        System.out.println("\nWAITING BOMB EXPLOSION");
+        Thread.sleep(12000); //wait explosion
+
+        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
+        Assert.assertEquals(0, node0.appContext.GAME_MANAGER.getPlayerScore());
     }
 }
