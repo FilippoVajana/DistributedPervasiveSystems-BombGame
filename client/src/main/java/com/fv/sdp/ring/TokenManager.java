@@ -52,15 +52,14 @@ public class TokenManager
         synchronized (moduleLock)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", this.getClass().getSimpleName()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Storing token", appContext.getPlayerInfo().getId()));
             hasToken = true;
 
-            //signal token awaiter
+            //signal token store
             synchronized (tokenStoreSignal)
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", this.getClass().getSimpleName()));
-
+                PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", appContext.getPlayerInfo().getId()));
                 tokenStoreSignal.notifyAll();
             }
         }
@@ -71,7 +70,7 @@ public class TokenManager
         synchronized (moduleLock)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token", this.getClass().getSimpleName()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Releasing token", appContext.getPlayerInfo().getId()));
             System.out.println("\n\nThere is only one Lord of the Ring,\nonly one who can bend it to his will.\nAnd he does not share power.\n\n");
 
             //create new token message
@@ -89,13 +88,13 @@ public class TokenManager
                 try
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token release ACK", this.getClass().getSimpleName()));
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token release ACK", appContext.getPlayerInfo().getId()));
 
                     ackWaitLock.wait(); //wait message ACK
                     //release token
                     hasToken = false;
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Token released", this.getClass().getSimpleName()));
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Token released", appContext.getPlayerInfo().getId()));
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();

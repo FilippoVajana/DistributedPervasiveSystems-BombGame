@@ -156,8 +156,15 @@ public class GUIManager
     public void notifyPlayerLost(Player killer)
     {
         //console output
-        System.out.println(String.format("\n### YOU LOST ###\n" +
-                "### %s KILLED YOU ###", killer.getId()));
+        System.out.println(String.format("\n### %s, YOU LOST ###\n" +
+                "### %s KILLED YOU ###", appContext.getPlayerInfo().getId(),killer.getId()));
+
+        //TODO: lock input
+    }
+    public void notifyPlayerLost()
+    {
+        //console output
+        System.out.println(String.format("\n### %s, YOU LOST ###\n", appContext.getPlayerInfo().getId()));
 
         //TODO: lock input
     }

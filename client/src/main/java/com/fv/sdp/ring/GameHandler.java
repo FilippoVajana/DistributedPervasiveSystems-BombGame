@@ -28,17 +28,11 @@ public class GameHandler implements IMessageHandler
         gameManager = new GameManager(this.appContext);
     }
 
-    /*
-    ENTER-PLAYER#
-    EXIT-PLAYER#
-    MOVE#
-    BOMB#
-     */
     @Override
     public void handle(RingMessage receivedMessage)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Handling GAME %s", this.getClass().getSimpleName(), receivedMessage.getId()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Handling GAME %s", appContext.getPlayerInfo().getId(), receivedMessage.getId()));
 
         //get message type
         String messageType = receivedMessage.getContent().split("#")[0];

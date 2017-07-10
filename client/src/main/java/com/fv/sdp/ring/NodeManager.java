@@ -84,6 +84,11 @@ public class NodeManager implements ISocketObserver
 
     public void shutdownNode()
     {
+        //Match params
+        appContext.PLAYER_MATCH = null;
+        appContext.RING_NETWORK = null;
+
+        //Handler params
         ackHandler = null;
         appContext.ACK_HANDLER = null;
 
@@ -93,6 +98,7 @@ public class NodeManager implements ISocketObserver
         tokenHandler = null;
         appContext.TOKEN_MANAGER = null;
 
+        //Socket params
         appContext.SOCKET_CONNECTOR = null; //TODO: dispose listener
     }
 
@@ -103,7 +109,9 @@ public class NodeManager implements ISocketObserver
     @Override
     public void pushMessage(RingMessage message)
     {
-        new Thread(() -> queueManager.routeMessage(message)).start();
+        //log
+        //PrettyPrinter.printTimestampLog(String.format("[%s] Push %s in queue", appContext.getPlayerInfo().getId(), message.getId()));
+        queueManager.routeMessage(message);
     }
 
 }
@@ -132,6 +140,9 @@ class MessageQueueManager
 
     public void routeMessage(RingMessage message)
     {
+        //log
+        //PrettyPrinter.printTimestampLog(String.format("Routing message %s", message.getId()));
+
         ConcurrentObservableQueue queue = queuePool.get(message.getType());
         //push message into specific queue
         queue.push(message);
@@ -171,6 +182,7 @@ class MessageQueueManager
             else //at least one message available
             {
                 //dispatch message to proper handler
+                //PrettyPrinter.printTimestampLog(String.format("Dispatch message %s to %s", message.getId(), messageHandler.getClass().getSimpleName()));
                 messageHandler.handle(message);
             }
         }

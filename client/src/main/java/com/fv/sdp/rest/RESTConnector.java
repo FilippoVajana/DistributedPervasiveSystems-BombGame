@@ -148,31 +148,35 @@ public class RESTConnector
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Leaving REST server", appContext.getPlayerInfo().getId()));
 
-        //set web target
-        WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
-        WebTarget leaveTarget = matchTarget.path(String.format("%s/leave", match.getId()));
+       try
+       {
+           //set web target
+           WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+           WebTarget leaveTarget = matchTarget.path(String.format("%s/leave", match.getId()));
 
-        //invocation
-        Invocation.Builder invocation = leaveTarget.request();
+           //invocation
+           Invocation.Builder invocation = leaveTarget.request();
 
-        //make request
-        Response response = invocation.post(Entity.entity(player, MediaType.APPLICATION_JSON));
+           //make request
+           Response response = invocation.post(Entity.entity(player, MediaType.APPLICATION_JSON));
 
-        //read response
-        if (response.getStatus() == 200)
-        {
-            //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Notified REST server", appContext.getPlayerInfo().getId()));
+           //read response
+           if (response.getStatus() == 200)
+           {
+               //log
+               PrettyPrinter.printTimestampLog(String.format("[%s] Left REST server", appContext.getPlayerInfo().getId()));
 
-            return true;
-        }
-        else
-        {
-            //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR leaving match %s: %s", this.getClass().getSimpleName(), match.getId(), response.getStatusInfo().getReasonPhrase()));
-            //TODO: fault strategy
-            return false;
-        }
+               return true;
+           }
+           else
+               return false;
+       }catch (Exception ex)
+       {
+           //log
+           PrettyPrinter.printTimestampError(String.format("[%s] ERROR leaving match %s: %s", appContext.getPlayerInfo().getId(), match.getId(), ex.getMessage()));
+           //TODO: fault strategy
+           return false;
+       }
     }
 }
 

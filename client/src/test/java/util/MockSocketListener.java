@@ -1,5 +1,6 @@
 package util;
 
+import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
@@ -92,7 +93,7 @@ class ClientHandler implements Runnable
                     MockSocketListener.lastMessageReceived = message.toString();
 
                     //log
-                    PrettyPrinter.printReceivedRingMessage(message);
+                    PrettyPrinter.printReceivedRingMessage(message, new Player("MOCK", "local", 0));
                 }
             }
 

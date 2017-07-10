@@ -65,7 +65,7 @@ public class SocketConnector
             try {
                 Socket client = listeningServer.accept();
                 //set up listener
-                SocketListenerRunner runner = new SocketListenerRunner(client, observersList);
+                SocketListenerRunner runner = new SocketListenerRunner(client, observersList, appContext);
                 //create thread
                 Thread listenerThread = new Thread(runner);
                 //start thread
@@ -130,7 +130,7 @@ public class SocketConnector
             writer.println(jsonMessage);
             writer.flush();
             //log
-            PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort());
+            PrettyPrinter.printSentRingMessage(message, destination.getAddress(), destination.getPort(), appContext.getPlayerInfo());
 
             //close writer
             writer.close();
@@ -302,14 +302,17 @@ class SocketListenerRunner implements Runnable
 {
     private final List<ISocketObserver> observersList; //not concurrent access
     private final Socket client;
+    private ApplicationContext appContext;
 
-    public SocketListenerRunner(Socket client, List<ISocketObserver> observers) //set up listening thread
+    public SocketListenerRunner(Socket client, List<ISocketObserver> observers, ApplicationContext appContext) //set up listening thread
     {
         //log
-        PrettyPrinter.printClassInit(this);
-
+        //PrettyPrinter.printClassInit(this);
         this.client = client;
         observersList = observers;
+
+        //save context
+        this.appContext = appContext;
     }
 
     @Override
@@ -327,7 +330,7 @@ class SocketListenerRunner implements Runnable
     private void runListener() throws Exception
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Handling client %s:%d", this.getClass().getSimpleName(), client.getInetAddress().getHostAddress(), client.getPort()));
+        //PrettyPrinter.printTimestampLog(String.format("[%s] Handling client %s:%d", this.getClass().getSimpleName(), client.getInetAddress().getHostAddress(), client.getPort()));
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
         while (!client.isClosed())
@@ -341,7 +344,7 @@ class SocketListenerRunner implements Runnable
                RingMessage message = new Gson().fromJson(input, RingMessage.class);
 
                //print log
-               PrettyPrinter.printReceivedRingMessage(message);
+               PrettyPrinter.printReceivedRingMessage(message, appContext.getPlayerInfo());
 
                //dispatch message to observers
                for (ISocketObserver observer : observersList)

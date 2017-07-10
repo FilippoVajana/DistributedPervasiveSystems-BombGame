@@ -1,5 +1,6 @@
 package util;
 
+import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.util.PrettyPrinter;
 import com.google.gson.Gson;
@@ -54,7 +55,7 @@ public class MockSocketClient
             lastMessageSent = outMessage;
 
             //log
-            PrettyPrinter.printSentRingMessage(message, client.getInetAddress().getHostAddress(), client.getPort());
+            PrettyPrinter.printSentRingMessage(message, client.getInetAddress().getHostAddress(), client.getPort(), new Player("MOCK", "local", 0));
 
             //read response
             if (waitResponse)
@@ -67,7 +68,7 @@ public class MockSocketClient
                     lastMessageReceived = responseMessage.toString();
 
                     //log
-                    PrettyPrinter.printReceivedRingMessage(responseMessage);
+                    PrettyPrinter.printReceivedRingMessage(responseMessage, new Player("MOCK", "local", 0));
                 }
             }
 

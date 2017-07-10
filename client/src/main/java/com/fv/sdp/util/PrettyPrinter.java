@@ -49,20 +49,20 @@ public class PrettyPrinter
         System.out.println(String.format("Id: %s, Addr: %s:%d", player.getId(), player.getAddress(), player.getPort()));
     }
 
-    public static void printReceivedRingMessage(RingMessage message)
+    public static void printReceivedRingMessage(RingMessage message, Player player)
     {
         if (message != null)
         {
-            String messageString = String.format("MESSAGE-IN [%s %s] FROM %s ### %s ###", message.getType(), message.getId(), message.getSourceAddress(), message.getContent());
+            String messageString = String.format("[%s] MESSAGE-IN [%s %s] FROM %s ### %s ###", player.getId(), message.getType(), message.getId(), message.getSourceAddress(), message.getContent());
             printTimestampLog(messageString);
         }
     }
 
-    public static void printSentRingMessage(RingMessage message, String destination, int port)
+    public static void printSentRingMessage(RingMessage message, String destination, int port, Player player)
     {
         if (message != null)
         {
-            String messageString = String.format("MESSAGE-OUT [%s %s] TO %s:%d ### %s ###", message.getType(), message.getId(), destination, port, message.getContent());
+            String messageString = String.format("[%s] MESSAGE-OUT [%s %s] TO %s:%d ### %s ###", player.getId(), message.getType(), message.getId(), destination, port, message.getContent());
             printTimestampLog(messageString);
         }
     }
