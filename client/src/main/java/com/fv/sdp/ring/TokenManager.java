@@ -60,7 +60,7 @@ public class TokenManager
             {
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Signaling token stored", appContext.getPlayerInfo().getId()));
-                tokenStoreSignal.notifyAll();
+                tokenStoreSignal.notify(); //TODO: check
             }
         }
     }

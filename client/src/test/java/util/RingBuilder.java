@@ -46,7 +46,7 @@ public class RingBuilder
         //set nodes app context
         for (NodeManager node : nodesList)
         {
-            node.appContext.RING_NETWORK = new ConcurrentList<>(playersList);
+            node.appContext.RING_NETWORK = new ConcurrentList<>(new ArrayList(playersList));
 
             //print node ring view
             System.out.println("\nRing view");

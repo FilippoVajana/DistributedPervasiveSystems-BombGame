@@ -18,6 +18,9 @@ public class ApplicationContext
     {
         //init REST
         RESTConfig();
+
+        //init ring network
+        RING_NETWORK = new ConcurrentList<>();
     }
 
     //REST
@@ -32,7 +35,7 @@ public class ApplicationContext
     }
 
     //RING
-    public ConcurrentList<Player> RING_NETWORK = new ConcurrentList<>();
+    public ConcurrentList<Player> RING_NETWORK;
 
     //NODE
     public NodeManager NODE_MANAGER;

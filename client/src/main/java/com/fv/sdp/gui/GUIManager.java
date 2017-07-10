@@ -78,7 +78,7 @@ public class GUIManager
     {
         Scanner inputReader = new Scanner(System.in);
 
-        System.out.print("Enter your nickname: ");
+        System.out.print("Enter your nickname: "); //TODO: nickname not empty
         String nickname = inputReader.next();
         System.out.println();
 
@@ -172,16 +172,16 @@ public class GUIManager
     public void notifyPlayerWin()
     {
         //console output
-        System.out.println(String.format("\n### YOU WIN ###\n" +
-                "### PLAYER SCORE: %d", appContext.GAME_MANAGER.getPlayerScore()));
+        System.out.println(String.format("\n### %s, YOU WIN ###\n" +
+                "### PLAYER SCORE: %d", appContext.getPlayerInfo().getId(), appContext.GAME_MANAGER.getPlayerScore()));
 
         //TODO: lock input
     }
     public void notifyKill(Player killedPlayer)
     {
         //console output
-        System.out.println(String.format("\n### YOU KILLED %s ###\n" +
-                "### SCORE: %d ###", killedPlayer.getId(), appContext.GAME_MANAGER.getPlayerScore()));
+        System.out.println(String.format("\n### %s, YOU KILLED %s ###\n" +
+                "### SCORE: %d ###", appContext.getPlayerInfo().getId(), killedPlayer.getId(), appContext.GAME_MANAGER.getPlayerScore()));
     }
     public void notifyBombRelease(GridBomb bomb)
     {
@@ -189,7 +189,7 @@ public class GUIManager
     }
     public void notifyBombKills(int killedPlayers)
     {
-        System.out.println(String.format("\n### BOMB DETONATED - You Killed %d Players  - ###\n" +
-                "### SCORE: %d ###", killedPlayers, appContext.GAME_MANAGER.getPlayerScore()));
+        System.out.println(String.format("\n### %s, BOMB DETONATED - You Killed %d Players  - ###\n" +
+                "### SCORE: %d ###", appContext.getPlayerInfo().getId(), killedPlayers, appContext.GAME_MANAGER.getPlayerScore()));
     }
 }

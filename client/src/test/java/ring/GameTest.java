@@ -12,7 +12,6 @@ import org.junit.Test;
 import util.RingBuilder;
 
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class GameTest
 {
@@ -111,10 +110,33 @@ public class GameTest
         leaveThread.join();
         Assert.assertEquals(1, ring.get(1).appContext.RING_NETWORK.getList().size());
         Assert.assertTrue(ring.get(1).appContext.TOKEN_MANAGER.isHasToken());
-        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
-        //Assert.assertNull(node0.appContext.RING_NETWORK);
+        Assert.assertNull(node0.appContext.TOKEN_MANAGER);
+        Assert.assertNull(node0.appContext.RING_NETWORK);
     }
 
+    @Test
+    public void leaveLastTest() throws InterruptedException
+    {
+        //setup ring
+        Match match = new Match("MATCH_TEST", 10, 10);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(match, 1);
+
+        //setting node
+        NodeManager node0 = ring.get(0);
+        Assert.assertTrue(node0.appContext.TOKEN_MANAGER.isHasToken());
+
+        //leave ring
+        Thread leaveThread = new Thread(() ->node0.appContext.GAME_MANAGER.leaveMatchGrid());
+        leaveThread.start();
+
+        leaveThread.join();
+        Assert.assertNull(node0.appContext.RING_NETWORK);
+        Assert.assertNull(node0.appContext.PLAYER_MATCH);
+        Assert.assertNull(node0.appContext.ACK_HANDLER);
+        Assert.assertNull(node0.appContext.GAME_MANAGER);
+        Assert.assertNull(node0.appContext.SOCKET_CONNECTOR);
+        Assert.assertNull(node0.appContext.TOKEN_MANAGER);
+    }
     @Test
     public void leaveWaitTokenTest() throws InterruptedException
     {
@@ -139,26 +161,7 @@ public class GameTest
         notifyLeaveThread.join();
         Assert.assertEquals(1, ring.get(1).appContext.RING_NETWORK.getList().size());
         Assert.assertTrue(ring.get(1).appContext.TOKEN_MANAGER.isHasToken());
-        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
-    }
-
-    @Test
-    public void deathTest() throws Exception
-    {
-        //setup ring
-        Match testMatch = new Match("TEST_MATCH", 10, 10);
-        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 2);
-
-        //setting node
-        NodeManager node0 = ring.get(0);
-        node0.appContext.TOKEN_MANAGER.storeToken();
-
-        //node0 death
-        Thread deathThread = new Thread(() -> node0.appContext.GAME_MANAGER.playerDeathProcedure(new Player("Killer", ring.get(1).appContext.LISTENER_ADDR, ring.get(1).appContext.LISTENER_PORT)));
-        deathThread.start();
-
-        deathThread.join();
-        Assert.assertEquals(1, ring.get(1).appContext.RING_NETWORK.size());
+        Assert.assertNull(node0.appContext.TOKEN_MANAGER);
     }
 
     @Test
@@ -364,10 +367,10 @@ public class GameTest
         //wait release
         releaseBombThread.join();
         System.out.println("\nWAITING BOMB EXPLOSION");
-        Thread.sleep(14000); //wait explosion
+        Thread.sleep(30000); //wait explosion
 
-        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
         Assert.assertEquals(3, node0.appContext.GAME_MANAGER.getPlayerScore());
+
     }
 
     @Test
@@ -375,7 +378,7 @@ public class GameTest
     {
         //setup ring
         Match testMatch = new Match("TEST_MATCH", 10, 10);
-        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 2);
+        ArrayList<NodeManager> ring = new RingBuilder().buildTestMatch(testMatch, 3);
 
         //setup node0
         NodeManager node0 = ring.get(0);
@@ -388,6 +391,9 @@ public class GameTest
         NodeManager node1 = ring.get(1);
         node1.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(0, 9)); //green sector
 
+        NodeManager node2 = ring.get(2);
+        node2.appContext.GAME_MANAGER.setPlayerPosition(new GridPosition(6, 4)); //yellow sector
+
         //node0 release bomb
         System.out.println("\n\nNODE0 RELEASING BOMB");
         Thread releaseBombThread = new Thread(() -> node0.appContext.GAME_MANAGER.releaseBomb());
@@ -396,9 +402,17 @@ public class GameTest
         //wait release
         releaseBombThread.join();
         System.out.println("\nWAITING BOMB EXPLOSION");
-        Thread.sleep(25000); //wait explosion
+        Thread.sleep(20000); //wait explosion
 
-        Assert.assertFalse(node0.appContext.TOKEN_MANAGER.isHasToken());
-        Assert.assertEquals(0, node0.appContext.GAME_MANAGER.getPlayerScore());
+        //node2 release token
+        node2.appContext.TOKEN_MANAGER.releaseToken();
+        Thread.sleep(5000);
+
+        Assert.assertNull(node0.appContext.RING_NETWORK);
+        Assert.assertNull(node0.appContext.PLAYER_MATCH);
+        Assert.assertNull(node1.appContext.RING_NETWORK);
+        Assert.assertNull(node1.appContext.PLAYER_MATCH);
+        Assert.assertEquals(0, node2.appContext.GAME_MANAGER.getPlayerScore());
+        Assert.assertEquals(1, node2.appContext.RING_NETWORK.size());
     }
 }

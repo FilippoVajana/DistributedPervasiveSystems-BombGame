@@ -84,6 +84,8 @@ public class NodeManager implements ISocketObserver
 
     public void shutdownNode()
     {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Shutdown application", appContext.getPlayerInfo().getId()));
         //Match params
         appContext.PLAYER_MATCH = null;
         appContext.RING_NETWORK = null;
@@ -100,6 +102,8 @@ public class NodeManager implements ISocketObserver
 
         //Socket params
         appContext.SOCKET_CONNECTOR = null; //TODO: dispose listener
+
+       //System.exit(0); //TODO: enable
     }
 
     /**
