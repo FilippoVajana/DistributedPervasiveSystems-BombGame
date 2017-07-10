@@ -6,6 +6,7 @@ import com.fv.sdp.model.Player;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
+import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.ConcurrentObservableQueue;
 import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
@@ -54,11 +55,11 @@ public class GameManager
         if (!appContext.RING_NETWORK.contain(newPlayer)) //check duplicated player
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", this.getClass().getSimpleName(), newPlayer.getId()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", appContext.getPlayerInfo().getId(), newPlayer.getId()));
             appContext.RING_NETWORK.add(newPlayer);
         }
         else
-            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added", this.getClass().getSimpleName(), newPlayer.getId()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added",appContext.getPlayerInfo().getId(), newPlayer.getId()));
 
         //send back ACK
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
@@ -124,22 +125,31 @@ public class GameManager
         //get player
         Player leavingPlayer = new Gson().fromJson(playerJson, Player.class);
 
-        //remove from ring
-        boolean deleteResult = appContext.RING_NETWORK.remove(leavingPlayer);
+        //remove from ring if sender != receiver (release token hack)
+        boolean deleteResult = false;
+        if (appContext.getPlayerInfo().equals(leavingPlayer) == false)
+        {
+            deleteResult = appContext.RING_NETWORK.remove(leavingPlayer);
+        }
 
-        if (!deleteResult)
+        if (deleteResult == false)
         {
             //log
             PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already out of ring", appContext.getPlayerInfo().getId(), leavingPlayer.getId()));
         }
         else
+        {
             //log
             PrettyPrinter.printTimestampLog(String.format("[%s] Player %s deleted", appContext.getPlayerInfo().getId(), leavingPlayer.getId()));
+        }
+
 
         //send back ACK
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
         response.setSourceAddress(message.getSourceAddress()); //MAGIC HACK
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
+
+        //TODO: check victory
     }
     public void handleMovement(RingMessage receivedMessage)
     {
@@ -167,15 +177,16 @@ public class GameManager
                 PrettyPrinter.printTimestampLog(String.format("[%s] Player %s killed by %s", appContext.getPlayerInfo().getId(), appContext.getPlayerInfo().getId(), movedPlayer.getId()));
 
                 //call player killed procedure
-                new Thread(() -> {try
-                {
-                    Thread.sleep(500);
-                    playerDeathProcedure(movedPlayer);
-                }catch (Exception ex)
-                {
+                new Thread(() ->{
+                    try
+                    {
+                        Thread.sleep(500);
+                        playerKilledProcedure(movedPlayer);
+                    }catch (Exception ex)
+                    {
 
-                }
-                                            }).start();
+                    }
+                }).start();
             }
         }
     }
@@ -256,23 +267,23 @@ public class GameManager
         //send message
         appContext.SOCKET_CONNECTOR.sendMessage(bombKillMessage, SocketConnector.DestinationGroup.SOURCE);
 
-        //TODO: if dead leave match
+        //leave match
         if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //player dead
         {
-            try
-            {
-                Thread.sleep(500);
+            new Thread(() ->{
+                try
+                {
+                    Thread.sleep(500);
+                    //notify gui
+                    appContext.GUI_MANAGER.notifyPlayerLost();
 
-                //notify gui
-                appContext.GUI_MANAGER.notifyPlayerLost();
+                    //leave procedure
+                    leaveMatchGrid(); //TODO: check deadlock
+                }catch (Exception ex)
+                {
 
-                //leave match
-                leaveMatchGrid();
-            } catch (InterruptedException e)
-            {
-                //log
-                PrettyPrinter.printTimestampError(String.format("[%s] %s", appContext.getPlayerInfo().getId(), e.getMessage()));
-            }
+                }
+            }).start();
         }
     }
     public void handleBombKill(RingMessage receivedMessage)
@@ -287,7 +298,8 @@ public class GameManager
         //push player in bomb kill queue
         ConcurrentObservableQueue<Player> queue = bombKillQueueMap.get(explosionId);
 
-        //System.out.println("PUSH IN QUEUE " + explosionId);
+        //log
+        //PrettyPrinter.printTimestampLog(String.format("[%s] Push bomb kill %s", appContext.getPlayerInfo().getId(), explosionId));
         queue.push(player);
     }
 
@@ -397,7 +409,7 @@ public class GameManager
     private void notifyPlayerKilled(Player killer)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Notify player %s killed by %s", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId(), killer.getId()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notify player %s killed by %s", appContext.getPlayerInfo().getId(), appContext.getPlayerInfo().getId(), killer.getId()));
 
         //build message
         String playerKilledJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
@@ -526,7 +538,7 @@ public class GameManager
         appContext.PLAYER_MATCH = match;
 
         //set network ring
-        appContext.RING_NETWORK = match.getPlayers();
+        appContext.RING_NETWORK = new ConcurrentList(match.getPlayers().getList());
 
         //init game engine
         if (appContext.PLAYER_MATCH == null)
@@ -599,11 +611,14 @@ public class GameManager
         }
 
         //leave match procedures
-        //notify
-        notifyLeave(appContext.getPlayerInfo());
+        if (appContext.RING_NETWORK.size() > 1) //check if last player
+        {
+            //notify
+            notifyLeave(appContext.getPlayerInfo());
 
-        //release token
-        appContext.TOKEN_MANAGER.releaseToken();
+            //release token
+            appContext.TOKEN_MANAGER.releaseToken();
+        }
 
         //clean app context
         appContext.NODE_MANAGER.shutdownNode();
@@ -629,6 +644,9 @@ public class GameManager
                 break;
             case "D":
                 gameEngine.moveRight();
+                break;
+            case "B":
+                releaseBomb();
         }
 
         //get new player position
@@ -704,6 +722,20 @@ public class GameManager
     private ConcurrentObservableQueue<GridPosition> occupiedPositions;
     private Map<String, ConcurrentObservableQueue<Player>> bombKillQueueMap = new HashMap<>();
 
+    private boolean checkVictoryCondition()
+    {
+        //check victory condition
+        if (appContext.RING_NETWORK.size() == 1 && appContext.RING_NETWORK.contain(appContext.getPlayerInfo())) //1 player alive
+        {
+            return true;
+        }
+        else if (appContext.PLAYER_MATCH.getVictoryPoints() <= getPlayerScore()) //score
+        {
+            return true;
+        }
+
+        return false;
+    }
     private void setPlayerStartingPosition()
     {
         //log
@@ -780,7 +812,7 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Setting first player position (%d,%d)", appContext.getPlayerInfo().getId(), startingPosition.x, startingPosition.y));
     }
-    public void playerDeathProcedure(Player killer) //TODO: access level
+    private void playerKilledProcedure(Player killer) //TODO: access level
     {
         //notify ring
         notifyPlayerKilled(killer);
@@ -791,23 +823,21 @@ public class GameManager
         //leave match
         leaveMatchGrid();
     }
-    private void monitorBombQueue(String bombExplosionMessageId)
+    private void monitorBombQueue(String bombExplosionMessageId) //run on bomb source player
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Started Bomb(%s) kills monitor", appContext.getPlayerInfo().getId(), bombExplosionMessageId));
 
 
-        //put in bomb kill map
+        //put into bomb kill map
         bombKillQueueMap.put(bombExplosionMessageId, new ConcurrentObservableQueue<>());
-        //System.out.println("CREATED QUEUE " + bombExplosionMessageId);
         ConcurrentObservableQueue<Player> killQueue = bombKillQueueMap.get(bombExplosionMessageId);
 
-        //loop on check queue size
+        //wait all bomb kill response
         while (killQueue.size() != appContext.RING_NETWORK.size())
         {
             synchronized (killQueue.getQueueSignal())
             {
-                //wait push
                 try
                 {
                     killQueue.getQueueSignal().wait(1000);
@@ -818,13 +848,8 @@ public class GameManager
             }
         }
 
-        //check player id
-        if (killQueue.getQueue().contains(appContext.getPlayerInfo())) //player suicide
-        {
-            //player death procedure
-            playerDeathProcedure(appContext.getPlayerInfo());
-        }
-        else
+        //check players id
+        if (!killQueue.getQueue().contains(appContext.getPlayerInfo())) //player not suicide
         {
             //count killed players
             int killCount = 0;
@@ -842,35 +867,20 @@ public class GameManager
             //notify gui
             appContext.GUI_MANAGER.notifyBombKills(killCount);
 
-            //check for victory
+            //check for victory (alive AND victory)
             if (checkVictoryCondition())
             {
                 //TODO: change in playerWinProcedure
-
                 //notify gui
                 appContext.GUI_MANAGER.notifyPlayerWin();
-
                 matchEnd();
             }
-
-            //clean queue map
-            bombKillQueueMap.remove(bombExplosionMessageId);
-        }
-    }
-    private boolean checkVictoryCondition()
-    {
-        //check victory condition
-        if (appContext.RING_NETWORK.size() == 1 && appContext.RING_NETWORK.contain(appContext.getPlayerInfo())) //1 player alive
-        {
-            return true;
-        }
-        else if (appContext.PLAYER_MATCH.getVictoryPoints() <= getPlayerScore()) //score
-        {
-            return true;
         }
 
-        return false;
+        //clean queue map
+        bombKillQueueMap.remove(bombExplosionMessageId);
     }
+
 
 
 
