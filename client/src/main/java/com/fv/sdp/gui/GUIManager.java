@@ -147,10 +147,10 @@ public class GUIManager
         return creationResult;
     }
 
-    //todo play
-    public void play()
+    public void play()//TODO
     {
-
+        //TODO: check input lock
+        //TODO: wait token
     }
 
     public void notifyPlayerLost(Player killer)
@@ -159,8 +159,7 @@ public class GUIManager
         System.out.println(String.format("\n### YOU LOST ###\n" +
                 "### %s KILLED YOU ###", killer.getId()));
 
-        //call REST leave match procedure
-        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo());
+        //TODO: lock input
     }
 
     public void notifyPlayerWin()
@@ -169,8 +168,7 @@ public class GUIManager
         System.out.println(String.format("\n### YOU WIN ###\n" +
                 "### PLAYER SCORE: %d", appContext.GAME_MANAGER.getPlayerScore()));
 
-        //call REST leave procedure
-        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo());
+        //TODO: lock input
     }
     public void notifyKill(Player killedPlayer)
     {

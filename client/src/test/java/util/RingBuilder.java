@@ -103,17 +103,17 @@ public class RingBuilder
             nodeList.get(0).appContext.TOKEN_MANAGER.storeToken();
             for (NodeManager node : nodeList)
             {
-                Thread.sleep(1000);
+                //Thread.sleep(1000);
                 node.appContext.GAME_MANAGER.joinMatchGrid(node.appContext.getPlayerInfo(), testMatch);
-                Thread.sleep(250);
 
                 int x = node.appContext.GAME_MANAGER.getPlayerPosition().x;
                 int y = node.appContext.GAME_MANAGER.getPlayerPosition().y;
                 System.err.println(String .format("Player %s start at (%d,%d)", node.appContext.getPlayerInfo().getId(), x, y));
+                Thread.sleep(250);
             }
             System.out.println("\n\n");
 
-            Thread.sleep(1000);
+            Thread.sleep(100);
             return nodeList;
         }catch (Exception ex)
         {

@@ -146,7 +146,7 @@ public class RESTConnector
     public boolean leaveServerMatch(Match match, Player player)
     {
         //log
-        PrettyPrinter.printTimestampLog("### LEAVING MATCH ###");
+        PrettyPrinter.printTimestampLog(String.format("[%s] Leaving REST server", appContext.getPlayerInfo().getId()));
 
         //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
@@ -161,8 +161,8 @@ public class RESTConnector
         //read response
         if (response.getStatus() == 200)
         {
-            //notify ring
-            appContext.GAME_MANAGER.leaveMatchGrid();
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Notified REST server", appContext.getPlayerInfo().getId()));
 
             return true;
         }
