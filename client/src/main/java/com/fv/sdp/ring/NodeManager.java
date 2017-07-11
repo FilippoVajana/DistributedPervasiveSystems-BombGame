@@ -84,25 +84,21 @@ public class NodeManager implements ISocketObserver
     public void shutdownNode()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Shutdown application", appContext.getPlayerInfo().getId()));
-        //Match params
-        appContext.PLAYER_MATCH = null;
-        appContext.RING_NETWORK = null;
+        PrettyPrinter.printTimestampLog(String.format("[%s] Shutdown application, exit in 10 seconds", appContext.getPlayerInfo().getId()));
 
-        //Handler params
-        ackHandler = null;
-        appContext.ACK_HANDLER = null;
+        //stop listener socket
+        appContext.SOCKET_CONNECTOR.closeListenerSocket();
 
-        gameHandler = null;
-        appContext.GAME_MANAGER = null;
-
-        tokenHandler = null;
-        appContext.TOKEN_MANAGER = null;
-
-        //Socket params
-        appContext.SOCKET_CONNECTOR = null;
-
-       synchronized (appContext.APP_EXIT_SIGNAL)
+        try
+        {
+            //System.out.println(String.format("[%s] Exit in 10 seconds", appContext.getPlayerInfo().getId()));
+            Thread.sleep(10000);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        //signal main
+        synchronized (appContext.APP_EXIT_SIGNAL)
        {
            appContext.APP_EXIT_SIGNAL.notifyAll();
        }

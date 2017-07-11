@@ -144,10 +144,6 @@ public class GameManager
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
         response.setSourceAddress(message.getSourceAddress()); //MAGIC HACK
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
-
-        //TODO: check victory
-        if (checkVictoryCondition())
-            matchEnd();
     }
     public void handleMovement(RingMessage receivedMessage)
     {
@@ -199,9 +195,6 @@ public class GameManager
         String playerData = receivedMessage.getContent().split("#")[1];
         Player killedPlayer = new Gson().fromJson(playerData, Player.class);
 
-        //remove killed node
-        //appContext.RING_NETWORK.remove(killedPlayer); //TODO remove, use notify leave from killed node
-
         //update score
         gameEngine.incrementPlayerScore();
 
@@ -211,11 +204,7 @@ public class GameManager
         //check for victory
         if (checkVictoryCondition())
         {
-            //notify gui
-            appContext.GUI_MANAGER.notifyPlayerWin();
-
-            //end match
-            matchEnd();
+            winMatch();
         }
     }
     public void handleBombRelease(RingMessage receivedMessage)
@@ -240,7 +229,7 @@ public class GameManager
         appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
         try
         {
-            Thread.sleep(500);
+            Thread.sleep(1000);
         } catch (InterruptedException e)
         {
             e.printStackTrace();
@@ -300,7 +289,22 @@ public class GameManager
         //PrettyPrinter.printTimestampLog(String.format("[%s] Push bomb kill %s", appContext.getPlayerInfo().getId(), explosionId));
         queue.push(player);
     }
+    public void handleGameEnd(RingMessage receivedMessage)
+    {
+        //notify gui
+        appContext.GUI_MANAGER.notifyGameEnd();
 
+        //send back ack
+        RingMessage ackMessage = new RingMessage(MessageType.ACK, receivedMessage.getId());
+        ackMessage.setSourceAddress(receivedMessage.getSourceAddress()); //hack
+        appContext.SOCKET_CONNECTOR.sendMessage(ackMessage, SocketConnector.DestinationGroup.SOURCE);
+
+        if (!receivedMessage.getSourceAddress().equals(appContext.getPlayerInfo().getCompleteAddress()))
+        {
+            //shutdown node
+            appContext.NODE_MANAGER.shutdownNode();
+        }
+    }
 
 
     //ACTION NOTIFIER
@@ -526,6 +530,39 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Notified bomb explosion in sector %s ", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
     }
+    private void notifyEndMatch()
+    {
+        //build message
+        String endMessageContent = "GAME-END";
+        RingMessage endMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), endMessageContent);
+        //endMessage.setNeedToken(false); //TODO: check
+
+        //build ack queue
+        Object ackWaitLock = new Object();
+        appContext.ACK_HANDLER.addPendingAck(endMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
+
+        //send message
+        appContext.SOCKET_CONNECTOR.sendMessage(endMessage, SocketConnector.DestinationGroup.ALL);
+
+        //wait ack
+        while (appContext.ACK_HANDLER.isQueueEmpty(endMessage.getId()) == false)
+        {
+            synchronized (ackWaitLock)
+            {
+                try
+                {
+                    //log
+                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting match end ACK", appContext.getPlayerInfo().getId()));
+                    ackWaitLock.wait(1000);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Notified match end", appContext.getPlayerInfo().getId()));
+    }
 
 
 
@@ -582,13 +619,13 @@ public class GameManager
 
         return true;
     }
-    public boolean leaveMatchGrid()
+    public boolean leaveMatchGrid() //TODO: rest call
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Leaving match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
         //call rest connector leave server
-        //appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo()); //TODO: check
+        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo()); //TODO: check
 
         //wait token
         Object tokenStoreSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
@@ -651,8 +688,11 @@ public class GameManager
         //notify other players
         notifyMove(playerPosition);
 
+        //notify gui
+        appContext.GUI_MANAGER.notifyMove(playerPosition);
+
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Player moved to (%d,%d)", this.getClass().getSimpleName(), playerPosition.x, playerPosition.y));
+        PrettyPrinter.printTimestampLog(String.format("[%s] %s moved to (%d,%d)", this.getClass().getSimpleName(), appContext.getPlayerInfo().getId(), playerPosition.x, playerPosition.y));
 
         //release token
         appContext.TOKEN_MANAGER.releaseToken();
@@ -663,6 +703,9 @@ public class GameManager
     {
         //get first bomb
         GridBomb bomb = gameEngine.getAvailableBombsQueue().pop();
+        //check bomb
+        if (bomb == null)
+            return false;
 
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Releasing bomb in sector %s", appContext.getPlayerInfo().getId(), bomb.getBombSOE()));
@@ -705,12 +748,15 @@ public class GameManager
 
         return true;
     }
-    public boolean matchEnd()
+    public boolean winMatch()
     {
-        //notify match end
-        PrettyPrinter.printTimestampLog(String.format("[%s] MATCH END", appContext.getPlayerInfo().getId()));
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Win match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
-        return false;
+        //end match procedure
+        new Thread(() -> endMatch()).start();
+
+        return true;
     }
 
 
@@ -830,7 +876,8 @@ public class GameManager
             {
                 try
                 {
-                    killQueue.getQueueSignal().wait(1000);
+                    System.err.println("queue size: " + killQueue.size());
+                    killQueue.getQueueSignal().wait(2000);
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
@@ -845,7 +892,7 @@ public class GameManager
             int killCount = 0;
             for (Player p : killQueue.getQueue())
             {
-                if (!p.getId().equals("") && !p.getCompleteAddress().equals(":0")) //player killed //TODO: add nickname check in gui
+                if (!p.getId().equals("") && !p.getCompleteAddress().equals(":0")) //player killed
                 {
                     killCount++;
                 }
@@ -857,22 +904,36 @@ public class GameManager
             //notify gui
             appContext.GUI_MANAGER.notifyBombKills(killCount);
 
-            //check for victory (alive AND victory)
+            //check score for victory
             if (checkVictoryCondition())
             {
-                //TODO: change in playerWinProcedure
-                //notify gui
-                appContext.GUI_MANAGER.notifyPlayerWin();
-                matchEnd();
+                //win procedure
+                winMatch();
             }
         }
 
         //clean queue map
         bombKillQueueMap.remove(bombExplosionMessageId);
     }
+    private boolean endMatch()
+    {
+        //match end
+        PrettyPrinter.printTimestampLog(String.format("[%s] Ending match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
+        //notify gui
+        appContext.GUI_MANAGER.notifyPlayerWin();
 
+        //notify rest//TODO
+        appContext.REST_CONNECTOR.deleteMatch(appContext.PLAYER_MATCH);
 
+        //notify ring  -> hard exit
+        notifyEndMatch();
+
+        //node shutdown
+        appContext.NODE_MANAGER.shutdownNode();
+
+        return true;
+    }
 
 
     //GRID GETTER/SETTER

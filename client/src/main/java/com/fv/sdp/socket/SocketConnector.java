@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 
 import javax.validation.constraints.NotNull;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -55,12 +56,13 @@ public class SocketConnector
     }
 
     //Input Side
-    public boolean startListener() //syncronous op.
+    private boolean listenerON = true;
+    public void startListener() //syncronous op.
     {
         //wait on client
         PrettyPrinter.printTimestampLog(String.format("[%s] Listening at %s:%d", this.getClass().getSimpleName(), getListenerAddress().getHostAddress(), getListenerPort()));
 
-        while (true) //start stream reader foreach accepted connection
+        while (listenerON) //start stream reader foreach accepted connection
         {
             try {
                 Socket client = listeningServer.accept();
@@ -194,7 +196,6 @@ public class SocketConnector
         return true;
     }
 
-    //TODO: caller must check return value
     /**
      * Initialize message destinations based on DestinationGroup param value.
      * @param message
@@ -243,19 +244,7 @@ public class SocketConnector
         return true;
     }
 
-    private Player findNodeByAddress(String messageSourceAddress, ArrayList<Player> ringNodes)
-    {
-        //split message source address
-        String ip = messageSourceAddress.split(":")[0];
-        int port = Integer.parseInt(messageSourceAddress.split(":")[1]);
-
-        //filter ring nodes
-        Stream<Player> nodeStream = ringNodes.stream();
-        Stream<Player> playerStream = nodeStream.filter(p -> p.getAddress().equals(ip) && p.getPort() == port);
-
-        return playerStream.findFirst().get();
-    }
-
+    //HELPER
     private Player findNextNode()
     {
         Player thisNode = appContext.getPlayerInfo();
@@ -285,8 +274,13 @@ public class SocketConnector
         }
         return nextNode;
     }
+    public void closeListenerSocket()
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Closing listener socket", appContext.getPlayerInfo().getId()));
 
-
+        listenerON = false;
+    }
     public int getListenerPort()
     {
         return listeningServer.getLocalPort();
@@ -295,6 +289,7 @@ public class SocketConnector
     {
         return listeningServer.getInetAddress();
     }
+
 }
 
 
