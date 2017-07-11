@@ -93,12 +93,33 @@ public class MatchResource
         MatchModel model = MatchModel.getInstance();
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
 
-        //check for match cancellation
+        /*
+        //check for match cancellation //TODO: remove, make endpoint
         Match match = model.getMatch(matchId);
-        if (match == null || match.getPlayers().getList().size() == 0) //TODO: remove, make endpoint
+        if (match == null || match.getPlayers().getList().size() == 0)
             model.deleteMatch(matchId);
+        */
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    @DELETE
+    @Path("/{matchId}/delete")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response deleteMatch(@PathParam("matchId") String matchId)
+    {
+        //get data model
+        MatchModel model = MatchModel.getInstance();
+
+        //check match id
+        Match match = model.getMatch(matchId);
+        if (match != null)
+        {
+            //delete match
+            model.deleteMatch(matchId);
+            return Response.status(Response.Status.OK).build();
+        }
         return Response.status(Response.Status.NOT_FOUND).build();
     }
 }

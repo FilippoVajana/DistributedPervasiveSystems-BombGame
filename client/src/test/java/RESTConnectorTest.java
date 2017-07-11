@@ -101,7 +101,7 @@ public class RESTConnectorTest extends JerseyTest //TODO: review
         //init node
         NodeManager node =  new NodeManager();
         node.startupNode();
-        Thread.sleep(1000);
+        //Thread.sleep(1000);
 
         //app context
         ApplicationContext appContext =node.appContext;
@@ -146,7 +146,7 @@ public class RESTConnectorTest extends JerseyTest //TODO: review
         //init node
         NodeManager node =  new NodeManager();
         node.startupNode();
-        Thread.sleep(1000);
+        //Thread.sleep(1000);
 
         //app context
         ApplicationContext appContext =node.appContext;
@@ -166,15 +166,41 @@ public class RESTConnectorTest extends JerseyTest //TODO: review
         Player player = appContext.getPlayerInfo();
 
         //join
-        boolean joinResult = connector.joinServerMatch(new Match("Glory",0,0), player);
-        Thread.sleep(1000);
+        connector.joinServerMatch(new Match("Glory",0,0), player);
+        //Thread.sleep(1000);
 
         //leave match
         boolean leaveResult = connector.leaveServerMatch(match, player);
-
         Assert.assertTrue(leaveResult);
 
         ArrayList<Match> matchList = connector.getServerMatchList();
-        Assert.assertEquals(0, matchList.size());
+        Assert.assertEquals(1, matchList.size());
+    }
+
+    @Test
+    public void deleteMatchTest()
+    {
+        //init node
+        NodeManager node =  new NodeManager();
+        node.startupNode();
+        //Thread.sleep(1000);
+
+        //app context
+        ApplicationContext appContext =node.appContext;
+        //set JdkHttpServerTestContainer
+        appContext.REST_BASE_URL = "http://localhost:9998/";
+
+        System.out.println("\n\nSTARTING RESTConnector TEST");
+        //init REST connector
+        connector = new RESTConnector(appContext);
+
+        //create match
+        Match match = new Match("Glory", 56, 67);
+        connector.createServerMatch(match);
+
+        //delete match
+        connector.deleteMatch(match);
+
+        Assert.assertEquals(0, connector.getServerMatchList().size());
     }
 }

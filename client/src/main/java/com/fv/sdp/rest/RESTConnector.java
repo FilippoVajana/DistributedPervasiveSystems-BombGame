@@ -58,7 +58,7 @@ public class RESTConnector
 
         //read response payload
         String entity = response.readEntity(String.class);
-        System.out.println(entity);
+        //System.out.println(entity);
 
         //unpack json data
         Type listType = new TypeToken<ArrayList<Match>>(){}.getType(); //sembra aver risolto il problema del riconoscimento tipi generics
@@ -116,7 +116,11 @@ public class RESTConnector
 
         //read response
         if (response.getStatus() == 201)
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Created REST match", appContext.getPlayerInfo().getId(), match.getId()));
             return true;
+        }
         else
         {
             //log
@@ -130,7 +134,7 @@ public class RESTConnector
     public boolean leaveServerMatch(Match match, Player player)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Leaving REST server", appContext.getPlayerInfo().getId()));
+        PrettyPrinter.printTimestampLog(String.format("[%s] Leaving REST match", appContext.getPlayerInfo().getId()));
 
        try
        {
@@ -149,7 +153,7 @@ public class RESTConnector
            if (response.getStatus() == 200)
            {
                //log
-               PrettyPrinter.printTimestampLog(String.format("[%s] Left REST server", appContext.getPlayerInfo().getId()));
+               PrettyPrinter.printTimestampLog(String.format("[%s] Left REST match", appContext.getPlayerInfo().getId()));
 
                return true;
            }
@@ -162,6 +166,42 @@ public class RESTConnector
            //TODO: fault strategy
            return false;
        }
+    }
+
+    public boolean deleteMatch(Match match)
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Deleting REST match: %s", appContext.getPlayerInfo().getId(), match.getId()));
+
+        try
+        {
+            //set web target
+            WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+            WebTarget deleteTarget = matchTarget.path(String.format("%s/delete", match.getId()));
+
+            //invocation
+            Invocation.Builder invocation = deleteTarget.request();
+
+            //make request
+            Response response = invocation.delete();
+
+            //read response
+            if (response.getStatus() == 200)
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] REST match %s deleted", appContext.getPlayerInfo().getId(), match.getId()));
+
+                return true;
+            }
+            else
+                return false;
+        }catch (Exception ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR deleting match %s: %s", appContext.getPlayerInfo().getId(), match.getId(), ex.getMessage()));
+            //TODO: fault strategy
+            return false;
+        }
     }
 }
 
