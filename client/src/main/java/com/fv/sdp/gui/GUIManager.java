@@ -49,11 +49,12 @@ public class GUIManager
 
         while (true)
         {
-            System.out.println("### Choose an action ###\n");
+            System.out.println("\n\n### Choose an action ###\n");
             System.out.println("[1] - Set nickname");
-            System.out.println("[2] - Create new match");
-            System.out.println("[3] - Enter existing match");
-            System.out.println("[4] - Exit application");
+            System.out.println("[2] - Show matches");
+            System.out.println("[3] - Create new match");
+            System.out.println("[4] - Enter existing match");
+            System.out.println("[5] - Exit application");
 
             System.out.print("Enter option num: ");
             int option = inputReader.nextInt();
@@ -63,13 +64,16 @@ public class GUIManager
                     setNickname();
                     break;
                 case 2:
-                    createMatch();
+                    showMatch();
                     break;
                 case 3:
+                    createMatch();
+                    break;
+                case 4:
                     if (joinMatch())
                         play();
                     break;
-                case 4:
+                case 5:
                     exitApplication();
                     return;
             }
@@ -106,6 +110,25 @@ public class GUIManager
         //set nickname
         appContext.PLAYER_NICKNAME = nickname;
         System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
+    }
+    //show available match
+    public void showMatch()
+    {
+        System.out.println("Retrieving available matches . . .");
+        //get list
+        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
+
+        System.out.println("Available matches: ");
+        for (int i = 0; i < matchList.size(); i++)
+        {
+            try
+            {
+                System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+            }catch (NullPointerException ex)
+            {
+                System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
+            }
+        }
     }
     //enter match
     public boolean joinMatch()
@@ -172,15 +195,74 @@ public class GUIManager
         Scanner inputReader = new Scanner(System.in);
 
         System.out.println("### Match creation menu ###\n");
+
         //match id
-        System.out.print("Enter match id: ");
-        match.setId( inputReader.nextLine());
+        while (true)
+        {
+            System.out.print("Enter match id: ");
+
+            String mID = inputReader.nextLine();
+            //check input
+            if (mID.equals(""))
+                System.out.println("Invalid ID");
+            else
+            {
+                match.setId(mID);
+                break;
+            }
+        }
+
         //edge
+        while (true)
+    {
         System.out.print("Enter match edge length: ");
-        match.setEdgeLength(inputReader.nextInt());
+
+        try
+        {
+            int mEdge = Integer.parseInt(inputReader.nextLine());
+
+            //check value
+            if (mEdge <= 0)
+            {
+                System.out.println("Invalid Edge Value");
+                continue;
+            }
+
+            //set value
+            match.setEdgeLength(mEdge);
+            break;
+        }catch (Exception ex)
+        {
+            System.out.println("Invalid Edge Value");
+            continue;
+        }
+    }
+
         //victory
-        System.out.print("Enter match victory points: ");
-        match.setVictoryPoints(inputReader.nextInt());
+        while (true)
+        {
+            System.out.print("Enter match victory points: ");
+
+            try
+            {
+                int mVictory = Integer.parseInt(inputReader.nextLine());
+
+                //check value
+                if (mVictory <= 0)
+                {
+                    System.out.println("Invalid Points Value");
+                    continue;
+                }
+
+                //set value
+                match.setVictoryPoints(mVictory);
+                break;
+            }catch (Exception ex)
+            {
+                System.out.println("Invalid Points Value");
+                continue;
+            }
+        }
 
         boolean creationResult = new RESTConnector(appContext).createServerMatch(match);
 
