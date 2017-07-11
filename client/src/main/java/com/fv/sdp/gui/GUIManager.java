@@ -9,6 +9,7 @@ import com.fv.sdp.util.PrettyPrinter;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 /**
@@ -28,9 +29,11 @@ public class GUIManager
         //save context
         this.appContext = appContext;
 
-        //welcome
+        //welcome message
         welcome();
-        //TODO: show menu
+
+        //show menu
+        new Thread(() -> showMenu()).start();
     }
 
     //welcome message
@@ -44,33 +47,39 @@ public class GUIManager
     {
         Scanner inputReader = new Scanner(System.in);
 
-        System.out.println("### Choose an action ###\n");
-        System.out.println("[1] - Set nickname");
-        System.out.println("[2] - Create new match");
-        System.out.println("[3] - Enter existing match");
-        System.out.println("[4] - Exit application");
+        while (true)
+        {
+            System.out.println("### Choose an action ###\n");
+            System.out.println("[1] - Set nickname");
+            System.out.println("[2] - Create new match");
+            System.out.println("[3] - Enter existing match");
+            System.out.println("[4] - Exit application");
 
-        System.out.print("Enter option num: ");
-        int option = inputReader.nextInt();
-        switch (option) {
-            case 1:
-                setNickname();
-                break;
-            case 2:
-                createMatch();
-                break;
-            case 3:
-                joinMatch();
-                break;
-            case 4:
-                exitApplication();
-                return;
+            System.out.print("Enter option num: ");
+            int option = inputReader.nextInt();
+            switch (option)
+            {
+                case 1:
+                    setNickname();
+                    break;
+                case 2:
+                    createMatch();
+                    break;
+                case 3:
+                    if (joinMatch())
+                        play();
+                    break;
+                case 4:
+                    exitApplication();
+                    return;
+            }
         }
     }
 
     private void exitApplication()
     {
-        System.exit(0);
+        //node shutdown
+        appContext.NODE_MANAGER.shutdownNode();
     }
 
     //set nickname
@@ -78,14 +87,26 @@ public class GUIManager
     {
         Scanner inputReader = new Scanner(System.in);
 
-        System.out.print("Enter your nickname: "); //TODO: nickname not empty
-        String nickname = inputReader.next();
-        System.out.println();
+        //read input
+        String nickname;
+        while (true)
+        {
+            System.out.print("Enter your nickname: "); //TODO: nickname not empty
+            nickname = inputReader.nextLine();
+            //check nickname
+            if (nickname.equals(""))
+                System.out.println("Invalid Nickname");
+            else
+            {
+                System.out.println();
+                break;
+            }
+        }
 
+        //set nickname
         appContext.PLAYER_NICKNAME = nickname;
         System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
     }
-
     //enter match
     public boolean joinMatch()
     {
@@ -98,12 +119,36 @@ public class GUIManager
         System.out.println("Available matches: ");
         for (int i = 0; i < matchList.size(); i++)
         {
-            System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+            try
+            {
+                System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+            }catch (NullPointerException ex)
+            {
+                System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
+            }
         }
 
         //choose match
-        System.out.println("Select match index: ");
-        int index = inputReader.nextInt();
+        int index = 0;
+        while (true)
+        {
+            System.out.println("Select match index: ");
+            try
+            {
+                index = Integer.parseInt(inputReader.nextLine());
+            }catch (Exception ex)
+            {
+                System.out.println("Invalid Input");
+                continue;
+            }
+            //check input
+            if (index >= matchList.size())
+                System.out.println("Invalid Index Value");
+            else
+            {
+                break;
+            }
+        }
 
         //enter match
         Player player = appContext.getPlayerInfo();
@@ -114,17 +159,12 @@ public class GUIManager
         if (joinResult)
         {
             System.out.println(String.format("Successfully joined match %s", matchList.get(index).getId()));
-
-            //TODO: start play module
-            play();
-
             return true;
         }
         else
             System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
         return false;
     }
-
     //create match
     public boolean createMatch()
     {
@@ -146,11 +186,37 @@ public class GUIManager
 
         return creationResult;
     }
-
-    public void play()//TODO
+    private boolean inputLock = false;
+    public void play()
     {
-        //TODO: check input lock
-        //TODO: wait token
+        Scanner inputReader = new Scanner(System.in);
+        while(inputLock == false)
+        {
+            //read input
+           String input = inputReader.nextLine().toUpperCase();
+
+           //check input
+            switch (input)
+            {
+                case "W":
+                    appContext.GAME_MANAGER.movePlayer(input);
+                    break;
+                case "S":
+                    appContext.GAME_MANAGER.movePlayer(input);
+                    break;
+                case "A":
+                    appContext.GAME_MANAGER.movePlayer(input);
+                    break;
+                case "D":
+                    appContext.GAME_MANAGER.movePlayer(input);
+                    break;
+                case "B":
+                    appContext.GAME_MANAGER.releaseBomb();
+                    break;
+                default:
+                    System.out.println("Invalid Input");
+            }
+        }
     }
 
     public void notifyPlayerLost(Player killer)
@@ -159,23 +225,25 @@ public class GUIManager
         System.out.println(String.format("\n### %s, YOU LOST ###\n" +
                 "### %s KILLED YOU ###", appContext.getPlayerInfo().getId(),killer.getId()));
 
-        //TODO: lock input
+        //lock input
+        inputLock = true;
     }
     public void notifyPlayerLost()
     {
         //console output
         System.out.println(String.format("\n### %s, YOU LOST ###\n", appContext.getPlayerInfo().getId()));
 
-        //TODO: lock input
+        //lock input
+        inputLock = true;
     }
-
     public void notifyPlayerWin()
     {
         //console output
         System.out.println(String.format("\n### %s, YOU WIN ###\n" +
                 "### PLAYER SCORE: %d", appContext.getPlayerInfo().getId(), appContext.GAME_MANAGER.getPlayerScore()));
 
-        //TODO: lock input
+        //lock input
+        inputLock = true;
     }
     public void notifyKill(Player killedPlayer)
     {
@@ -191,5 +259,14 @@ public class GUIManager
     {
         System.out.println(String.format("\n### %s, BOMB DETONATED - You Killed %d Players  - ###\n" +
                 "### SCORE: %d ###", appContext.getPlayerInfo().getId(), killedPlayers, appContext.GAME_MANAGER.getPlayerScore()));
+    }
+    public void notifyGameEnd()
+    {
+        //console output
+        System.out.println(String.format("\n### %s, MATCH END ###\n" +
+                "### PLAYER SCORE: %d", appContext.getPlayerInfo().getId(), appContext.GAME_MANAGER.getPlayerScore()));
+
+        //lock input
+        inputLock = true;
     }
 }
