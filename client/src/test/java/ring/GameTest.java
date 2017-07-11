@@ -406,7 +406,7 @@ public class GameTest
 
         //node2 release token
         node2.appContext.TOKEN_MANAGER.releaseToken();
-        Thread.sleep(5000);
+        Thread.sleep(10000);
 
         Assert.assertNull(node0.appContext.RING_NETWORK);
         Assert.assertNull(node0.appContext.PLAYER_MATCH);

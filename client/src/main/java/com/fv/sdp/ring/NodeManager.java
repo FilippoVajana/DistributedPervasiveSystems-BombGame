@@ -72,7 +72,6 @@ public class NodeManager implements ISocketObserver
             //startup GUI manager
             guiManager = new GUIManager(appContext);
             appContext.GUI_MANAGER = guiManager;
-            //new Thread(() -> guiManager.showMenu()).start();
 
             return true;
         }catch (Exception ex)
@@ -101,9 +100,12 @@ public class NodeManager implements ISocketObserver
         appContext.TOKEN_MANAGER = null;
 
         //Socket params
-        appContext.SOCKET_CONNECTOR = null; //TODO: dispose listener
+        appContext.SOCKET_CONNECTOR = null;
 
-       //System.exit(0); //TODO: enable
+       synchronized (appContext.APP_EXIT_SIGNAL)
+       {
+           appContext.APP_EXIT_SIGNAL.notifyAll();
+       }
     }
 
     /**

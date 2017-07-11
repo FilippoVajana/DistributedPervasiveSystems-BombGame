@@ -23,6 +23,9 @@ public class ApplicationContext
         RING_NETWORK = new ConcurrentList<>();
     }
 
+    //APP
+    public Object APP_EXIT_SIGNAL = new Object();
+
     //REST
     public String REST_BASE_URL;
     public HashMap<String, String> REST_ENDPOINTS = new HashMap<>();

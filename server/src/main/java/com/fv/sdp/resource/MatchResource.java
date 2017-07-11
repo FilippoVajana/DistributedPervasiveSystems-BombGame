@@ -95,8 +95,8 @@ public class MatchResource
 
         //check for match cancellation
         Match match = model.getMatch(matchId);
-        if (match == null || match.getPlayers().getList().size() == 0)
-            model.deleteMatch(matchId); //TODO: need notify???
+        if (match == null || match.getPlayers().getList().size() == 0) //TODO: remove, make endpoint
+            model.deleteMatch(matchId);
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
         return Response.status(Response.Status.NOT_FOUND).build();
