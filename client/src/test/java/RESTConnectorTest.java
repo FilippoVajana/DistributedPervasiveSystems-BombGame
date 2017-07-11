@@ -52,9 +52,9 @@ public class RESTConnectorTest extends JerseyTest //TODO: review
         Match m3 = new Match("game3@°çé@[?^", 64867,45);
 
         Gson jsonizer = new Gson();
-        target("match").request().post(Entity.entity(jsonizer.toJson(m1), MediaType.APPLICATION_JSON));
-        target("match").request().post(Entity.entity(jsonizer.toJson(m2), MediaType.APPLICATION_JSON));
-        target("match").request().post(Entity.entity(jsonizer.toJson(m3), MediaType.APPLICATION_JSON));
+        target("match").request().post(Entity.entity(jsonizer.toJson(m1, Match.class), MediaType.APPLICATION_JSON));
+        target("match").request().post(Entity.entity(jsonizer.toJson(m2, Match.class), MediaType.APPLICATION_JSON));
+        target("match").request().post(Entity.entity(jsonizer.toJson(m3, Match.class), MediaType.APPLICATION_JSON));
 
         //match with players
         ConcurrentList<Player> pList4 = new ConcurrentList<>();
@@ -62,7 +62,8 @@ public class RESTConnectorTest extends JerseyTest //TODO: review
         pList4.add(new Player("pl2", "127.0.0.1", 56387));
         pList4.add(new Player("pl3", "192.168.1.1", 45624));
         Match m4 = new Match("game4", 34,67, pList4);
-        target("match").request().post(Entity.entity(m4, MediaType.APPLICATION_JSON));
+        String m4Json = jsonizer.toJson(m4, Match.class);
+        target("match").request().post(Entity.entity(m4Json, MediaType.APPLICATION_JSON));
     }
 
     @Test

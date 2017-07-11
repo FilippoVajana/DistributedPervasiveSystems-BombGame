@@ -45,20 +45,6 @@ public class RESTConnector
         restEndpointsIndex = this.appContext.REST_ENDPOINTS;
     }
 
-    public boolean requestSetTestModel()
-    {
-        //set web target
-        WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
-        WebTarget testModelTarget = matchTarget.path("setTest");
-
-        //invocation
-        Invocation.Builder invocation = testModelTarget.request();
-
-        //make request
-        Response response = invocation.get();
-        return true;
-    }
-
     public ArrayList<Match> getServerMatchList()
     {
         //set web target
@@ -92,17 +78,15 @@ public class RESTConnector
         Invocation.Builder invocation = joinTarget.request();
 
         //make request
-        Response response = invocation.post(Entity.entity(player, MediaType.APPLICATION_JSON));
+        String playerJson = new Gson().toJson(player, Player.class);
+        Response response = invocation.post(Entity.entity(playerJson, MediaType.APPLICATION_JSON));
 
         //read response
         if (response.getStatus() == 200)
         {
-            Match joinedMatch = response.readEntity(Match.class);
-            //set match
-            //appContext.PLAYER_MATCH = joinedMatch; //TODO: rivedere pesantemente andando a demandare le azioni a GameManager
-
-            //set ring node
-            //appContext.RING_NETWORK = joinedMatch.getPlayers(); //TODO: remove current player
+            //read joined match
+            String joinedMatchJson = response.readEntity(String.class);
+            Match joinedMatch = new Gson().fromJson(joinedMatchJson, Match.class);
 
             //notify ring
             appContext.GAME_MANAGER.joinMatchGrid(player, joinedMatch);
@@ -158,7 +142,8 @@ public class RESTConnector
            Invocation.Builder invocation = leaveTarget.request();
 
            //make request
-           Response response = invocation.post(Entity.entity(player, MediaType.APPLICATION_JSON));
+           String playerJson = new Gson().toJson(player, Player.class);
+           Response response = invocation.post(Entity.entity(playerJson, MediaType.APPLICATION_JSON));
 
            //read response
            if (response.getStatus() == 200)
