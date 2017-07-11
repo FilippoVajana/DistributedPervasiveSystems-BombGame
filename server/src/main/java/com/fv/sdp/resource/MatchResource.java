@@ -66,18 +66,21 @@ public class MatchResource
     @Path("/{matchId}/join")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response joinMatch(@PathParam("matchId") String matchId, Player player)
+    public Response joinMatch(@PathParam("matchId") String matchId, String playerJson)
     {
+        //parse Player from string
+        Player player = new Gson().fromJson(playerJson, Player.class);
+
         MatchModel model = MatchModel.getInstance();
         boolean opResult = model.addPlayerToMatch(matchId, player);
         if (opResult)
         {
-            //DEBUG PROBE
-            ConcurrentList<Player> pList = model.getMatch(matchId).getPlayers();
-            Match m = model.getMatch(matchId);
+            //ConcurrentList<Player> pList = model.getMatch(matchId).getPlayers(); //TODO: remove
 
-            //serialize json string
-            return Response.ok(model.getMatch(matchId)).build(); //todo use Gson
+            //serialize json response
+            Match match = model.getMatch(matchId);
+            String responseJson = new Gson().toJson(match, Match.class);
+            return Response.ok(responseJson).build();
         }
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
@@ -85,7 +88,7 @@ public class MatchResource
     @POST
     @Path("/{matchId}/leave")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response leaveMatch(@PathParam("matchId") String matchId, String playerJson) //todo change to Player-json
+    public Response leaveMatch(@PathParam("matchId") String matchId, String playerJson)
     {
         //parse Player from string
         Player player = new Gson().fromJson(playerJson, Player.class);
@@ -164,9 +167,6 @@ class MatchModel
        MatchModel mm = MatchModel.getInstance();
        matchesList.setList(mL);
     }
-
-
-
 
     //add new match
     public boolean addMatch(Match match)

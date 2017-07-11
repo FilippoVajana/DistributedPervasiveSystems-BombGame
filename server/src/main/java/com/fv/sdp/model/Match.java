@@ -29,7 +29,6 @@ public class Match
         this.victoryPoints = victoryPoints;
         this.players = new ConcurrentList<>();
     }
-
     public Match(String id, int edgeLength, int victoryPoints, ConcurrentList<Player> players) {
         this.id = id;
         this.edgeLength = edgeLength;
@@ -40,7 +39,6 @@ public class Match
     public String getId() {
         return id;
     }
-
     public void setId(String id) {
         this.id = id;
     }
@@ -48,7 +46,6 @@ public class Match
     public int getEdgeLength() {
         return edgeLength;
     }
-
     public void setEdgeLength(int edgeLength) {
         this.edgeLength = edgeLength;
     }
@@ -56,7 +53,6 @@ public class Match
     public int getVictoryPoints() {
         return victoryPoints;
     }
-
     public void setVictoryPoints(int victoryPoints) {
         this.victoryPoints = victoryPoints;
     }
@@ -64,7 +60,6 @@ public class Match
     public ConcurrentList<Player> getPlayers() {
         return players;
     }
-
     public void setPlayers(ConcurrentList<Player> players) {
         this.players = players;
     }
