@@ -126,21 +126,17 @@ public class GameManager
         Player leavingPlayer = new Gson().fromJson(playerJson, Player.class);
 
         //remove from ring if sender != receiver (release token hack)
-        boolean deleteResult = false;
         if (appContext.getPlayerInfo().equals(leavingPlayer) == false)
         {
-            deleteResult = appContext.RING_NETWORK.remove(leavingPlayer);
-        }
+            appContext.RING_NETWORK.remove(leavingPlayer);
 
-        if (deleteResult == false)
-        {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already out of ring", appContext.getPlayerInfo().getId(), leavingPlayer.getId()));
+            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s deleted", appContext.getPlayerInfo().getId(), leavingPlayer.getId()));
         }
         else
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s deleted", appContext.getPlayerInfo().getId(), leavingPlayer.getId()));
+            //PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already out of ring", appContext.getPlayerInfo().getId(), leavingPlayer.getId()));
         }
 
 
