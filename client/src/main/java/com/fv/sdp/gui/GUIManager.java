@@ -5,6 +5,8 @@ import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.rest.RESTConnector;
 import com.fv.sdp.ring.GridBomb;
+import com.fv.sdp.ring.GridPosition;
+import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.PrettyPrinter;
 
 import javax.validation.constraints.NotNull;
@@ -130,6 +132,87 @@ public class GUIManager
             }
         }
     }
+    //create match
+    public boolean createMatch()
+    {
+        Match match = new Match();
+        match.setPlayers(new ConcurrentList<>());  //set empty player
+        Scanner inputReader = new Scanner(System.in);
+
+        System.out.println("### Match creation menu ###\n");
+
+        //match id
+        while (true)
+        {
+            System.out.print("Enter match id: ");
+
+            String mID = inputReader.nextLine();
+            //check input
+            if (mID.equals(""))
+                System.out.println("Invalid ID");
+            else
+            {
+                match.setId(mID);
+                break;
+            }
+        }
+
+        //edge
+        while (true)
+        {
+            System.out.print("Enter match edge length: ");
+
+            try
+            {
+                int mEdge = Integer.parseInt(inputReader.nextLine());
+
+                //check value
+                if (mEdge <= 0)
+                {
+                    System.out.println("Invalid Edge Value");
+                    continue;
+                }
+
+                //set value
+                match.setEdgeLength(mEdge);
+                break;
+            }catch (Exception ex)
+            {
+                System.out.println("Invalid Edge Value");
+                continue;
+            }
+        }
+
+        //victory
+        while (true)
+        {
+            System.out.print("Enter match victory points: ");
+
+            try
+            {
+                int mVictory = Integer.parseInt(inputReader.nextLine());
+
+                //check value
+                if (mVictory <= 0)
+                {
+                    System.out.println("Invalid Points Value");
+                    continue;
+                }
+
+                //set value
+                match.setVictoryPoints(mVictory);
+                break;
+            }catch (Exception ex)
+            {
+                System.out.println("Invalid Points Value");
+                continue;
+            }
+        }
+
+        boolean creationResult = new RESTConnector(appContext).createServerMatch(match);
+
+        return creationResult;
+    }
     //enter match
     public boolean joinMatch()
     {
@@ -175,8 +258,7 @@ public class GUIManager
 
         //enter match
         Player player = appContext.getPlayerInfo();
-        boolean joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player );
-        //TODO: token management + signal new node
+        boolean joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player);
 
         //set match
         if (joinResult)
@@ -185,91 +267,12 @@ public class GUIManager
             return true;
         }
         else
-            System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
+            //System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
         return false;
     }
-    //create match
-    public boolean createMatch()
-    {
-        Match match = new Match();
-        Scanner inputReader = new Scanner(System.in);
 
-        System.out.println("### Match creation menu ###\n");
-
-        //match id
-        while (true)
-        {
-            System.out.print("Enter match id: ");
-
-            String mID = inputReader.nextLine();
-            //check input
-            if (mID.equals(""))
-                System.out.println("Invalid ID");
-            else
-            {
-                match.setId(mID);
-                break;
-            }
-        }
-
-        //edge
-        while (true)
-    {
-        System.out.print("Enter match edge length: ");
-
-        try
-        {
-            int mEdge = Integer.parseInt(inputReader.nextLine());
-
-            //check value
-            if (mEdge <= 0)
-            {
-                System.out.println("Invalid Edge Value");
-                continue;
-            }
-
-            //set value
-            match.setEdgeLength(mEdge);
-            break;
-        }catch (Exception ex)
-        {
-            System.out.println("Invalid Edge Value");
-            continue;
-        }
-    }
-
-        //victory
-        while (true)
-        {
-            System.out.print("Enter match victory points: ");
-
-            try
-            {
-                int mVictory = Integer.parseInt(inputReader.nextLine());
-
-                //check value
-                if (mVictory <= 0)
-                {
-                    System.out.println("Invalid Points Value");
-                    continue;
-                }
-
-                //set value
-                match.setVictoryPoints(mVictory);
-                break;
-            }catch (Exception ex)
-            {
-                System.out.println("Invalid Points Value");
-                continue;
-            }
-        }
-
-        boolean creationResult = new RESTConnector(appContext).createServerMatch(match);
-
-        return creationResult;
-    }
     private boolean inputLock = false;
-    public void play()
+    public void play() //TODO: test, add status feedback
     {
         Scanner inputReader = new Scanner(System.in);
         while(inputLock == false)
@@ -322,7 +325,7 @@ public class GUIManager
     {
         //console output
         System.out.println(String.format("\n### %s, YOU WIN ###\n" +
-                "### PLAYER SCORE: %d", appContext.getPlayerInfo().getId(), appContext.GAME_MANAGER.getPlayerScore()));
+                "### PLAYER SCORE: %d ###", appContext.getPlayerInfo().getId(), appContext.GAME_MANAGER.getPlayerScore()));
 
         //lock input
         inputLock = true;
@@ -350,5 +353,9 @@ public class GUIManager
 
         //lock input
         inputLock = true;
+    }
+    public void notifyMove(GridPosition playerPosition)
+    {
+        System.out.println(String.format("### %s, MOVED TO (%d,%d) ###", appContext.getPlayerInfo().getId(), playerPosition.x, playerPosition.y));
     }
 }
