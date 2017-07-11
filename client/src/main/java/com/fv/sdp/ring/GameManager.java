@@ -150,6 +150,8 @@ public class GameManager
         appContext.SOCKET_CONNECTOR.sendMessage(response, SocketConnector.DestinationGroup.SOURCE);
 
         //TODO: check victory
+        if (checkVictoryCondition())
+            matchEnd();
     }
     public void handleMovement(RingMessage receivedMessage)
     {
@@ -273,12 +275,12 @@ public class GameManager
             new Thread(() ->{
                 try
                 {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                     //notify gui
                     appContext.GUI_MANAGER.notifyPlayerLost();
 
                     //leave procedure
-                    leaveMatchGrid(); //TODO: check deadlock
+                    leaveMatchGrid();
                 }catch (Exception ex)
                 {
 
@@ -381,7 +383,7 @@ public class GameManager
         //build message
         String positionJson = new Gson().toJson(playerPosition, GridPosition.class);
         String playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
-        String messageData = String.format("MOVE#%s#%s", playerJson, positionJson); //TODO: message format
+        String messageData = String.format("MOVE#%s#%s", playerJson, positionJson);
         RingMessage moveMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), messageData);
 
         //build ack queue
@@ -389,7 +391,7 @@ public class GameManager
         appContext.ACK_HANDLER.addPendingAck(moveMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
         //send message
-        appContext.SOCKET_CONNECTOR.sendMessage(moveMessage, SocketConnector.DestinationGroup.ALL); //TODO: check result
+        appContext.SOCKET_CONNECTOR.sendMessage(moveMessage, SocketConnector.DestinationGroup.ALL);
 
         //wait ack
         synchronized (ackWaitLock)
@@ -625,7 +627,7 @@ public class GameManager
 
         return true;
     }
-    public boolean movePlayer(String movementKey)
+    public boolean movePlayer(String movementKey) //bloccante
     {
         //remove case sensitiveness
         movementKey = movementKey.toUpperCase();
@@ -645,8 +647,6 @@ public class GameManager
             case "D":
                 gameEngine.moveRight();
                 break;
-            case "B":
-                releaseBomb();
         }
 
         //get new player position
@@ -663,7 +663,7 @@ public class GameManager
 
         return true;
     }
-    public boolean releaseBomb()
+    public boolean releaseBomb() //bloccante
     {
         //get first bomb
         GridBomb bomb = gameEngine.getAvailableBombsQueue().pop();
@@ -724,16 +724,10 @@ public class GameManager
 
     private boolean checkVictoryCondition()
     {
-        //check victory condition
-        if (appContext.RING_NETWORK.size() == 1 && appContext.RING_NETWORK.contain(appContext.getPlayerInfo())) //1 player alive
+        if (appContext.PLAYER_MATCH.getVictoryPoints() <= getPlayerScore()) //score
         {
             return true;
         }
-        else if (appContext.PLAYER_MATCH.getVictoryPoints() <= getPlayerScore()) //score
-        {
-            return true;
-        }
-
         return false;
     }
     private void setPlayerStartingPosition()
@@ -812,7 +806,7 @@ public class GameManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Setting first player position (%d,%d)", appContext.getPlayerInfo().getId(), startingPosition.x, startingPosition.y));
     }
-    private void playerKilledProcedure(Player killer) //TODO: access level
+    private void playerKilledProcedure(Player killer)
     {
         //notify ring
         notifyPlayerKilled(killer);
@@ -900,8 +894,6 @@ public class GameManager
         return gameEngine.getPlayerScore();
     }
     public ConcurrentObservableQueue<GridBomb> getBombQueue() { return gameEngine.getAvailableBombsQueue(); }
-
-
 }
 
 //GAME ENGINE
