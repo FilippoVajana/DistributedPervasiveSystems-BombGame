@@ -111,7 +111,7 @@ public class SocketConnector
             String jsonMessage = new Gson().toJson(message);
 
 
-            if (message.getNeedToken() == true) //TODO: check
+            if (message.getNeedToken() == true)
             {
                 //check token
                 while (appContext.TOKEN_MANAGER.isHasToken() == false) //no token
@@ -328,31 +328,41 @@ class SocketListenerRunner implements Runnable
         //PrettyPrinter.printTimestampLog(String.format("[%s] Handling client %s:%d", this.getClass().getSimpleName(), client.getInetAddress().getHostAddress(), client.getPort()));
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-        while (!client.isClosed())
+        try
         {
-            //read input message
-            String input = reader.readLine();
+            String input;
+            while (true)
+            {
+                //System.err.println(String.format("[%s] reading message input", appContext.getPlayerInfo().getId()));
+                //read input message
+                input = reader.readLine();
 
-           if (input != null)
-           {
-               //json parsing
-               RingMessage message = new Gson().fromJson(input, RingMessage.class);
+                if (input != null)
+                {
+                    //json parsing
+                    RingMessage message = new Gson().fromJson(input, RingMessage.class);
 
-               //print log
-               PrettyPrinter.printReceivedRingMessage(message, appContext.getPlayerInfo());
+                    //print log
+                    PrettyPrinter.printReceivedRingMessage(message, appContext.getPlayerInfo());
 
-               //dispatch message to observers
-               for (ISocketObserver observer : observersList)
-                   observer.pushMessage(message); //dispatch to NodeManager
-           }
+                    //dispatch message to observers
+                    for (ISocketObserver observer : observersList)
+                        observer.pushMessage(message); //dispatch to NodeManager
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            }
+        }catch (Exception ex)
+        {
+            //log
+            //PrettyPrinter.printTimestampLog(String.format("Disconnected client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
+
+            //dispose reader
+            reader.close();
+            //dispose socket
+            client.close();
         }
-
-        //log
-        PrettyPrinter.printTimestampLog(String.format("Disconnected client %s:%d", client.getInetAddress().getHostAddress(), client.getPort()));
-
-        //dispose reader
-        reader.close();
-        //dispose socket
-        client.close();
     }
 }
