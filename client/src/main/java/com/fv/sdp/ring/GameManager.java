@@ -619,7 +619,7 @@ public class GameManager
 
         return true;
     }
-    public boolean leaveMatchGrid() //TODO: rest call
+    public boolean leaveMatchGrid()
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Leaving match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
@@ -967,6 +967,7 @@ class GameEngine
 
         //init grid
         gameGrid = new Grid(match.getEdgeLength());
+        gameGrid.setPlayerPosition(new GridPosition(-1, -1));
 
         //init player score
         playerScore = 0;
