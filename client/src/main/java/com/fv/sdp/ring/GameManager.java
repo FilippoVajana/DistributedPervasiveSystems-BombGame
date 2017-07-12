@@ -283,7 +283,7 @@ public class GameManager
         Player player = new Gson().fromJson(playerData, Player.class);
 
         //push player in bomb kill queue
-        ConcurrentObservableQueue<Player> queue = bombKillQueueMap.get(explosionId);
+        ConcurrentObservableQueue<Player> queue = explosionKillQueueMap.get(explosionId);
 
         //log
         //PrettyPrinter.printTimestampLog(String.format("[%s] Push bomb kill %s", appContext.getPlayerInfo().getId(), explosionId));
@@ -497,7 +497,7 @@ public class GameManager
         try
         {
             //start bomb kill monitor
-            new Thread(() -> monitorBombQueue(explosionMessage.getId())).start();
+            new Thread(() -> monitorExplosionKillQueue(explosionMessage.getId())).start();
             Thread.sleep(5000);
         } catch (InterruptedException e)
         {
@@ -762,7 +762,7 @@ public class GameManager
 
     //HELPER METHOD
     private ConcurrentObservableQueue<GridPosition> occupiedPositions;
-    private Map<String, ConcurrentObservableQueue<Player>> bombKillQueueMap = new HashMap<>();
+    private Map<String, ConcurrentObservableQueue<Player>> explosionKillQueueMap = new HashMap<>();
 
     private boolean checkVictoryCondition()
     {
@@ -859,15 +859,15 @@ public class GameManager
         //leave match
         leaveMatchGrid();
     }
-    private void monitorBombQueue(String bombExplosionMessageId) //run on bomb source player
+    private void monitorExplosionKillQueue(String bombExplosionMessageId) //run on bomb source player
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Started Bomb(%s) kills monitor", appContext.getPlayerInfo().getId(), bombExplosionMessageId));
 
 
         //put into bomb kill map
-        bombKillQueueMap.put(bombExplosionMessageId, new ConcurrentObservableQueue<>());
-        ConcurrentObservableQueue<Player> killQueue = bombKillQueueMap.get(bombExplosionMessageId);
+        explosionKillQueueMap.put(bombExplosionMessageId, new ConcurrentObservableQueue<>());
+        ConcurrentObservableQueue<Player> killQueue = explosionKillQueueMap.get(bombExplosionMessageId);
 
         //wait all bomb kill response
         while (killQueue.size() != appContext.RING_NETWORK.size())
@@ -913,7 +913,7 @@ public class GameManager
         }
 
         //clean queue map
-        bombKillQueueMap.remove(bombExplosionMessageId);
+        explosionKillQueueMap.remove(bombExplosionMessageId);
     }
     private boolean endMatch()
     {
