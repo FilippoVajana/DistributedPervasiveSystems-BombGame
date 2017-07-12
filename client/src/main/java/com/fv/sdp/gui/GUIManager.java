@@ -57,6 +57,7 @@ public class GUIManager
             System.out.println("[3] - Create new match");
             System.out.println("[4] - Enter existing match");
             System.out.println("[5] - Exit application");
+            System.out.println("[6] - Reset server");
 
             System.out.print("Enter option num: ");
             int option = inputReader.nextInt();
@@ -78,6 +79,8 @@ public class GUIManager
                 case 5:
                     exitApplication();
                     return;
+                case 6:
+                    appContext.REST_CONNECTOR.resetServer();
             }
         }
     }
@@ -114,7 +117,7 @@ public class GUIManager
         System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
     }
     //show available match
-    public void showMatch()
+    public void showMatch() //TODO: check input
     {
         System.out.println("Retrieving available matches . . .");
         //get list
@@ -272,11 +275,34 @@ public class GUIManager
     }
 
     private boolean inputLock = false;
-    public void play() //TODO: test, add status feedback
+    public void play()
     {
         Scanner inputReader = new Scanner(System.in);
         while(inputLock == false)
         {
+            //check token
+            try
+            {
+                while (appContext.TOKEN_MANAGER.isHasToken() == false) //no token
+                {
+                    //token signal
+                    Object tokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
+                    synchronized (tokenSignal)
+                    {
+                        tokenSignal.wait();
+                    }
+                }
+            }catch (Exception ex)
+            {
+                PrettyPrinter.printTimestampError(String.format("[%s] ERROR play() wait token", appContext.getPlayerInfo().getId()));
+            }
+
+            //visual feedback
+            System.out.println(String.format("\n\n### %s, CHOOSE ACTION ###", appContext.getPlayerInfo().getId()));
+            System.out.println(String.format("### POSITION: (%d,%d) ###", appContext.GAME_MANAGER.getPlayerPosition().x, appContext.GAME_MANAGER.getPlayerPosition().y));
+            System.out.println(String.format("### SCORE: %d ###", appContext.GAME_MANAGER.getPlayerScore()));
+            System.out.println(String.format("### BOMBS: %d ###", appContext.GAME_MANAGER.getBombQueue().size()));
+
             //read input
            String input = inputReader.nextLine().toUpperCase();
 
@@ -296,7 +322,9 @@ public class GUIManager
                     appContext.GAME_MANAGER.movePlayer(input);
                     break;
                 case "B":
-                    appContext.GAME_MANAGER.releaseBomb();
+                    boolean release = appContext.GAME_MANAGER.releaseBomb();
+                    if (release == false)
+                        System.out.println("### INVALID ACTION ###");
                     break;
                 default:
                     System.out.println("Invalid Input");
