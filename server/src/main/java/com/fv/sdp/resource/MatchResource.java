@@ -21,6 +21,7 @@ import java.util.ArrayList;
 @Path("/match")
 public class MatchResource
 {
+    @DELETE
     public void resetResourceModel()
     {
         MatchModel.resetModel();

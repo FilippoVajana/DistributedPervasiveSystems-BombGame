@@ -203,5 +203,35 @@ public class RESTConnector
             return false;
         }
     }
+
+    public void resetServer()
+    {
+        //log
+        PrettyPrinter.printTimestampLog(String.format("[%s] Resetting REST server", appContext.getPlayerInfo().getId()));
+
+        try
+        {
+            //set web target
+            WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
+
+            //invocation
+            Invocation.Builder invocation = matchTarget.request();
+
+            //make request
+            Response response = invocation.delete();
+
+            //read response
+            if (response.getStatus() == 200)
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] REST server reset", appContext.getPlayerInfo().getId()));
+            }
+
+        }catch (Exception ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR resetting server", appContext.getPlayerInfo().getId()));
+        }
+    }
 }
 
