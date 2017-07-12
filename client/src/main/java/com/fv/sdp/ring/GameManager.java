@@ -537,7 +537,7 @@ public class GameManager
         RingMessage endMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), endMessageContent);
         //endMessage.setNeedToken(false); //TODO: check
 
-        //build ack queue
+        // build ack queue
         Object ackWaitLock = new Object();
         appContext.ACK_HANDLER.addPendingAck(endMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
@@ -553,7 +553,7 @@ public class GameManager
                 {
                     //log
                     PrettyPrinter.printTimestampLog(String.format("[%s] Waiting match end ACK", appContext.getPlayerInfo().getId()));
-                    ackWaitLock.wait(1000);
+                    ackWaitLock.wait();
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
@@ -751,7 +751,7 @@ public class GameManager
     public boolean winMatch()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Win match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
+        //PrettyPrinter.printTimestampLog(String.format("[%s] Win match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
         //end match procedure
         new Thread(() -> endMatch()).start();
@@ -796,7 +796,7 @@ public class GameManager
                     //log
                     PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
 
-                    hasTokenSignal.wait(1000);
+                    hasTokenSignal.wait();
                 }
             } catch (InterruptedException e)
             {
@@ -822,7 +822,7 @@ public class GameManager
                 synchronized (queueSignal)
                 {
                     //wait response
-                    queueSignal.wait(1000); //timeout before another check on while condition
+                    queueSignal.wait(); //timeout before another check on while condition
                 }
 
             } catch (InterruptedException e)
@@ -877,7 +877,7 @@ public class GameManager
                 try
                 {
                     System.err.println("queue size: " + killQueue.size());
-                    killQueue.getQueueSignal().wait(2000);
+                    killQueue.getQueueSignal().wait();
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
@@ -923,10 +923,10 @@ public class GameManager
         //notify gui
         appContext.GUI_MANAGER.notifyPlayerWin();
 
-        //notify rest//TODO
+        //notify rest
         appContext.REST_CONNECTOR.deleteMatch(appContext.PLAYER_MATCH);
 
-        //notify ring  -> hard exit
+        //notify ring
         notifyEndMatch();
 
         //node shutdown
