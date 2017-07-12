@@ -3,6 +3,7 @@ package com.fv.sdp.ring;
 import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
+import com.fv.sdp.sensors.SensorsManager;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
@@ -617,6 +618,9 @@ public class GameManager
             return false;
         }
 
+        //start sensor simulator
+        appContext.SENSOR_MANAGER.startSensorsSimulator();
+
         return true;
     }
     public boolean leaveMatchGrid()
@@ -698,6 +702,22 @@ public class GameManager
         appContext.TOKEN_MANAGER.releaseToken();
 
         return true;
+    }
+    public boolean addBomb(GridBomb bomb)
+    {
+        try
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Added new bomb", appContext.getPlayerInfo().getId()));
+
+            gameEngine.pushBomb(bomb);
+            return true;
+        }catch (Exception ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR adding bomb: %s", appContext.getPlayerInfo().getId(), ex.getMessage()));
+            return false;
+        }
     }
     public boolean releaseBomb() //bloccante
     {
@@ -911,7 +931,7 @@ public class GameManager
                 winMatch();
             }
         }
-
+        
         //clean queue map
         explosionKillQueueMap.remove(bombExplosionMessageId);
     }
@@ -1097,34 +1117,9 @@ class GameEngine
         return playerPosition;
     }
 
-    //Data Analysis
-    private final double ALFA = 1;
-    private final double TH = 10;
-    private double EMA_prev = 0;
-
-    public void checkSensorData(int[] data) //TODO: check input type
+    public void pushBomb(GridBomb bomb)
     {
-        //compute average
-        double M = 0;
-        for (int d : data)
-            M+= d;
-        M = M/data.length;
-
-        //compute EMA
-        double EMA = EMA_prev + ALFA * (M - EMA_prev);
-
-        //debug
-        System.err.println(String.format("Avg. : %d, EMA : %d", M, EMA));
-
-        //check for outliers
-        if (EMA - EMA_prev > TH) //found outlier
-        {
-            //build new bomb
-            GridBomb bomb = new GridBomb(EMA);
-
-            //store bomb
-            availableBombsQueue.push(bomb);
-        }
+        availableBombsQueue.push(bomb);
     }
 }
 
