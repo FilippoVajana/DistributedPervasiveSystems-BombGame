@@ -1,3 +1,5 @@
+package com.fv.sdp.sensors;
+
 import java.util.Calendar;
 import java.util.Random;
 
@@ -23,6 +25,9 @@ public abstract class Simulator implements Runnable {
     }
 
     protected void addMeasurementToQueue(double measurement){
+
+        //debug
+        //System.err.println("SIM, PUSH NEW DATA");
         measurementsQueue.addNewMeasurement(new Measurement(id, type, measurement, deltaTime()));
     }
 

@@ -1,3 +1,5 @@
+package com.fv.sdp.sensors;
+
 import java.util.List;
 
 /**
