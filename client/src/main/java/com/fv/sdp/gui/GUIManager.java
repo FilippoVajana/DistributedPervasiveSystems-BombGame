@@ -278,7 +278,7 @@ public class GUIManager
     public void play()
     {
         Scanner inputReader = new Scanner(System.in);
-        while(inputLock == false)
+        while(true)
         {
             //check token
             try
@@ -296,6 +296,9 @@ public class GUIManager
             {
                 PrettyPrinter.printTimestampError(String.format("[%s] ERROR play() wait token", appContext.getPlayerInfo().getId()));
             }
+
+            if (inputLock)
+                return;
 
             //visual feedback
             System.out.println(String.format("\n\n### %s, CHOOSE ACTION ###", appContext.getPlayerInfo().getId()));

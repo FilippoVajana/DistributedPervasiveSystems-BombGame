@@ -931,7 +931,7 @@ public class GameManager
                 winMatch();
             }
         }
-        
+
         //clean queue map
         explosionKillQueueMap.remove(bombExplosionMessageId);
     }
@@ -939,6 +939,9 @@ public class GameManager
     {
         //match end
         PrettyPrinter.printTimestampLog(String.format("[%s] Ending match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
+
+        //stop sensors simulator
+        appContext.SENSOR_MANAGER.stopSensorsSimulator();
 
         //notify gui
         appContext.GUI_MANAGER.notifyPlayerWin();
