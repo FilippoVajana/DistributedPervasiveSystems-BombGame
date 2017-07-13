@@ -14,12 +14,19 @@ import java.util.Map;
  */
 public class PrettyPrinter
 {
+    private static final boolean ENABLE_LOG = true;
+    private static final boolean ENABLE_ERROR = true;
+    private static final boolean ENABLE_MESSAGE_IN = true;
+    private static final boolean ENABLE_MESSAGE_OUT = true;
+    private static final boolean ENABLE_INIT = false;
+
     public static void printTimestampLog(String log)
     {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
         String timestamp = String.format("[%s]-(%d)", timeFormatter.format(LocalDateTime.now()), Thread.currentThread().getId());
 
-        System.out.println(String.format("%s: \t%s", timestamp, log));
+        if (ENABLE_LOG)
+            System.out.println(String.format("%s: \t%s", timestamp, log));
     }
 
     public static void printTimestampError(String error)
@@ -27,7 +34,8 @@ public class PrettyPrinter
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
         String timestamp = String.format("[%s]-(%d)", timeFormatter.format(LocalDateTime.now()), Thread.currentThread().getId());
 
-        System.err.println(String.format("%s: \t%s", timestamp, error));
+        if (ENABLE_ERROR)
+            System.err.println(String.format("%s: \t%s", timestamp, error));
     }
 
     public static void printMatchDetails(Match match)
@@ -51,7 +59,7 @@ public class PrettyPrinter
 
     public static void printReceivedRingMessage(RingMessage message, Player player)
     {
-        if (message != null)
+        if (message != null && ENABLE_MESSAGE_IN)
         {
             String messageString = String.format("[%s] MESSAGE-IN [%s %s] FROM %s ### %s ###", player.getId(), message.getType(), message.getId(), message.getSourceAddress(), message.getContent());
             printTimestampLog(messageString);
@@ -60,7 +68,7 @@ public class PrettyPrinter
 
     public static void printSentRingMessage(RingMessage message, String destination, int port, Player player)
     {
-        if (message != null)
+        if (message != null && ENABLE_MESSAGE_OUT)
         {
             String messageString = String.format("[%s] MESSAGE-OUT [%s %s] TO %s:%d ### %s ###", player.getId(), message.getType(), message.getId(), destination, port, message.getContent());
             printTimestampLog(messageString);
@@ -69,7 +77,8 @@ public class PrettyPrinter
 
     public static void printClassInit(Object obj)
     {
-        printTimestampLog(String.format("INIT %s", obj.getClass().getSimpleName()));
+        if (ENABLE_INIT)
+            printTimestampLog(String.format("INIT %s", obj.getClass().getSimpleName()));
     }
 
     public static void printQueuePool(Map<MessageType, ConcurrentObservableQueue<RingMessage>> getQueuePool)
