@@ -43,6 +43,7 @@ public class GUIManager
         System.out.println("### Welcome to TokenBombRing Land ###");
     }
 
+    private boolean inputLock = false;
     //main menu
     public void showMenu()
     {
@@ -57,6 +58,9 @@ public class GUIManager
             {
                 continue;
             }
+
+            if (inputLock)
+                break;
 
             System.out.println("\n\n### Choose an action ###\n");
             System.out.println("[1] - Set nickname");
@@ -91,13 +95,6 @@ public class GUIManager
             }
         }
     }
-
-    private void exitApplication()
-    {
-        //node shutdown
-        appContext.NODE_MANAGER.shutdownNode();
-    }
-
     //set nickname
     public void setNickname()
     {
@@ -314,8 +311,7 @@ public class GUIManager
             //System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
         return false;
     }
-
-    private boolean inputLock = false;
+    //play game
     public void play()
     {
         Scanner inputReader = new Scanner(System.in);
@@ -429,5 +425,10 @@ public class GUIManager
     public void notifyMove(GridPosition playerPosition)
     {
         System.out.println(String.format("### %s, MOVED TO (%d,%d) ###", appContext.getPlayerInfo().getId(), playerPosition.x, playerPosition.y));
+    }
+    private void exitApplication()
+    {
+        //node shutdown
+        appContext.NODE_MANAGER.shutdownNode();
     }
 }

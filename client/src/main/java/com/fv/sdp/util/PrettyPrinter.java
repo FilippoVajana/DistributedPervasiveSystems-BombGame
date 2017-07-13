@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class PrettyPrinter
 {
-    private static final boolean ENABLE_LOG = false;
+    private static final boolean ENABLE_LOG = true;
     private static final boolean ENABLE_ERROR = true;
     private static final boolean ENABLE_MESSAGE_IN = false;
     private static final boolean ENABLE_MESSAGE_OUT = false;

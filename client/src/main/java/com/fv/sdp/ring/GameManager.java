@@ -535,7 +535,7 @@ public class GameManager
         //build message
         String endMessageContent = "GAME-END";
         RingMessage endMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), endMessageContent);
-        //endMessage.setNeedToken(false); //TODO: check
+        endMessage.setNeedToken(false); //TODO: check
 
         // build ack queue
         Object ackWaitLock = new Object();
@@ -639,7 +639,7 @@ public class GameManager
                 synchronized (tokenStoreSignal)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getId()));
+                    //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getId()));
                     tokenStoreSignal.wait(1000);
                 }
             }catch (Exception ex)
@@ -841,7 +841,7 @@ public class GameManager
                 synchronized (queueSignal)
                 {
                     //wait response
-                    queueSignal.wait(); //timeout before another check on while condition
+                    queueSignal.wait(1000); //timeout before another check on while condition
                 }
 
             } catch (InterruptedException e)
@@ -895,7 +895,7 @@ public class GameManager
             {
                 try
                 {
-                    System.err.println("queue size: " + killQueue.size());
+                    //System.err.println("queue size: " + killQueue.size());
                     killQueue.getQueueSignal().wait();
                 } catch (InterruptedException e)
                 {

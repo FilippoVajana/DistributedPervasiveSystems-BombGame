@@ -145,9 +145,9 @@ public class SocketConnector
                 Thread.sleep(100);
             } catch (InterruptedException e)
             {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
-            ex.printStackTrace();
+            //ex.printStackTrace();
         }
     }
 
