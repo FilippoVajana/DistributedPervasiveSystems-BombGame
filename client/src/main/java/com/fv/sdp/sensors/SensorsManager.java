@@ -16,6 +16,7 @@ public class SensorsManager
 {
     private ApplicationContext appContext;
     private DataBuffer dataBuffer;
+    private List<Thread> workThreadsList;
 
     public SensorsManager(ApplicationContext appContext)
     {
@@ -35,11 +36,25 @@ public class SensorsManager
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Starting sensors simulator", appContext.getPlayerInfo().getId()));
 
-        //start simulator
-        new Thread(new AccelerometerSimulator(dataBuffer)).start();
+        //init workers list
+        workThreadsList = new ArrayList<>();
 
-        //start sensor data monitor
-        new Thread(() -> monitorSensorBuffer(this.dataBuffer)).start();
+        //add simulator thread
+        workThreadsList.add(new Thread(new AccelerometerSimulator(dataBuffer)));
+
+        //add sensor data monitor thread
+        workThreadsList.add(new Thread(() -> monitorSensorBuffer(this.dataBuffer)));
+
+        //start workers
+        for (Thread t : workThreadsList)
+            t.start();
+    }
+
+    //stop sim
+    public void stopSensorsSimulator()
+    {
+        for (Thread t : workThreadsList)
+            t.interrupt();
     }
 
     //sensor data monitor
@@ -96,7 +111,7 @@ public class SensorsManager
         double EMA = EMA_prev + ALFA * (M - EMA_prev);
 
         //debug
-        System.err.println(String.format("Avg. : %f, EMA : %f", M, EMA));
+        //System.err.println(String.format("Avg. : %f, EMA : %f", M, EMA));
 
         //check for outliers
         if (EMA - EMA_prev > TH) //found outlier
