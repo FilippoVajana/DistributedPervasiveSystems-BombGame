@@ -58,8 +58,8 @@ public class GameManager
             PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", appContext.getPlayerInfo().getId(), newPlayer.getId()));
             appContext.RING_NETWORK.add(newPlayer);
         }
-        else
-            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added",appContext.getPlayerInfo().getId(), newPlayer.getId()));
+        //else
+            //PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added",appContext.getPlayerInfo().getId(), newPlayer.getId()));
 
         //send back ACK
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
@@ -334,7 +334,7 @@ public class GameManager
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Waiting new player notification ACK", appContext.getPlayerInfo().getId()));
 
-                ackWaitLock.wait(); //wait ACK
+                ackWaitLock.wait(1000); //wait ACK
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -401,7 +401,7 @@ public class GameManager
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Waiting movement ACK", this.getClass().getSimpleName()));
 
-                ackWaitLock.wait();
+                ackWaitLock.wait(1000);
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -553,7 +553,7 @@ public class GameManager
                 {
                     //log
                     PrettyPrinter.printTimestampLog(String.format("[%s] Waiting match end ACK", appContext.getPlayerInfo().getId()));
-                    ackWaitLock.wait();
+                    ackWaitLock.wait(1000);
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
