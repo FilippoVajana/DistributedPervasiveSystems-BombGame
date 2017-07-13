@@ -1,6 +1,8 @@
 package com.fv.sdp.resource;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -67,17 +69,18 @@ public class MatchResource
     @Path("/{matchId}/join")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response joinMatch(@PathParam("matchId") String matchId, String playerJson)
+    public Response joinMatch(@Context HttpServletRequest requestContext, @PathParam("matchId") String matchId, String playerJson)
     {
+        String clientIp = requestContext.getRemoteAddr();
+
         //parse Player from string
         Player player = new Gson().fromJson(playerJson, Player.class);
+        //player.setAddress(clientIp);//TODO: remove, a lot of problems with SocketConnector findNext()
 
         MatchModel model = MatchModel.getInstance();
         boolean opResult = model.addPlayerToMatch(matchId, player);
         if (opResult)
         {
-            //ConcurrentList<Player> pList = model.getMatch(matchId).getPlayers(); //TODO: remove
-
             //serialize json response
             Match match = model.getMatch(matchId);
             String responseJson = new Gson().toJson(match, Match.class);
