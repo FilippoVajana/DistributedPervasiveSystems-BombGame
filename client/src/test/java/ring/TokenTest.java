@@ -1,15 +1,12 @@
 package ring;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 import util.RingBuilder;
 
 import java.util.ArrayList;

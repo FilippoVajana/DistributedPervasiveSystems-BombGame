@@ -3,7 +3,6 @@ package com.fv.sdp.ring;
 import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
-import com.fv.sdp.sensors.SensorsManager;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
