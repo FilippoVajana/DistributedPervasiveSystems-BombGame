@@ -15,6 +15,7 @@ import java.util.List;
 public class SensorsManager
 {
     private ApplicationContext appContext;
+    private AccelerometerSimulator accelerometerSimulator;
     private DataBuffer dataBuffer;
     private List<Thread> workThreadsList;
 
@@ -40,7 +41,8 @@ public class SensorsManager
         workThreadsList = new ArrayList<>();
 
         //add simulator thread
-        workThreadsList.add(new Thread(new AccelerometerSimulator(dataBuffer)));
+        accelerometerSimulator = new AccelerometerSimulator(dataBuffer);
+        workThreadsList.add(new Thread(accelerometerSimulator));
 
         //add sensor data monitor thread
         workThreadsList.add(new Thread(() -> monitorSensorBuffer(this.dataBuffer)));
@@ -53,8 +55,8 @@ public class SensorsManager
     //stop sim
     public void stopSensorsSimulator()
     {
-        for (Thread t : workThreadsList)
-            t.interrupt();
+        //stop sensor sim
+        accelerometerSimulator.stopMeGently();
     }
 
     //sensor data monitor
