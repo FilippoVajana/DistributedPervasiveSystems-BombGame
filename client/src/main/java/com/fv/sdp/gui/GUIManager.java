@@ -50,6 +50,14 @@ public class GUIManager
 
         while (true)
         {
+            try
+            {
+                Thread.sleep(500);
+            }catch (Exception ex)
+            {
+                continue;
+            }
+
             System.out.println("\n\n### Choose an action ###\n");
             System.out.println("[1] - Set nickname");
             System.out.println("[2] - Show matches");
@@ -116,18 +124,29 @@ public class GUIManager
         System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
     }
     //show available match
-    public void showMatch() //TODO: check input
+    public void showMatch()//TODO: test
     {
         System.out.println("Retrieving available matches . . .");
         //get list
-        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
+        ArrayList<Match> matchList = new ArrayList<>();
+        try
+        {
+            matchList = new RESTConnector(appContext).getServerMatchList();
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error retrieving match list");
+            return;
+        }
+
 
         System.out.println("Available matches: ");
         for (int i = 0; i < matchList.size(); i++)
         {
             try
             {
-                System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                //System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                System.out.print(i + ")");;
+                PrettyPrinter.printMatchDetails(matchList.get(i));
             }catch (NullPointerException ex)
             {
                 System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
@@ -135,7 +154,7 @@ public class GUIManager
         }
     }
     //create match
-    public boolean createMatch()
+    public void createMatch()
     {
         Match match = new Match();
         match.setPlayers(new ConcurrentList<>());  //set empty player
@@ -211,9 +230,14 @@ public class GUIManager
             }
         }
 
-        boolean creationResult = new RESTConnector(appContext).createServerMatch(match);
-
-        return creationResult;
+        try
+        {
+            new RESTConnector(appContext).createServerMatch(match);
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error creating new match");
+            return;
+        }
     }
     //enter match
     public boolean joinMatch()
@@ -222,14 +246,24 @@ public class GUIManager
 
         System.out.println("Retrieving available matches . . .");
         //get list
-        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
+        ArrayList<Match> matchList = new ArrayList<>();
+        try
+        {
+            matchList = new RESTConnector(appContext).getServerMatchList();
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error retrieving match list");
+            return false;
+        }
 
         System.out.println("Available matches: ");
         for (int i = 0; i < matchList.size(); i++)
         {
             try
             {
-                System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                //System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                System.out.print(i + ")");
+                PrettyPrinter.printMatchDetails(matchList.get(i));
             }catch (NullPointerException ex)
             {
                 System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
@@ -237,7 +271,7 @@ public class GUIManager
         }
 
         //choose match
-        int index = 0;
+        int index;
         while (true)
         {
             System.out.println("Select match index: ");
@@ -260,7 +294,15 @@ public class GUIManager
 
         //enter match
         Player player = appContext.getPlayerInfo();
-        boolean joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player);
+        boolean joinResult;
+        try
+        {
+            joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player);
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error joining match");
+            return false;
+        }
 
         //set match
         if (joinResult)
