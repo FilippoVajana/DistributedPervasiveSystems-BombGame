@@ -38,6 +38,11 @@ public class ApplicationContext
         //endpoints
         REST_ENDPOINTS.put("Match", "match");
     }
+    public void setREST_BASE_URL(String serverIp, int serverPort)
+    {
+        String url = String.format("http://%s:%d/server_war_exploded/", serverIp, serverPort);
+        REST_BASE_URL = url;
+    }
 
     //RING
     public ConcurrentList<Player> RING_NETWORK;
