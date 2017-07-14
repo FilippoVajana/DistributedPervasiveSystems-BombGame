@@ -813,9 +813,9 @@ public class GameManager
                 synchronized (hasTokenSignal)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
+                    //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
 
-                    hasTokenSignal.wait();
+                    hasTokenSignal.wait(1000);
                 }
             } catch (InterruptedException e)
             {
@@ -836,7 +836,7 @@ public class GameManager
             try
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
+                //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
 
                 synchronized (queueSignal)
                 {

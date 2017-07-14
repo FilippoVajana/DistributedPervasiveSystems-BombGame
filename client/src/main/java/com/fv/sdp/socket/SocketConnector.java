@@ -313,14 +313,14 @@ class SocketListenerRunner implements Runnable
     {
         try
         {
-            runListener(); //listening loop
+            readInputMessage(); //listening loop
         }catch (Exception ex)
         {
             ex.printStackTrace();
         }
     }
 
-    private void runListener() throws Exception
+    private void readInputMessage() throws Exception
     {
         //log
         //PrettyPrinter.printTimestampLog(String.format("[%s] Handling client %s:%d", this.getClass().getSimpleName(), client.getInetAddress().getHostAddress(), client.getPort()));
