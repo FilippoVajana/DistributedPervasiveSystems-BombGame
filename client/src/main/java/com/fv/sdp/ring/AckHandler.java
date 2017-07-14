@@ -55,7 +55,7 @@ public class AckHandler implements IMessageHandler
     public synchronized void handle(RingMessage receivedMessage)
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Handling ACK %s", appContext.getPlayerInfo().getId(), receivedMessage.getId()));
+        //PrettyPrinter.printTimestampLog(String.format("[%s] Handling ACK %s", appContext.getPlayerInfo().getId(), receivedMessage.getId()));
 
         //decrement ack count
         try
@@ -76,7 +76,7 @@ public class AckHandler implements IMessageHandler
             synchronized (moduleLock)
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK queue %s", appContext.getPlayerInfo().getId(),  receivedMessage.getId()));
+                //PrettyPrinter.printTimestampLog(String.format("[%s] Clearing ACK queue %s", appContext.getPlayerInfo().getId(),  receivedMessage.getId()));
 
                 //notify action module (GameHandler/TokenHandler)
                 moduleLock.notify();

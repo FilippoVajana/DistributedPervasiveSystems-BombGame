@@ -58,8 +58,8 @@ public class GameManager
             PrettyPrinter.printTimestampLog(String.format("[%s] Added player %s", appContext.getPlayerInfo().getId(), newPlayer.getId()));
             appContext.RING_NETWORK.add(newPlayer);
         }
-        else
-            PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added",appContext.getPlayerInfo().getId(), newPlayer.getId()));
+        //else
+            //PrettyPrinter.printTimestampLog(String.format("[%s] Player %s already added",appContext.getPlayerInfo().getId(), newPlayer.getId()));
 
         //send back ACK
         RingMessage response = new RingMessage(MessageType.ACK, message.getId());
@@ -283,7 +283,7 @@ public class GameManager
         Player player = new Gson().fromJson(playerData, Player.class);
 
         //push player in bomb kill queue
-        ConcurrentObservableQueue<Player> queue = bombKillQueueMap.get(explosionId);
+        ConcurrentObservableQueue<Player> queue = explosionKillQueueMap.get(explosionId);
 
         //log
         //PrettyPrinter.printTimestampLog(String.format("[%s] Push bomb kill %s", appContext.getPlayerInfo().getId(), explosionId));
@@ -334,7 +334,7 @@ public class GameManager
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Waiting new player notification ACK", appContext.getPlayerInfo().getId()));
 
-                ackWaitLock.wait(); //wait ACK
+                ackWaitLock.wait(1000); //wait ACK
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -401,7 +401,7 @@ public class GameManager
                 //log
                 PrettyPrinter.printTimestampLog(String.format("[%s] Waiting movement ACK", this.getClass().getSimpleName()));
 
-                ackWaitLock.wait();
+                ackWaitLock.wait(1000);
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -497,7 +497,7 @@ public class GameManager
         try
         {
             //start bomb kill monitor
-            new Thread(() -> monitorBombQueue(explosionMessage.getId())).start();
+            new Thread(() -> monitorExplosionKillQueue(explosionMessage.getId())).start();
             Thread.sleep(5000);
         } catch (InterruptedException e)
         {
@@ -535,9 +535,9 @@ public class GameManager
         //build message
         String endMessageContent = "GAME-END";
         RingMessage endMessage = new RingMessage(MessageType.GAME, RandomIdGenerator.getRndId(), endMessageContent);
-        //endMessage.setNeedToken(false); //TODO: check
+        endMessage.setNeedToken(false); //TODO: check
 
-        //build ack queue
+        // build ack queue
         Object ackWaitLock = new Object();
         appContext.ACK_HANDLER.addPendingAck(endMessage.getId(), appContext.RING_NETWORK.size(), ackWaitLock);
 
@@ -617,9 +617,12 @@ public class GameManager
             return false;
         }
 
+        //start sensor simulator
+        appContext.SENSOR_MANAGER.startSensorsSimulator();
+
         return true;
     }
-    public boolean leaveMatchGrid() //TODO: rest call
+    public boolean leaveMatchGrid()
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Leaving match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
@@ -636,7 +639,7 @@ public class GameManager
                 synchronized (tokenStoreSignal)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getId()));
+                    //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getId()));
                     tokenStoreSignal.wait(1000);
                 }
             }catch (Exception ex)
@@ -699,6 +702,22 @@ public class GameManager
 
         return true;
     }
+    public boolean addBomb(GridBomb bomb)
+    {
+        try
+        {
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Added new bomb", appContext.getPlayerInfo().getId()));
+
+            gameEngine.pushBomb(bomb);
+            return true;
+        }catch (Exception ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] ERROR adding bomb: %s", appContext.getPlayerInfo().getId(), ex.getMessage()));
+            return false;
+        }
+    }
     public boolean releaseBomb() //bloccante
     {
         //get first bomb
@@ -751,7 +770,7 @@ public class GameManager
     public boolean winMatch()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Win match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
+        //PrettyPrinter.printTimestampLog(String.format("[%s] Win match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
         //end match procedure
         new Thread(() -> endMatch()).start();
@@ -762,7 +781,7 @@ public class GameManager
 
     //HELPER METHOD
     private ConcurrentObservableQueue<GridPosition> occupiedPositions;
-    private Map<String, ConcurrentObservableQueue<Player>> bombKillQueueMap = new HashMap<>();
+    private Map<String, ConcurrentObservableQueue<Player>> explosionKillQueueMap = new HashMap<>();
 
     private boolean checkVictoryCondition()
     {
@@ -794,7 +813,7 @@ public class GameManager
                 synchronized (hasTokenSignal)
                 {
                     //log
-                    PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
+                    //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting token", appContext.getPlayerInfo().getCompleteAddress()));
 
                     hasTokenSignal.wait(1000);
                 }
@@ -817,7 +836,7 @@ public class GameManager
             try
             {
                 //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
+                //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
 
                 synchronized (queueSignal)
                 {
@@ -859,15 +878,15 @@ public class GameManager
         //leave match
         leaveMatchGrid();
     }
-    private void monitorBombQueue(String bombExplosionMessageId) //run on bomb source player
+    private void monitorExplosionKillQueue(String bombExplosionMessageId) //run on bomb source player
     {
         //log
         PrettyPrinter.printTimestampLog(String.format("[%s] Started Bomb(%s) kills monitor", appContext.getPlayerInfo().getId(), bombExplosionMessageId));
 
 
         //put into bomb kill map
-        bombKillQueueMap.put(bombExplosionMessageId, new ConcurrentObservableQueue<>());
-        ConcurrentObservableQueue<Player> killQueue = bombKillQueueMap.get(bombExplosionMessageId);
+        explosionKillQueueMap.put(bombExplosionMessageId, new ConcurrentObservableQueue<>());
+        ConcurrentObservableQueue<Player> killQueue = explosionKillQueueMap.get(bombExplosionMessageId);
 
         //wait all bomb kill response
         while (killQueue.size() != appContext.RING_NETWORK.size())
@@ -876,8 +895,8 @@ public class GameManager
             {
                 try
                 {
-                    System.err.println("queue size: " + killQueue.size());
-                    killQueue.getQueueSignal().wait(2000);
+                    //System.err.println("queue size: " + killQueue.size());
+                    killQueue.getQueueSignal().wait();
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
@@ -913,20 +932,23 @@ public class GameManager
         }
 
         //clean queue map
-        bombKillQueueMap.remove(bombExplosionMessageId);
+        explosionKillQueueMap.remove(bombExplosionMessageId);
     }
     private boolean endMatch()
     {
         //match end
         PrettyPrinter.printTimestampLog(String.format("[%s] Ending match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
+        //stop sensors simulator
+        appContext.SENSOR_MANAGER.stopSensorsSimulator();
+
         //notify gui
         appContext.GUI_MANAGER.notifyPlayerWin();
 
-        //notify rest//TODO
+        //notify rest
         appContext.REST_CONNECTOR.deleteMatch(appContext.PLAYER_MATCH);
 
-        //notify ring  -> hard exit
+        //notify ring
         notifyEndMatch();
 
         //node shutdown
@@ -967,6 +989,7 @@ class GameEngine
 
         //init grid
         gameGrid = new Grid(match.getEdgeLength());
+        gameGrid.setPlayerPosition(new GridPosition(-1, -1));
 
         //init player score
         playerScore = 0;
@@ -1096,34 +1119,9 @@ class GameEngine
         return playerPosition;
     }
 
-    //Data Analysis
-    private final double ALFA = 1;
-    private final double TH = 10;
-    private double EMA_prev = 0;
-
-    public void checkSensorData(int[] data) //TODO: check input type
+    public void pushBomb(GridBomb bomb)
     {
-        //compute average
-        double M = 0;
-        for (int d : data)
-            M+= d;
-        M = M/data.length;
-
-        //compute EMA
-        double EMA = EMA_prev + ALFA * (M - EMA_prev);
-
-        //debug
-        System.err.println(String.format("Avg. : %d, EMA : %d", M, EMA));
-
-        //check for outliers
-        if (EMA - EMA_prev > TH) //found outlier
-        {
-            //build new bomb
-            GridBomb bomb = new GridBomb(EMA);
-
-            //store bomb
-            availableBombsQueue.push(bomb);
-        }
+        availableBombsQueue.push(bomb);
     }
 }
 

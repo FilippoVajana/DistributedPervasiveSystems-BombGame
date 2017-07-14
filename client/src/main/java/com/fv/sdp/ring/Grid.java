@@ -1,7 +1,5 @@
 package com.fv.sdp.ring;
 
-import com.fv.sdp.util.PrettyPrinter;
-
 import javax.validation.constraints.NotNull;
 
 public class Grid

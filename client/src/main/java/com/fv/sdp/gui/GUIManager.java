@@ -11,7 +11,6 @@ import com.fv.sdp.util.PrettyPrinter;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 /**
@@ -44,6 +43,7 @@ public class GUIManager
         System.out.println("### Welcome to TokenBombRing Land ###");
     }
 
+    private boolean inputLock = false;
     //main menu
     public void showMenu()
     {
@@ -51,12 +51,24 @@ public class GUIManager
 
         while (true)
         {
+            try
+            {
+                Thread.sleep(500);
+            }catch (Exception ex)
+            {
+                continue;
+            }
+
+            if (inputLock)
+                break;
+
             System.out.println("\n\n### Choose an action ###\n");
             System.out.println("[1] - Set nickname");
             System.out.println("[2] - Show matches");
             System.out.println("[3] - Create new match");
             System.out.println("[4] - Enter existing match");
             System.out.println("[5] - Exit application");
+            System.out.println("[6] - Reset server");
 
             System.out.print("Enter option num: ");
             int option = inputReader.nextInt();
@@ -78,16 +90,11 @@ public class GUIManager
                 case 5:
                     exitApplication();
                     return;
+                case 6:
+                    appContext.REST_CONNECTOR.resetServer();
             }
         }
     }
-
-    private void exitApplication()
-    {
-        //node shutdown
-        appContext.NODE_MANAGER.shutdownNode();
-    }
-
     //set nickname
     public void setNickname()
     {
@@ -114,18 +121,29 @@ public class GUIManager
         System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
     }
     //show available match
-    public void showMatch()
+    public void showMatch()//TODO: test
     {
         System.out.println("Retrieving available matches . . .");
         //get list
-        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
+        ArrayList<Match> matchList = new ArrayList<>();
+        try
+        {
+            matchList = new RESTConnector(appContext).getServerMatchList();
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error retrieving match list");
+            return;
+        }
+
 
         System.out.println("Available matches: ");
         for (int i = 0; i < matchList.size(); i++)
         {
             try
             {
-                System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                //System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                System.out.print(i + ")");;
+                PrettyPrinter.printMatchDetails(matchList.get(i));
             }catch (NullPointerException ex)
             {
                 System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
@@ -133,7 +151,7 @@ public class GUIManager
         }
     }
     //create match
-    public boolean createMatch()
+    public void createMatch()
     {
         Match match = new Match();
         match.setPlayers(new ConcurrentList<>());  //set empty player
@@ -209,9 +227,14 @@ public class GUIManager
             }
         }
 
-        boolean creationResult = new RESTConnector(appContext).createServerMatch(match);
-
-        return creationResult;
+        try
+        {
+            new RESTConnector(appContext).createServerMatch(match);
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error creating new match");
+            return;
+        }
     }
     //enter match
     public boolean joinMatch()
@@ -220,14 +243,24 @@ public class GUIManager
 
         System.out.println("Retrieving available matches . . .");
         //get list
-        ArrayList<Match> matchList = new RESTConnector(appContext).getServerMatchList();
+        ArrayList<Match> matchList = new ArrayList<>();
+        try
+        {
+            matchList = new RESTConnector(appContext).getServerMatchList();
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error retrieving match list");
+            return false;
+        }
 
         System.out.println("Available matches: ");
         for (int i = 0; i < matchList.size(); i++)
         {
             try
             {
-                System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                //System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
+                System.out.print(i + ")");
+                PrettyPrinter.printMatchDetails(matchList.get(i));
             }catch (NullPointerException ex)
             {
                 System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
@@ -235,7 +268,7 @@ public class GUIManager
         }
 
         //choose match
-        int index = 0;
+        int index;
         while (true)
         {
             System.out.println("Select match index: ");
@@ -258,7 +291,15 @@ public class GUIManager
 
         //enter match
         Player player = appContext.getPlayerInfo();
-        boolean joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player);
+        boolean joinResult;
+        try
+        {
+            joinResult = new RESTConnector(appContext).joinServerMatch(matchList.get(index), player);
+        }catch (Exception ex)
+        {
+            PrettyPrinter.printTimestampError("Error joining match");
+            return false;
+        }
 
         //set match
         if (joinResult)
@@ -270,13 +311,38 @@ public class GUIManager
             //System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
         return false;
     }
-
-    private boolean inputLock = false;
-    public void play() //TODO: test, add status feedback
+    //play game
+    public void play()
     {
         Scanner inputReader = new Scanner(System.in);
-        while(inputLock == false)
+        while(true)
         {
+            //check token
+            try
+            {
+                while (appContext.TOKEN_MANAGER.isHasToken() == false) //no token
+                {
+                    //token signal
+                    Object tokenSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
+                    synchronized (tokenSignal)
+                    {
+                        tokenSignal.wait();
+                    }
+                }
+            }catch (Exception ex)
+            {
+                PrettyPrinter.printTimestampError(String.format("[%s] ERROR play() wait token", appContext.getPlayerInfo().getId()));
+            }
+
+            if (inputLock)
+                return;
+
+            //visual feedback
+            System.out.println(String.format("\n\n### %s, CHOOSE ACTION ###", appContext.getPlayerInfo().getId()));
+            System.out.println(String.format("### POSITION: (%d,%d) ###", appContext.GAME_MANAGER.getPlayerPosition().x, appContext.GAME_MANAGER.getPlayerPosition().y));
+            System.out.println(String.format("### SCORE: %d ###", appContext.GAME_MANAGER.getPlayerScore()));
+            System.out.println(String.format("### BOMBS: %d ###", appContext.GAME_MANAGER.getBombQueue().size()));
+
             //read input
            String input = inputReader.nextLine().toUpperCase();
 
@@ -296,7 +362,9 @@ public class GUIManager
                     appContext.GAME_MANAGER.movePlayer(input);
                     break;
                 case "B":
-                    appContext.GAME_MANAGER.releaseBomb();
+                    boolean release = appContext.GAME_MANAGER.releaseBomb();
+                    if (release == false)
+                        System.out.println("### INVALID ACTION ###");
                     break;
                 default:
                     System.out.println("Invalid Input");
@@ -357,5 +425,10 @@ public class GUIManager
     public void notifyMove(GridPosition playerPosition)
     {
         System.out.println(String.format("### %s, MOVED TO (%d,%d) ###", appContext.getPlayerInfo().getId(), playerPosition.x, playerPosition.y));
+    }
+    private void exitApplication()
+    {
+        //node shutdown
+        appContext.NODE_MANAGER.shutdownNode();
     }
 }

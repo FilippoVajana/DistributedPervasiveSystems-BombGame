@@ -8,8 +8,10 @@ import com.fv.sdp.ring.AckHandler;
 import com.fv.sdp.ring.GameManager;
 import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.ring.TokenManager;
+import com.fv.sdp.sensors.SensorsManager;
 import com.fv.sdp.socket.SocketConnector;
 import com.fv.sdp.util.ConcurrentList;
+
 import java.util.HashMap;
 
 public class ApplicationContext
@@ -36,6 +38,11 @@ public class ApplicationContext
         //endpoints
         REST_ENDPOINTS.put("Match", "match");
     }
+    public void setREST_BASE_URL(String serverIp, int serverPort)
+    {
+        String url = String.format("http://%s:%d/server_war_exploded/", serverIp, serverPort);
+        REST_BASE_URL = url;
+    }
 
     //RING
     public ConcurrentList<Player> RING_NETWORK;
@@ -48,6 +55,7 @@ public class ApplicationContext
     public GameManager GAME_MANAGER;
     public TokenManager TOKEN_MANAGER;
     public GUIManager GUI_MANAGER;
+    public SensorsManager SENSOR_MANAGER;
 
     //PLAYER
     public String PLAYER_NICKNAME;

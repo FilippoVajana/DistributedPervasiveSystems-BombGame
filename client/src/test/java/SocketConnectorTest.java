@@ -1,17 +1,13 @@
 import com.fv.sdp.ApplicationContext;
-import com.fv.sdp.model.Player;
 import com.fv.sdp.ring.NodeManager;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
 import com.fv.sdp.socket.SocketConnector;
-import com.fv.sdp.util.ConcurrentList;
-import com.fv.sdp.util.PrettyPrinter;
 import com.fv.sdp.util.RandomIdGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 import util.MockSocketClient;
-import util.MockSocketListener;
 import util.MockSocketObserver;
 import util.RingBuilder;
 

@@ -3,6 +3,7 @@ package com.fv.sdp.ring;
 import com.fv.sdp.ApplicationContext;
 import com.fv.sdp.gui.GUIManager;
 import com.fv.sdp.rest.RESTConnector;
+import com.fv.sdp.sensors.SensorsManager;
 import com.fv.sdp.socket.ISocketObserver;
 import com.fv.sdp.socket.MessageType;
 import com.fv.sdp.socket.RingMessage;
@@ -41,6 +42,21 @@ public class NodeManager implements ISocketObserver
         queueManager = new MessageQueueManager();
     }
 
+    public NodeManager(String ip, int port, String nickname)
+    {
+        //log
+        PrettyPrinter.printClassInit(this);
+
+        //init app context
+        appContext = new ApplicationContext();
+        appContext.NODE_MANAGER = this;
+        appContext.setREST_BASE_URL(ip, port);
+        appContext.PLAYER_NICKNAME = nickname;
+
+        //init queue manager
+        queueManager = new MessageQueueManager();
+    }
+
     public boolean startupNode()
     {
         try
@@ -53,6 +69,10 @@ public class NodeManager implements ISocketObserver
 
             //init rest connector
             appContext.REST_CONNECTOR = new RESTConnector(appContext);
+
+
+            //init sensor manager
+            appContext.SENSOR_MANAGER = new SensorsManager(appContext);
 
             //init ack handler
             ackHandler = new AckHandler(appContext);
