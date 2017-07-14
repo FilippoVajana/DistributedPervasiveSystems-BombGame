@@ -10,6 +10,8 @@ import com.fv.sdp.util.ConcurrentList;
 import com.fv.sdp.util.PrettyPrinter;
 
 import javax.validation.constraints.NotNull;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -291,6 +293,8 @@ public class GUIManager
 
         //enter match
         Player player = appContext.getPlayerInfo();
+        //set player public ip
+        //player.setAddress(getHostPublicIp());
         boolean joinResult;
         try
         {
@@ -311,6 +315,29 @@ public class GUIManager
             //System.out.println(String.format("Error joining match %s", matchList.get(index).getId()));
         return false;
     }
+
+    private String getHostPublicIp()
+    {
+        String ip = "";
+        try
+        {
+            InetAddress localHost = InetAddress.getLocalHost();
+            InetAddress[] addresses = InetAddress.getAllByName(localHost.getCanonicalHostName());
+
+            //select ip
+            for (InetAddress a : addresses)
+            {
+                if (a.getAddress()[2] == 1)
+                    ip = a.getHostAddress();
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return ip;
+    }
+
     //play game
     public void play()
     {

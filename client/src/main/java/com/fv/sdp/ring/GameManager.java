@@ -836,7 +836,7 @@ public class GameManager
             try
             {
                 //log
-                //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
+                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
 
                 synchronized (queueSignal)
                 {

@@ -44,7 +44,8 @@ public class SocketConnector
             //create listener
             listeningServer = new ServerSocket(listenerPort);
             //update session config
-            this.appContext.LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
+            //this.appContext.LISTENER_ADDR = listeningServer.getInetAddress().getHostAddress();
+            this.appContext.LISTENER_ADDR = getHostPublicIp();
             this.appContext.LISTENER_PORT = listeningServer.getLocalPort();
 
         }catch (Exception ex)
@@ -139,7 +140,7 @@ public class SocketConnector
         }catch (Exception ex)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("ERROR SENDING [%s - %s] TO %s:%d", message.getId(), message.getType(), destination.getAddress(), destination.getPort()));
+            PrettyPrinter.printTimestampLog(String.format("Error sending [%s - %s] to %s:%d", message.getId(), message.getType(), destination.getAddress(), destination.getPort()));
             try
             {
                 Thread.sleep(100);
@@ -243,6 +244,27 @@ public class SocketConnector
     }
 
     //HELPER
+    private String getHostPublicIp()
+    {
+        String ip = "";
+        try
+        {
+            InetAddress localHost = InetAddress.getLocalHost();
+            InetAddress[] addresses = InetAddress.getAllByName(localHost.getCanonicalHostName());
+
+            //select ip
+            for (InetAddress a : addresses)
+            {
+                if (a.getAddress()[2] == 1)
+                    ip = a.getHostAddress();
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return ip;
+    }
     private Player findNextNode()
     {
         Player thisNode = appContext.getPlayerInfo();
