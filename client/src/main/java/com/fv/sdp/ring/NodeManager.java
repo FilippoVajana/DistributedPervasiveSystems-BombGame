@@ -191,9 +191,6 @@ class MessageQueueManager
                     try
                     {
                         queueLock.wait(); //wait new message
-
-                        //debug
-                        //PrettyPrinter.printQueuePool(getQueuePool());
                     }catch (Exception ex)
                     {
                         ex.printStackTrace();
