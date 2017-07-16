@@ -71,11 +71,21 @@ public class MatchResource
     @Produces(MediaType.APPLICATION_JSON)
     public Response joinMatch(@Context HttpServletRequest requestContext, @PathParam("matchId") String matchId, String playerJson)
     {
-        String clientIp = requestContext.getRemoteAddr();
+        //TODO: presentazione
+        try
+        {
+            Thread.sleep(5000);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+
+        //String clientIp = requestContext.getRemoteAddr(); //lettura ip sorgente richiesta
 
         //parse Player from string
         Player player = new Gson().fromJson(playerJson, Player.class);
-        //player.setAddress(clientIp);//TODO: remove, a lot of problems with SocketConnector findNext()
+
 
         MatchModel model = MatchModel.getInstance();
         boolean opResult = model.addPlayerToMatch(matchId, player);
@@ -94,6 +104,17 @@ public class MatchResource
     @Consumes(MediaType.APPLICATION_JSON)
     public Response leaveMatch(@PathParam("matchId") String matchId, String playerJson)
     {
+        //TODO: presentazione
+        try
+        {
+            Thread.sleep(5000);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+
+
         //parse Player from string
         Player player = new Gson().fromJson(playerJson, Player.class);
 
