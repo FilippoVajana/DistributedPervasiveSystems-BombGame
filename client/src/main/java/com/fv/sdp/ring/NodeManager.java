@@ -104,7 +104,7 @@ public class NodeManager implements ISocketObserver
     public void shutdownNode()
     {
         //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Shutdown application, exit in 10 seconds", appContext.getPlayerInfo().getId()));
+        System.out.println(String.format("### [%s] Shutdown application, exit in 10 seconds ###", appContext.getPlayerInfo().getId()));
 
         //stop listener socket
         appContext.SOCKET_CONNECTOR.closeListenerSocket();

@@ -48,8 +48,8 @@ public class PrettyPrinter
         }
         System.out.println(String.format("Id: %s\n" +
                 "Players: %s\n" +
-                "Points_V: %d\n" +
-                "Points_E: %d\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
+                "Victory points: %d\n" +
+                "Grid edge: %d\n", match.getId(), playerDetails, match.getVictoryPoints(), match.getEdgeLength()));
     }
 
     public static void printPlayerDetails(Player player)
