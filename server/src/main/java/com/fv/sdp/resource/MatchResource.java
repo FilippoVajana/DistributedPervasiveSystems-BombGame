@@ -137,15 +137,18 @@ public class MatchResource
         MatchModel model = MatchModel.getInstance();
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
 
-        /*
-        //check for match cancellation //TODO: remove, make endpoint
+
+        //check for match cancellation
         Match match = model.getMatch(matchId);
-        if (match == null || match.getPlayers().getList().size() == 0)
+        if (match == null) //check match
+            return Response.noContent().build();
+
+        if (match.getPlayers().getList().size() == 0) //check for 0 players
             model.deleteMatch(matchId);
-        */
+
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
-        return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.noContent().build();
     }
 
     @DELETE
