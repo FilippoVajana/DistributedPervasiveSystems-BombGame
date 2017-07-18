@@ -24,8 +24,8 @@ public class RESTConnector
     private ApplicationContext appContext;
 
     private Client restClient = null;
-    private WebTarget restBaseUrl = null; //TODO: remove, use ApplicationContext
-    private Map<String, String> restEndpointsIndex = null; //TODO: remove
+    private WebTarget restBaseUrl = null;
+    private Map<String, String> restEndpointsIndex = null;
 
     public RESTConnector(@NotNull ApplicationContext appContext)
     {
@@ -50,22 +50,28 @@ public class RESTConnector
         //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
 
-        //invocation
-        Invocation.Builder invocation = matchTarget.request();
+        try
+        {
+            //invocation
+            Invocation.Builder invocation = matchTarget.request();
 
-        //make request
-        Response response = invocation.get();
+            //make request
+            Response response = invocation.get();
 
-        //read response payload
-        String entity = response.readEntity(String.class);
-        //System.out.println(entity);
+            //read response payload
+            String entity = response.readEntity(String.class);
 
-        //unpack json data
-        Type listType = new TypeToken<ArrayList<Match>>(){}.getType(); //sembra aver risolto il problema del riconoscimento tipi generics
-        Gson jsonizer = new Gson();
-        ArrayList<Match> matches = jsonizer.fromJson(entity, listType);
+            //unpack json data
+            Type listType = new TypeToken<ArrayList<Match>>(){}.getType(); //sembra aver risolto il problema del riconoscimento tipi generics
+            ArrayList<Match> matches = new Gson().fromJson(entity, listType);
 
-        return matches;
+            return matches;
+        }catch (Exception ex)
+        {
+            //log
+            PrettyPrinter.printTimestampError(String.format("[%s] Error getting server list", appContext.getPlayerInfo().getId()));
+            return new ArrayList<>();
+        }
     }
 
     public boolean joinServerMatch(Match match, Player player)
@@ -74,30 +80,33 @@ public class RESTConnector
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
         WebTarget joinTarget = matchTarget.path(String.format("%s/join", match.getId()));
 
-        //invocation
-        Invocation.Builder invocation = joinTarget.request();
-
-        //make request
-        String playerJson = new Gson().toJson(player, Player.class);
-        Response response = invocation.post(Entity.entity(playerJson, MediaType.APPLICATION_JSON));
-
-        //read response
-        if (response.getStatus() == 200)
+        try
         {
-            //read joined match
-            String joinedMatchJson = response.readEntity(String.class);
-            Match joinedMatch = new Gson().fromJson(joinedMatchJson, Match.class);
+            //invocation
+            Invocation.Builder invocation = joinTarget.request();
 
-            //notify ring
-            appContext.GAME_MANAGER.joinMatchGrid(player, joinedMatch);
+            //make request
+            String playerJson = new Gson().toJson(player, Player.class);
+            Response response = invocation.post(Entity.entity(playerJson, MediaType.APPLICATION_JSON));
 
-            return true;
-        }
-        else
+            //read response
+            if (response.getStatus() == 200)
+            {
+                //read joined match
+                String joinedMatchJson = response.readEntity(String.class);
+                Match joinedMatch = new Gson().fromJson(joinedMatchJson, Match.class);
+
+                //notify ring
+                appContext.GAME_MANAGER.joinMatchGrid(player, joinedMatch);
+
+                return true;
+            }
+            else
+                throw new Exception(response.getStatusInfo().getReasonPhrase());
+        }catch (Exception ex)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR joining match %s: %s", this.getClass().getSimpleName(), match.getId(), response.getStatusInfo().getReasonPhrase()));
-            //TODO: fault strategy
+            PrettyPrinter.printTimestampError(String.format("[%s] Error joining match %s: %s", appContext.getPlayerInfo().getId(), match.getId(), ex.getMessage()));
             return false;
         }
     }
@@ -107,28 +116,29 @@ public class RESTConnector
         //set web target
         WebTarget matchTarget = restBaseUrl.path(restEndpointsIndex.get("Match"));
 
-        //invocation
-        Invocation.Builder invocation = matchTarget.request();
+        try
+        {
+            //invocation
+            Invocation.Builder invocation = matchTarget.request();
 
-        //make request
-        //String matchJson = new Gson().toJson(match, new TypeToken<Match>(){}.getType());
-        Response response = invocation.post(Entity.entity(match, MediaType.APPLICATION_JSON)); //todo change to String + Gson
+            //make request
+            Response response = invocation.post(Entity.entity(match, MediaType.APPLICATION_JSON));
 
-        //read response
-        if (response.getStatus() == 201)
+            //read response
+            if (response.getStatus() == 201)
+            {
+                //log
+                PrettyPrinter.printTimestampLog(String.format("[%s] Created REST match", appContext.getPlayerInfo().getId(), match.getId()));
+                return true;
+            }
+            else
+                throw new Exception(response.getStatusInfo().getReasonPhrase());
+        }catch (Exception ex)
         {
             //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] Created REST match", appContext.getPlayerInfo().getId(), match.getId()));
-            return true;
-        }
-        else
-        {
-            //log
-            PrettyPrinter.printTimestampLog(String.format("[%s] ERROR creating match %s: %s", this.getClass().getSimpleName(), match.getId(), response.getStatusInfo().getReasonPhrase()));
-            //TODO: fault strategy
+            PrettyPrinter.printTimestampError(String.format("[%s] Error creating match %s: %s", appContext.getPlayerInfo().getId(), match.getId(), ex.getMessage()));
             return false;
         }
-
     }
 
     public boolean leaveServerMatch(Match match, Player player)
@@ -162,7 +172,7 @@ public class RESTConnector
        }catch (Exception ex)
        {
            //log
-           PrettyPrinter.printTimestampError(String.format("[%s] ERROR leaving match %s: %s", appContext.getPlayerInfo().getId(), match.getId(), ex.getMessage()));
+           PrettyPrinter.printTimestampError(String.format("[%s] Error leaving match %s: %s", appContext.getPlayerInfo().getId(), match.getId(), ex.getMessage()));
            //TODO: fault strategy
            return false;
        }
@@ -230,7 +240,7 @@ public class RESTConnector
         }catch (Exception ex)
         {
             //log
-            PrettyPrinter.printTimestampError(String.format("[%s] ERROR resetting server", appContext.getPlayerInfo().getId()));
+            PrettyPrinter.printTimestampError(String.format("[%s] Error resetting server", appContext.getPlayerInfo().getId()));
         }
     }
 }

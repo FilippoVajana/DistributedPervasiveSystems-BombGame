@@ -42,7 +42,7 @@ public class GUIManager
     //welcome message
     public void welcome()
     {
-        System.out.println("### Welcome to TokenBombRing Land ###");
+        System.out.println("### Welcome ###");
     }
 
     private boolean inputLock = false;
@@ -74,6 +74,8 @@ public class GUIManager
 
             System.out.print("Enter option num: ");
             int option = inputReader.nextInt();
+                System.out.println("\n");
+
             switch (option)
             {
                 case 1:
@@ -123,7 +125,7 @@ public class GUIManager
         System.out.println("Nickname set to " + appContext.PLAYER_NICKNAME);
     }
     //show available match
-    public void showMatch()//TODO: test
+    public void showMatch()
     {
         System.out.println("Retrieving available matches . . .");
         //get list
@@ -143,9 +145,9 @@ public class GUIManager
         {
             try
             {
-                //System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
-                System.out.print(i + ")");;
+                System.out.println(String.format("[%d]", i));
                 PrettyPrinter.printMatchDetails(matchList.get(i));
+                System.out.println("\n");
             }catch (NullPointerException ex)
             {
                 System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));
@@ -260,9 +262,9 @@ public class GUIManager
         {
             try
             {
-                //System.out.println(String.format("[%d] %s [players: %d]", i, matchList.get(i).getId(), matchList.get(i).getPlayers().getList().size()));
-                System.out.print(i + ")");
+                System.out.println(String.format("[%d]", i));
                 PrettyPrinter.printMatchDetails(matchList.get(i));
+                System.out.println("\n");
             }catch (NullPointerException ex)
             {
                 System.out.println(String.format("[%d] %s [players: 0]", i, matchList.get(i).getId()));

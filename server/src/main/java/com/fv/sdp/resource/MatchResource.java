@@ -14,6 +14,7 @@ import  com.fv.sdp.model.Match;
 import com.fv.sdp.model.Player;
 import com.fv.sdp.util.ConcurrentList;
 import com.google.gson.Gson;
+import com.sun.org.apache.regexp.internal.RE;
 
 import java.util.ArrayList;
 
@@ -38,19 +39,34 @@ public class MatchResource
     }
 
     @GET
+    @Path("/{matchId}/info")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMatchDetail(@PathParam("matchId") String matchId)
+    {
+        MatchModel model = MatchModel.getInstance();
+
+        //get match
+        Match match = model.getMatch(matchId);
+        if (match != null)
+            return Response.ok().entity(new Gson().toJson(match, Match.class)).build();
+        else
+            return Response.noContent().build();
+    }
+
+    @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllMatches()
     {
         MatchModel model = MatchModel.getInstance();
         ArrayList<Match> matches = model.getMatchesList();
-        Gson jsonizer = new Gson();
 
-        return Response.ok().entity(jsonizer.toJson(matches)).build();
+        return Response.ok().entity(new Gson().toJson(matches)).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createMatch(Match match) //todo change with String + Gson
+    public Response createMatch(Match match)
     {
         //deserialize json string
 
@@ -121,15 +137,18 @@ public class MatchResource
         MatchModel model = MatchModel.getInstance();
         boolean playerRemoveResult = model.removePlayerFromMatch(matchId, player.getId());
 
-        /*
-        //check for match cancellation //TODO: remove, make endpoint
+
+        //check for match cancellation
         Match match = model.getMatch(matchId);
-        if (match == null || match.getPlayers().getList().size() == 0)
+        if (match == null) //check match
+            return Response.noContent().build();
+
+        if (match.getPlayers().getList().size() == 0) //check for 0 players
             model.deleteMatch(matchId);
-        */
+
         if (playerRemoveResult)
             return Response.status(Response.Status.OK).build();
-        return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.noContent().build();
     }
 
     @DELETE
