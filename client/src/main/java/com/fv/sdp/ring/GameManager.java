@@ -245,7 +245,7 @@ public class GameManager
         if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //player dead
             playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
         else
-            playerJson = new Gson().toJson(new Player(), Player.class); //player alive //TODO: add check for position==null (match join)
+            playerJson = new Gson().toJson(new Player(), Player.class); //player alive
 
         bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#%s", playerJson));
         bombKillMessage.setNeedToken(false);
@@ -647,16 +647,18 @@ public class GameManager
                 PrettyPrinter.printTimestampError(String.format("[%s] %s", appContext.getPlayerInfo().getId(), ex.getMessage()));
             }
         }
-
-        //leave match procedures
-        if (appContext.RING_NETWORK.size() > 1) //check if last player //TODO: lock token module
+        synchronized (appContext.TOKEN_MANAGER.getModuleLock())
         {
-            //notify
-            notifyLeave(appContext.getPlayerInfo());
-
-            //release token
-            appContext.TOKEN_MANAGER.releaseToken();
+            //leave match procedures
+            if (appContext.RING_NETWORK.size() > 1) //check if last player
+            {
+                //notify
+                notifyLeave(appContext.getPlayerInfo());
+            }
         }
+
+        //release token
+        appContext.TOKEN_MANAGER.releaseToken();
 
         //clean app context
         appContext.NODE_MANAGER.shutdownNode();
