@@ -628,7 +628,7 @@ public class GameManager
         PrettyPrinter.printTimestampLog(String.format("[%s] Leaving match %s", appContext.getPlayerInfo().getId(), appContext.PLAYER_MATCH.getId()));
 
         //call rest connector leave server
-        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo()); 
+        appContext.REST_CONNECTOR.leaveServerMatch(appContext.PLAYER_MATCH, appContext.getPlayerInfo());
 
         //wait token
         Object tokenStoreSignal = appContext.TOKEN_MANAGER.getTokenStoreSignal();
@@ -649,7 +649,7 @@ public class GameManager
         }
 
         //leave match procedures
-        if (appContext.RING_NETWORK.size() > 1) //check if last player
+        if (appContext.RING_NETWORK.size() > 1) //check if last player //TODO: lock token module
         {
             //notify
             notifyLeave(appContext.getPlayerInfo());
@@ -828,36 +828,36 @@ public class GameManager
         {
             //send message
             appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
-        }
-
-        //loop on response
-        while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size()) //TODO: put into loop
-        {
-            try
+            //loop on response
+            while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size())
             {
-                //log
-                PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
-
-                synchronized (queueSignal)
+                try
                 {
-                    //wait response
-                    queueSignal.wait(1000);
-                }
+                    //log
+                    //PrettyPrinter.printTimestampLog(String.format("[%s] Waiting all CHECK-POSITION responses", appContext.getPlayerInfo().getCompleteAddress()));
 
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
+                    synchronized (queueSignal)
+                    {
+                        //wait response
+                        queueSignal.wait(1000);
+                    }
+
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
             }
+
+            //compute position
+            GridPosition playerStartingPosition = gameEngine.setStartingPosition(occupiedPositions);
+
+            //clean occupied positions
+            occupiedPositions = null;
+
+            //log
+            PrettyPrinter.printTimestampLog(String.format("[%s] Start at position (%d,%d)", appContext.getPlayerInfo().getId(), playerStartingPosition.x, playerStartingPosition.y));
         }
 
-        //compute position
-        GridPosition playerStartingPosition = gameEngine.setStartingPosition(occupiedPositions);
-
-        //clean occupied positions
-        occupiedPositions = null;
-
-        //log
-        PrettyPrinter.printTimestampLog(String.format("[%s] Player %s start at position (%d,%d)", appContext.getPlayerInfo().getCompleteAddress(), appContext.getPlayerInfo().getId(), playerStartingPosition.x, playerStartingPosition.y));
     }
     private void addPlayerToGrid()
     {
