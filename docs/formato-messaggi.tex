@@ -1,0 +1,127 @@
+\documentclass[a4paper]{report}
+\usepackage[margin=2cm]{geometry}
+\usepackage[italian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[ruled, boxed]{algorithm2e}
+\usepackage{algpseudocode}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage[table,xcdraw]{xcolor}
+
+\begin{document}
+
+\chapter{Protocollo messaggi}
+Per ogni azione del client è definito un protocollo per lo scambio dei messaggi, sia per comunicazioni \textbf{N2N} (\textit{node-to-node}) che \textbf{N2S} (\textit{node-to-server}).
+
+\section{Node To Server}
+
+Questa tipologia di comunicazione vede come entità coinvolte il client del giocatore e il server REST deputato alla gestione delle partite.\newline
+Il server REST espone le proprie risorse all'URL \textbf{http://server\_root:8080/server\_war\_exploded/match/}
+\begin{table}[h]
+	\centering
+	\caption{Risorse REST}
+	\label{rest-endpoint}
+	{\renewcommand{\arraystretch}{1.8}
+	\begin{tabular}{@{}lllll@{}}
+		\toprule
+		\rowcolor[HTML]{FFCCC9}
+		Risorsa        & Percorso          & Metodo REST & Input                                                                      & Output                                                                              \\ \midrule
+		Dettagli match & /(matchId)/info   & GET         & String matchId                                                             & \begin{tabular}[c]{@{}l@{}}ok(Match)\\ noContent()\end{tabular}                     \\ \midrule
+		Lista match    & /                 & GET         &                                                                            & ok(List\textless Match\textgreater)                                                  \\ \midrule
+		Crea match     & /                 & POST        & Match match                                                                & \begin{tabular}[c]{@{}l@{}}notAcceptable()\\ created()\\ notModified()\end{tabular} \\ \midrule
+		Entra in match & /(matchId)/join   & POST        & \begin{tabular}[c]{@{}l@{}}String matchId\\ String playerJson\end{tabular} & \begin{tabular}[c]{@{}l@{}}ok(Match)\\ badRequest()\end{tabular}                    \\ \midrule
+		Lascia match   & /(matchId)/leave  & POST        & \begin{tabular}[c]{@{}l@{}}String matchId\\ String playerJson\end{tabular} & \begin{tabular}[c]{@{}l@{}}noContent()\\ ok()\end{tabular}                          \\ \midrule
+		Rimuovi match  & /(matchId)/delete & DELETE      & String matchId                                                             & \begin{tabular}[c]{@{}l@{}}ok()\\ notFound()\end{tabular}                           \\ \bottomrule
+	\end{tabular}	
+	}
+\end{table}
+\clearpage
+
+\section{Node To Node}
+Le comunicazioni N2N avvengono all'interno di una rete \textbf{Token Ring} sfruttando il protocollo di trasporto \textbf{TCP}.
+
+\subsection{Modello messaggi}
+Per modellare i messaggi scambiati tra i vari nodi della rete è stata definita la classe \textbf{RingMessage}. Ogni messaggio è caratterizzato dalle seguenti proprietà:
+\begin{itemize}
+	\item \textit{MessageType} \textbf{type};
+	\item \textit{String} \textbf{sourceAddress};
+	\item \textit{String} \textbf{id};
+	\item \textit{String} \textbf{content};
+\end{itemize}
+\textbf{\underline{Nota}:} il campo sourceAddress segue la convenzione \textit{ip:port}.
+La tipologia di messaggio viene definita nell'enumerazione \textbf{MessageType} che comprende le seguenti tipologie:
+\begin{itemize}
+	\item \textbf{ACK} - per messaggi di conferma;
+	\item \textbf{GAME} - per messaggi riguardanti azioni relative al funzionamento del gioco;
+	\item \textbf{TOKEN} - per messaggi inerenti la gestione del token;
+\end{itemize}
+
+\subsection{Messaggi ACK}
+I messaggi \textbf{ACK}(\textit{Acknowledgement}) vengono utilizzati da un nodo ricevente per confermare la ricezione di un messaggio al relativo mittente: il messaggio ACK ha lo stesso \textbf{id} del messaggio da confermare.\newline
+I messaggi ACK hanno tutti il formato definito nella seguente tabella.
+
+\begin{table}[H]
+	\centering
+	\caption{Formato messaggi ACK}
+	\label{format-ack}
+	{\renewcommand{\arraystretch}{1.8}
+	\begin{tabular}{@{}lllll@{}}
+		\toprule
+		\rowcolor[HTML]{FFCCC9} 
+		{\color[HTML]{333333} Azione} & {\color[HTML]{333333} Type} & {\color[HTML]{333333} Source} & {\color[HTML]{333333} Id} & {\color[HTML]{333333} Content} \\ \midrule
+		Conferma ricezione            & ACK                         & $M_{in}$                  & $M_{in}$              & null                           \\ \bottomrule
+		\small{$M_{in}$ si riferisce al messaggio ricevuto}
+	\end{tabular}
+	}
+\end{table}
+
+\subsection{Messaggi TOKEN}
+I messaggi \textbf{TOKEN} vengono utilizzati dai nodi della rete per gestire il movimento del token all'interno della rete: mediante un messaggio di questo tipo viene data la possibilità ad un nodo di cedere il token.\newline
+I messaggi TOKEN hanno tutti il formato definito nella seguente tabella.
+
+\begin{table}[H]
+	\centering
+	\caption{Formato messaggi TOKEN}
+	\label{format-token}
+	{\renewcommand{\arraystretch}{1.8}
+		\begin{tabular}{@{}lllll@{}}
+			\toprule
+			\rowcolor[HTML]{FFCCC9} 
+			{\color[HTML]{333333} Azione} & {\color[HTML]{333333} Type} & {\color[HTML]{333333} Source} & {\color[HTML]{333333} Id} & {\color[HTML]{333333} Content} \\ \midrule
+			Conferma ricezione            & TOKEN                         & $M$                  & $M$              & null                           \\ \bottomrule			
+		\end{tabular}
+	}
+\end{table}
+\clearpage
+\subsection{Messaggi GAME}
+I messaggi \textbf{GAME} vengono utilizzati per la trasmissione di informazioni relative ad eventi del gioco.\newline
+I messaggi GAME hanno i formati definiti nella seguente tabella.
+
+\begin{table}[H]
+	\centering
+	\caption{Formato messaggi GAME}
+	\label{format-game}
+	{\renewcommand{\arraystretch}{1.8}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\rowcolor[HTML]{FFCCC9} 
+			{\color[HTML]{333333} Azione} & {\color[HTML]{333333} Type}	& {\color[HTML]{333333} Content} \\ \midrule
+			Entrata in partita            & GAME	& ENTER-PLAYER\#$Player_{JSON}$	\\ \bottomrule	
+			Uscita dalla partita            & GAME	& EXIT-PLAYER\#$Player_{JSON}$	\\ \bottomrule	
+			Verifica posizione giocatore            & GAME	& CHECK-POSITION	\\ \bottomrule
+			Notifica posizione giocatore            & GAME	& CHECK-POSITION\#$Position_{JSON}$	\\ \bottomrule
+			Notifica movimento           & GAME	& MOVE\#$Player_{JSON}$\#$Position_{JSON}$	\\ \bottomrule
+			Notifica giocatore ucciso            & GAME	& KILLED\#$Player_{JSON}$	\\ \bottomrule
+			Rilascio bomba            & GAME	& BOMB-RELEASE\#$Bomb_{JSON}$	\\ \bottomrule
+			Esplosione bomba            & GAME	& BOMB-EXPLOSION\#$Bomb_{JSON}$	\\ \bottomrule
+			Uccisione bomba            & GAME	& BOMB-KILL\#$Player_{JSON}$	\\ \bottomrule
+			Fine partita            & GAME	& GAME-END	\\ \bottomrule
+		\end{tabular}
+	}
+\end{table}
+	
+\end{document}

@@ -245,7 +245,7 @@ public class GameManager
         if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //player dead
             playerJson = new Gson().toJson(appContext.getPlayerInfo(), Player.class);
         else
-            playerJson = new Gson().toJson(new Player(), Player.class); //player alive
+            playerJson = new Gson().toJson(new Player(), Player.class); //player alive //TODO: add check for position==null (match join)
 
         bombKillMessage = new RingMessage(MessageType.GAME, receivedMessage.getId(), String.format("BOMB-KILL#%s", playerJson));
         bombKillMessage.setNeedToken(false);
@@ -255,7 +255,7 @@ public class GameManager
         appContext.SOCKET_CONNECTOR.sendMessage(bombKillMessage, SocketConnector.DestinationGroup.SOURCE);
 
         //leave match
-        if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //player dead
+        if (gameEngine.gameGrid.getPlayerSector() == bomb.getBombSOE()) //player killed
         {
             new Thread(() ->{
                 try
@@ -827,11 +827,11 @@ public class GameManager
         synchronized (appContext.TOKEN_MANAGER.getModuleLock())
         {
             //send message
-            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL); //check sync
+            appContext.SOCKET_CONNECTOR.sendMessage(message, SocketConnector.DestinationGroup.ALL);
         }
 
         //loop on response
-        while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size())
+        while (occupiedPositions.size() != appContext.RING_NETWORK.getList().size()) //TODO: put into loop
         {
             try
             {
@@ -841,7 +841,7 @@ public class GameManager
                 synchronized (queueSignal)
                 {
                     //wait response
-                    queueSignal.wait(1000); //timeout before another check on while condition
+                    queueSignal.wait(1000);
                 }
 
             } catch (InterruptedException e)
